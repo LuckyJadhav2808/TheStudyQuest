@@ -34,7 +34,7 @@ export function LoginPage() {
     <PageFrame title="Welcome to StudyQuest" subtitle="Your study life, turned into a quest.">
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
         <Card className="justify-between gap-4 overflow-y-auto">
-          <div className="flex items-center gap-4"><StrobiFace mood="happy" size={88} /><p className="font-display text-2xl leading-tight">Hi, I'm Strobi. No account needed. Jump in as a guest.</p></div>
+          <div className="flex items-center gap-4"><StrobiFace mood="happy" size={88} /><p className="font-display text-2xl leading-tight">Hi, I&apos;m Strobi. No account needed. Jump in as a guest.</p></div>
           <button className="btn btn-lime !min-h-16 text-lg" onClick={() => void guest()}>Continue as Guest</button>
           <p className="text-xs text-muted">Guest Mode creates a local profile instantly. Your data stays on this device.</p>
           {firebaseConfigured && (

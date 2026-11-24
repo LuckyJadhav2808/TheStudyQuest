@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
-// NOTE: typescript.ignoreBuildErrors is enabled for the first deploy only.
-// Turn it off once the project type-checks cleanly in CI.
 const nextConfig: NextConfig = {
-  typescript: { ignoreBuildErrors: true },
+  typescript: { ignoreBuildErrors: false },
   reactStrictMode: true,
   async headers() {
     return [

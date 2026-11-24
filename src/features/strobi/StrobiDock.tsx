@@ -28,7 +28,10 @@ export function StrobiDock() {
   const { menuOpen, setMenu, poke, mood } = useStrobi();
   const router = useRouter();
   const ui = useUI();
-  useEffect(() => setGl(hasWebGL()), []);
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => setGl(hasWebGL()));
+    return () => cancelAnimationFrame(handle);
+  }, []);
   const go = (fn: () => void) => () => { setMenu(false); fn(); };
   return (
     <>

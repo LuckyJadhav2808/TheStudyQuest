@@ -72,7 +72,7 @@ export function HabitsPage() {
     <Card className="gap-3">
       <CardTitle sub="Last 12 weeks, all habits">Consistency</CardTitle>
       <p className="font-display num text-5xl">{habits.length ? Math.round((doneToday / habits.length) * 100) : 0}%</p>
-      <p className="text-sm text-muted">of today's habits complete. A streak shield from Alchemy forgives one missed day.</p>
+      <p className="text-sm text-muted">of today&apos;s habits complete. A streak shield from Alchemy forgives one missed day.</p>
       <Heat days={new Set(logs.map((l) => l.date))} color="var(--color-teal)" />
     </Card>
   );

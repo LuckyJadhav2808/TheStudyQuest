@@ -6,16 +6,19 @@ import { scoresRepo } from "@/core/repos";
 import { QUESTIONS } from "@/content/questions";
 import { payout } from "./arcadeUtils";
 
+function pickQuestions() {
+  return [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 8);
+}
+
 export function TriviaDungeon() {
-  const [run, setRun] = useState(0);
-  const qs = useMemo(() => [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 8), [run]);
+  const [qs, setQs] = useState(pickQuestions);
   const [i, setI] = useState(0);
   const [hp, setHp] = useState(100);
   const [lives, setLives] = useState(3);
   const [picked, setPicked] = useState<number | null>(null);
   const [end, setEnd] = useState<null | { won: boolean; paid: number }>(null);
   const q = qs[i % qs.length];
-  const reset = () => { setRun((r) => r + 1); setI(0); setHp(100); setLives(3); setPicked(null); setEnd(null); };
+  const reset = () => { setQs(pickQuestions()); setI(0); setHp(100); setLives(3); setPicked(null); setEnd(null); };
   async function answer(k: number) {
     if (picked !== null || end) return;
     setPicked(k);

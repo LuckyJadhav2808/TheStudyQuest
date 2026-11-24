@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { ArrowUpRight, Check, Fire, Gift, Headphones, Pause, Play } from "@phosphor-icons/react";
 import { differenceInCalendarDays, parseISO, subDays, format } from "date-fns";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { BlobBackdrop, CurvedCorner, DashedAddTile, StickerCard } from "@/components/shapes";
 import { Card, CardTitle, CountUp, Empty, IconBadge, Segmented } from "@/components/ui/misc";
@@ -25,9 +25,13 @@ import { Lightning } from "@phosphor-icons/react";
 
 export function ChestTile() {
   const s = useSettings();
-  const ready = Date.now() - s.lastChest > 24 * 3600 * 1000;
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    setNow(Date.now());
+  }, []);
+  const ready = now > 0 && now - s.lastChest > 24 * 3600 * 1000;
   const open = async () => { const coins = 20 + Math.floor(Math.random() * 41); await updateSettings({ lastChest: Date.now() }); emit("chest.opened", { coins }); };
-  const hrs = Math.max(0, Math.ceil((24 * 3600 * 1000 - (Date.now() - s.lastChest)) / 3600000));
+  const hrs = Math.max(0, Math.ceil((24 * 3600 * 1000 - ((now || s.lastChest) - s.lastChest)) / 3600000));
   return (
     <button onClick={() => void open()} disabled={!ready} className="tile flex items-center gap-3 border-[1.5px] border-line bg-peach text-left text-ink disabled:opacity-70" aria-label="Daily treasure chest">
       <IconBadge color="#FF8B4A"><Gift size={24} weight="duotone" /></IconBadge>
