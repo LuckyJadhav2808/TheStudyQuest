@@ -8,7 +8,7 @@ import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
-import { Code, DownloadSimple, ListBullets, ListChecks, MagicWand, Quotes, Table as TableIcon, TextB, TextItalic, TextHTwo, Graph, Printer } from "@phosphor-icons/react";
+import { Code, DownloadSimple, ListBullets, ListChecks, MagicWand, Quotes, Table as TableIcon, TextB, TextItalic, TextHTwo, Graph, CaretDown } from "@phosphor-icons/react";
 import { Segmented } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
 import { notesRepo } from "@/core/repos";
@@ -20,14 +20,22 @@ import { MermaidModal } from "./MermaidModal";
 
 type Mode = "rich" | "source" | "preview";
 const MATH = ["\\alpha", "\\beta", "\\theta", "\\lambda", "\\pi", "\\sigma", "\\sum_{i=1}^{n}", "\\int_a^b", "\\frac{a}{b}", "\\sqrt{x}", "x^{2}", "\\infty", "\\leq", "\\geq", "\\neq", "\\approx", "\\to", "\\nabla"];
-export const PRINT_THEMES = [["modern", "Modern Clean"], ["dark", "Dark"], ["academic", "Academic Journal"], ["sepia", "Sepia"]] as const;
 
-export function NoteEditor({ note, onPrint }: { note: Note; onPrint: (theme: string) => void }) {
+export function NoteEditor({
+  note,
+  onPrint,
+  dock,
+  setDock,
+}: {
+  note: Note;
+  onPrint: (theme: string) => void;
+  dock?: string;
+  setDock?: (v: string) => void;
+}) {
   const [mode, setMode] = useState<Mode>("rich");
   const [content, setContent] = useState(note.content);
   const [busy, setBusy] = useState(false);
   const [mermaid, setMermaid] = useState(false);
-  const [theme, setTheme] = useState("modern");
   const src = useRef<HTMLTextAreaElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const latest = useRef(content);
@@ -37,85 +45,227 @@ export function NoteEditor({ note, onPrint }: { note: Note; onPrint: (theme: str
     clearTimeout(timer.current);
     timer.current = setTimeout(() => void notesRepo.update(note.id, { content: md }), 500);
   };
-  useEffect(() => () => { clearTimeout(timer.current); void notesRepo.update(note.id, { content: latest.current }); }, [note.id]);
+  useEffect(() => () => {
+    clearTimeout(timer.current);
+    void notesRepo.update(note.id, { content: latest.current });
+  }, [note.id]);
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [StarterKit, Markdown, Placeholder.configure({ placeholder: "Start writing. Markdown shortcuts work." }), CharacterCount, TaskList, TaskItem.configure({ nested: true }), Table, TableRow, TableHeader, TableCell],
+    extensions: [
+      StarterKit,
+      Markdown,
+      Placeholder.configure({ placeholder: "Start writing. Markdown shortcuts work." }),
+      CharacterCount,
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      Table,
+      TableRow,
+      TableHeader,
+      TableCell,
+    ],
     content: note.content,
     contentType: "markdown",
     editorProps: { attributes: { class: "tiptap prose-sq", "aria-label": "Note editor" } },
-    onUpdate: ({ editor: e }) => { const md = e.getMarkdown(); setContent(md); save(md); },
+    onUpdate: ({ editor: e }) => {
+      const md = e.getMarkdown();
+      setContent(md);
+      save(md);
+    },
   });
-  const setBoth = (md: string) => { setContent(md); save(md); editor?.commands.setContent(md, { contentType: "markdown" }); };
+
+  const setBoth = (md: string) => {
+    setContent(md);
+    save(md);
+    editor?.commands.setContent(md, { contentType: "markdown" });
+  };
+
   const insertSource = (text: string) => {
     const el = src.current;
     if (!el) return setBoth(content + text);
     const next = content.slice(0, el.selectionStart) + text + content.slice(el.selectionEnd);
-    setContent(next); save(next);
+    setContent(next);
+    save(next);
   };
-  const changeMode = (m: Mode) => { if (m === "rich" && editor) editor.commands.setContent(content, { contentType: "markdown" }); setMode(m); };
+
+  const changeMode = (m: Mode) => {
+    if (m === "rich" && editor) editor.commands.setContent(content, { contentType: "markdown" });
+    setMode(m);
+  };
+
   async function ai(action: AiAction) {
     if (!action) return;
     setBusy(true);
     try {
       const before = content;
       const r = await runAiAction(action, { ...note, content });
-      if (r.content) { setBoth(r.content); strobiSay(r.message, "tip", { action: { label: "Undo", onClick: () => setBoth(before) } }); }
-      else strobiSay(r.message, "tip");
-    } catch (e) { strobiSay(e instanceof Error ? e.message : "AI failed", "error"); }
+      if (r.content) {
+        setBoth(r.content);
+        strobiSay(r.message, "tip", { action: { label: "Undo", onClick: () => setBoth(before) } });
+      } else strobiSay(r.message, "tip");
+    } catch (e) {
+      strobiSay(e instanceof Error ? e.message : "AI failed", "error");
+    }
     setBusy(false);
   }
+
+  const handleExport = (kind: string) => {
+    if (!kind) return;
+    if (kind === "print") onPrint("modern");
+    else void exportNote({ ...note, content }, kind as "md" | "html" | "txt");
+  };
+
   const tb = (label: string, icon: React.ReactNode, fn: () => void, on?: boolean) => (
-    <button key={label} type="button" aria-label={label} aria-pressed={on} onClick={fn} className={`grid size-9 place-items-center rounded-full ${on ? "bg-ink text-paper" : "hover:bg-soft"}`}>{icon}</button>
+    <button
+      key={label}
+      type="button"
+      aria-label={label}
+      aria-pressed={on}
+      onClick={fn}
+      className={`grid size-8 place-items-center rounded-full transition ${on ? "bg-ink text-paper" : "text-muted hover:bg-soft hover:text-fg"}`}
+    >
+      {icon}
+    </button>
   );
+
   const c = editor?.chain().focus();
-  const cur = { ...note, content };
+  const words = editor ? editor.storage.characterCount.words() : 0;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <input className="input min-w-0 flex-1 !font-display !text-lg !font-extrabold" aria-label="Note title" defaultValue={note.title} onChange={(e) => void notesRepo.update(note.id, { title: e.target.value })} />
-        <Segmented<Mode> value={mode} onChange={changeMode} options={[{ value: "rich", label: "Rich" }, { value: "source", label: "Source" }, { value: "preview", label: "Preview" }]} />
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
+      <div className="flex items-center gap-2 shrink-0">
+        <input
+          className="input min-w-0 flex-1 !font-display !text-base sm:!text-lg !font-extrabold !min-h-10"
+          aria-label="Note title"
+          defaultValue={note.title}
+          onChange={(e) => void notesRepo.update(note.id, { title: e.target.value })}
+        />
+        <Segmented<Mode>
+          value={mode}
+          onChange={changeMode}
+          options={[
+            { value: "rich", label: "Rich" },
+            { value: "source", label: "Source" },
+            { value: "preview", label: "Preview" },
+          ]}
+        />
       </div>
-      <div className="flex flex-wrap items-center gap-1">
-        {mode === "rich" && editor && <>
-          {tb("Bold", <TextB size={18} weight="bold" />, () => c?.toggleBold().run(), editor.isActive("bold"))}
-          {tb("Italic", <TextItalic size={18} />, () => c?.toggleItalic().run(), editor.isActive("italic"))}
-          {tb("Heading", <TextHTwo size={18} />, () => c?.toggleHeading({ level: 2 }).run(), editor.isActive("heading"))}
-          {tb("Bullet list", <ListBullets size={18} />, () => c?.toggleBulletList().run(), editor.isActive("bulletList"))}
-          {tb("Task list", <ListChecks size={18} />, () => c?.toggleTaskList().run(), editor.isActive("taskList"))}
-          {tb("Quote", <Quotes size={18} />, () => c?.toggleBlockquote().run(), editor.isActive("blockquote"))}
-          {tb("Code block", <Code size={18} />, () => c?.toggleCodeBlock().run(), editor.isActive("codeBlock"))}
-          {tb("Table", <TableIcon size={18} />, () => c?.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())}
-        </>}
-        {tb("Mermaid diagram", <Graph size={18} />, () => setMermaid(true))}
-        <span className="mx-1 h-5 w-px bg-line/30" />
-        <label className="sr-only" htmlFor="ai-act">AI action</label>
-        <select id="ai-act" disabled={busy} className="input !min-h-9 max-w-40 !text-xs" value="" onChange={(e) => void ai(e.target.value as AiAction)}>
-          <option value="">{busy ? "Thinking..." : "AI actions"}</option>
-          {AI_ACTIONS.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
-        </select>
-        <MagicWand size={16} className="text-violet" aria-hidden />
-        <span className="ml-auto flex items-center gap-1">
-          <Select className="!min-h-9 max-w-36 !text-xs" value={theme} onChange={setTheme} options={PRINT_THEMES.map(([v, l]) => ({ value: v, label: l }))} />
-          {tb("Print or save as PDF", <Printer size={18} />, () => onPrint(theme))}
-          {tb("Download .md", <DownloadSimple size={18} />, () => void exportNote(cur, "md"))}
-          <button className="chip !min-h-8 text-xs" onClick={() => void exportNote(cur, "html")}>.html</button>
-          <button className="chip !min-h-8 text-xs" onClick={() => void exportNote(cur, "txt")}>.txt</button>
-        </span>
+
+      <div className="flex flex-wrap items-center justify-between gap-1 border-b border-line/40 pb-1.5 shrink-0">
+        <div className="flex items-center gap-0.5 flex-wrap">
+          {mode === "rich" && editor && (
+            <>
+              {tb("Bold", <TextB size={16} weight="bold" />, () => c?.toggleBold().run(), editor.isActive("bold"))}
+              {tb("Italic", <TextItalic size={16} />, () => c?.toggleItalic().run(), editor.isActive("italic"))}
+              {tb("Heading", <TextHTwo size={16} />, () => c?.toggleHeading({ level: 2 }).run(), editor.isActive("heading"))}
+              {tb("Bullet list", <ListBullets size={16} />, () => c?.toggleBulletList().run(), editor.isActive("bulletList"))}
+              {tb("Task list", <ListChecks size={16} />, () => c?.toggleTaskList().run(), editor.isActive("taskList"))}
+              {tb("Quote", <Quotes size={16} />, () => c?.toggleBlockquote().run(), editor.isActive("blockquote"))}
+              {tb("Code block", <Code size={16} />, () => c?.toggleCodeBlock().run(), editor.isActive("codeBlock"))}
+              {tb("Table", <TableIcon size={16} />, () => c?.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())}
+            </>
+          )}
+          {tb("Mermaid diagram", <Graph size={16} />, () => setMermaid(true))}
+
+          <span className="mx-1 h-4 w-px bg-line/30" />
+
+          <div className="relative inline-flex items-center">
+            <select
+              aria-label="AI actions"
+              disabled={busy}
+              className="appearance-none rounded-full border border-line bg-surface py-1 pl-2.5 pr-7 text-xs font-bold text-fg hover:border-ink cursor-pointer outline-none"
+              value=""
+              onChange={(e) => void ai(e.target.value as AiAction)}
+            >
+              <option value="">{busy ? "Thinking..." : "AI actions"}</option>
+              {AI_ACTIONS.map((a) => (
+                <option key={a.id} value={a.id}>{a.label}</option>
+              ))}
+            </select>
+            <MagicWand size={13} className="pointer-events-none absolute right-2 text-violet" aria-hidden />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 ml-auto">
+          {setDock && (
+            <div className="relative inline-flex items-center">
+              <select
+                aria-label="Side dock"
+                value={dock ?? ""}
+                onChange={(e) => setDock(e.target.value)}
+                className="appearance-none rounded-full border border-line bg-surface py-1 pl-2.5 pr-6 text-xs font-bold text-fg hover:border-ink cursor-pointer outline-none"
+              >
+                <option value="">No side dock</option>
+                <option value="whiteboard">Dock: whiteboard</option>
+                <option value="code">Dock: code</option>
+                <option value="reader">Dock: reader</option>
+              </select>
+              <CaretDown size={12} className="pointer-events-none absolute right-2 text-muted" />
+            </div>
+          )}
+
+          <div className="relative inline-flex items-center">
+            <select
+              aria-label="Export note"
+              value=""
+              onChange={(e) => handleExport(e.target.value)}
+              className="appearance-none rounded-full border border-line bg-surface py-1 pl-2.5 pr-6 text-xs font-bold text-fg hover:border-ink cursor-pointer outline-none"
+            >
+              <option value="">Export</option>
+              <option value="md">Markdown (.md)</option>
+              <option value="html">HTML (.html)</option>
+              <option value="txt">Plain Text (.txt)</option>
+              <option value="print">Print / PDF</option>
+            </select>
+            <DownloadSimple size={13} className="pointer-events-none absolute right-2 text-muted" />
+          </div>
+        </div>
       </div>
+
       {mode === "source" && (
-        <div className="flex gap-1 overflow-x-auto no-scrollbar py-1" aria-label="Math symbols">
-          {MATH.map((m) => <button key={m} className="chip !min-h-8 shrink-0 font-mono text-xs" onClick={() => insertSource(`$${m}$`)}>{m.slice(0, 12)}</button>)}
+        <div className="flex gap-1 overflow-x-auto no-scrollbar py-0.5 shrink-0" aria-label="Math symbols">
+          {MATH.map((m) => (
+            <button key={m} className="chip !min-h-7 shrink-0 font-mono text-[11px]" onClick={() => insertSource(`$${m}$`)}>
+              {m.slice(0, 12)}
+            </button>
+          ))}
         </div>
       )}
-      <div className="scroll-thin min-h-0 flex-1 rounded-[24px] bg-soft p-4">
+
+      <div className="scroll-thin min-h-0 flex-1 rounded-[24px] border border-line/40 bg-surface p-4 shadow-2xs">
         {mode === "rich" && <EditorContent editor={editor} className="h-full" />}
-        {mode === "source" && <textarea ref={src} aria-label="Markdown source" spellCheck={false} className="h-full w-full resize-none bg-transparent font-mono text-sm outline-none" value={content} onChange={(e) => { setContent(e.target.value); save(e.target.value); }} />}
+        {mode === "source" && (
+          <textarea
+            ref={src}
+            aria-label="Markdown source"
+            spellCheck={false}
+            className="h-full w-full resize-none bg-transparent font-mono text-sm outline-none"
+            value={content}
+            onChange={(e) => {
+              setContent(e.target.value);
+              save(e.target.value);
+            }}
+          />
+        )}
         {mode === "preview" && <MarkdownView source={content} />}
       </div>
-      <p className="num text-right text-[11px] text-muted">{editor ? `${editor.storage.characterCount.words()} words` : ""} · autosaved on this device</p>
-      <MermaidModal open={mermaid} onClose={() => setMermaid(false)} onInsert={(b) => { if (mode === "source") insertSource(b); else { setBoth(content + b); strobiToast("saved", { what: "diagram" }); } }} />
+
+      <div className="flex items-center justify-between text-[11px] text-muted px-1 shrink-0">
+        <span>{words} words · autosaved locally</span>
+        <span className="font-mono text-[10px]">Markdown ready</span>
+      </div>
+
+      <MermaidModal
+        open={mermaid}
+        onClose={() => setMermaid(false)}
+        onInsert={(b) => {
+          if (mode === "source") insertSource(b);
+          else {
+            setBoth(content + b);
+            strobiToast("saved", { what: "diagram" });
+          }
+        }}
+      />
     </div>
   );
 }

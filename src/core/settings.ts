@@ -1,14 +1,26 @@
 "use client";
+import { useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "./db";
 import { DEFAULT_GAME, DEFAULT_SETTINGS, gameRepo, settingsRepo } from "./repos";
 import type { Gamification, Settings } from "./types";
 
+let cachedSettings: Settings | null = null;
+let cachedGame: Gamification | null = null;
+
 export function useSettings(): Settings {
-  return useLiveQuery(() => db.settings.get("main"), [], undefined) ?? DEFAULT_SETTINGS;
+  const live = useLiveQuery(() => db.settings.get("main"), [], undefined);
+  useEffect(() => {
+    if (live) cachedSettings = live;
+  }, [live]);
+  return live ?? cachedSettings ?? DEFAULT_SETTINGS;
 }
 export function useGame(): Gamification {
-  return useLiveQuery(() => db.gamification.get("main"), [], undefined) ?? DEFAULT_GAME;
+  const live = useLiveQuery(() => db.gamification.get("main"), [], undefined);
+  useEffect(() => {
+    if (live) cachedGame = live;
+  }, [live]);
+  return live ?? cachedGame ?? DEFAULT_GAME;
 }
 export const updateSettings = (p: Partial<Settings>) => settingsRepo.patch(p);
 

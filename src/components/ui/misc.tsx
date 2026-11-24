@@ -6,6 +6,8 @@ import { BlobBackdrop } from "@/components/shapes";
 import { StrobiFace } from "@/features/strobi/StrobiFace";
 import type { Mood } from "@/features/strobi/store";
 
+import { useUI } from "@/components/shell/ui-store";
+
 export function Skeleton({ className }: { className?: string }) {
   return <div aria-hidden className={cn("skeleton", className)} />;
 }
@@ -46,13 +48,13 @@ export function IconBadge({ children, color = "var(--color-lime)", className }: 
 }
 export function Empty({ title, hint, action, mood = "idle" }: { title: string; hint?: string; action?: ReactNode; mood?: Mood }) {
   return (
-    <div className="relative grid h-full min-h-40 place-items-center overflow-hidden rounded-[24px] p-6 text-center">
-      <BlobBackdrop preset={1} className="size-56 opacity-60" />
-      <div className="relative z-10 flex flex-col items-center gap-2">
-        <StrobiFace mood={mood} size={64} />
-        <p className="card-title">{title}</p>
-        {hint && <p className="max-w-xs text-sm text-muted">{hint}</p>}
-        {action && <div className="mt-2">{action}</div>}
+    <div className="relative flex h-full min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[20px] p-3 text-center">
+      <BlobBackdrop preset={1} className="size-48 opacity-40 pointer-events-none" />
+      <div className="relative z-10 flex flex-col items-center gap-1.5 max-w-xs">
+        <StrobiFace mood={mood} size={44} />
+        <p className="card-title text-sm sm:text-base leading-tight">{title}</p>
+        {hint && <p className="text-xs text-muted leading-tight line-clamp-2">{hint}</p>}
+        {action && <div className="mt-1">{action}</div>}
       </div>
     </div>
   );
@@ -68,17 +70,30 @@ export function CardTitle({ children, right, sub }: { children: ReactNode; right
 export function Card({ children, className, lift = true, ...rest }: { children: ReactNode; className?: string; lift?: boolean } & React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("bento-card flex flex-col", lift && "lift", className)} {...rest}>{children}</div>;
 }
-export function PageFrame({ title, subtitle, actions, children, className }: { title: string; subtitle: string; actions?: ReactNode; children: ReactNode; className?: string }) {
+export function PageFrame({
+  title,
+  subtitle,
+  actions,
+  children,
+  className,
+}: {
+  title?: string;
+  subtitle?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  const set = useUI((s) => s.set);
+  useEffect(() => {
+    if (title || subtitle || actions) {
+      set({ pageHeader: { title, subtitle, actions } });
+    }
+    return () => set({ pageHeader: null });
+  }, [title, subtitle, actions, set]);
+
   return (
-    <section className={cn("flex h-full min-h-0 flex-col gap-3 p-3 sm:gap-4 sm:p-4", className)}>
-      <header className="flex shrink-0 items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="font-display truncate text-[26px] leading-none sm:text-4xl">{title}</h1>
-          <p className="mt-1 truncate text-[13px] text-muted sm:text-sm">{subtitle}</p>
-        </div>
-        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
-      </header>
-      <div className={cn("flex min-h-0 flex-1 flex-col gap-3 sm:gap-4")}>{children}</div>
+    <section className={cn("flex h-full min-h-0 flex-col p-2 sm:p-3", className)}>
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </section>
   );
 }

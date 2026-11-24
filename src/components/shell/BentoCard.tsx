@@ -1,0 +1,124 @@
+"use client";
+import type { CSSProperties, ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import { BlobBackdrop } from "@/components/shapes";
+
+export interface BentoCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  action?: ReactNode;
+  footer?: ReactNode;
+  curvedCorner?: ReactNode;
+  blob?: { preset?: 0 | 1 | 2; color?: string; className?: string; animate?: boolean };
+  decorations?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  headerClassName?: string;
+  bodyClassName?: string;
+  footerClassName?: string;
+  lift?: boolean;
+  scrollable?: boolean;
+  style?: CSSProperties;
+}
+
+export function BentoCard({
+  title,
+  subtitle,
+  action,
+  footer,
+  curvedCorner,
+  blob,
+  decorations,
+  children,
+  className,
+  headerClassName,
+  bodyClassName,
+  footerClassName,
+  lift = false,
+  scrollable = false,
+  style,
+  ...rest
+}: BentoCardProps) {
+  const hasHeader = Boolean(title || subtitle || action);
+
+  return (
+    <div
+      data-bento-card="true"
+      style={style}
+      className={cn(
+        "bento-card !p-0 relative flex flex-col min-h-0 overflow-hidden select-none",
+        lift && "lift",
+        className
+      )}
+      {...rest}
+    >
+      {/* Background decorations - pointer-events-none and z-0 */}
+      {blob && (
+        <BlobBackdrop
+          preset={blob.preset ?? 0}
+          color={blob.color ?? "var(--color-lavender)"}
+          className={cn("pointer-events-none absolute -z-0 opacity-40", blob.className)}
+          animate={blob.animate ?? false}
+        />
+      )}
+      {decorations}
+      {curvedCorner && (
+        <div className="pointer-events-auto absolute right-0 top-0 z-20">
+          {curvedCorner}
+        </div>
+      )}
+
+      {/* Header: fixed height / compact, line-clamp-1 on subtitle */}
+      {hasHeader && (
+        <div
+          className={cn(
+            "relative z-10 flex shrink-0 items-start justify-between gap-2 px-4.5 pt-4 pb-1.5 min-h-[44px]",
+            curvedCorner && "pr-14",
+            headerClassName
+          )}
+        >
+          <div className="min-w-0 flex-1">
+            {typeof title === "string" ? (
+              <h2 className="card-title truncate text-base sm:text-lg font-display font-extrabold text-ink leading-tight">
+                {title}
+              </h2>
+            ) : (
+              title
+            )}
+            {subtitle && (
+              <p className="mt-0.5 truncate text-[11px] text-muted font-medium line-clamp-1 leading-normal density-hide-sub">
+                {subtitle}
+              </p>
+            )}
+          </div>
+          {action && <div className="flex shrink-0 items-center gap-1.5">{action}</div>}
+        </div>
+      )}
+
+      {/* Body: container-type: size, flex-1 min-h-0, relative z-10 */}
+      <div
+        style={{ containerType: "size" }}
+        className={cn(
+          "relative z-10 flex-1 min-h-0 min-w-0 px-4.5 pb-4",
+          !hasHeader && "pt-4",
+          scrollable ? "overflow-y-auto scroll-thin" : "overflow-hidden flex flex-col",
+          bodyClassName
+        )}
+      >
+        {children}
+      </div>
+
+      {/* Optional Footer: fixed height, relative z-10 */}
+      {footer && (
+        <div
+          className={cn(
+            "relative z-10 flex shrink-0 items-center justify-between border-t border-line/10 px-4.5 py-2 text-xs text-muted bg-soft/40",
+            footerClassName
+          )}
+        >
+          {footer}
+        </div>
+      )}
+    </div>
+  );
+}

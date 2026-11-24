@@ -23,6 +23,36 @@ function Fallback() {
   return <StrobiFace mood={mood} size={96} className="size-full" />;
 }
 
+export function StrobiRailButton() {
+  const [gl, setGl] = useState<boolean | null>(null);
+  const { menuOpen, setMenu, poke, mood } = useStrobi();
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => setGl(hasWebGL()));
+    return () => cancelAnimationFrame(handle);
+  }, []);
+
+  return (
+    <button
+      type="button"
+      aria-label={`Strobi the study guide, feeling ${mood}. Open quick menu`}
+      aria-expanded={menuOpen}
+      onClick={() => { poke(); setMenu(!menuOpen); }}
+      className="group relative grid size-12 place-items-center rounded-full bg-soft/15 text-paper transition hover:scale-105 hover:bg-soft/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime shrink-0"
+    >
+      <div className="size-10 overflow-hidden rounded-full pointer-events-none">
+        {gl === null ? null : gl ? (
+          <ErrorBoundary fallback={<Fallback />}><Scene /></ErrorBoundary>
+        ) : (
+          <Fallback />
+        )}
+      </div>
+      <span role="tooltip" className="pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-paper opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100">
+        Strobi ({mood})
+      </span>
+    </button>
+  );
+}
+
 export function StrobiDock() {
   const [gl, setGl] = useState<boolean | null>(null);
   const { menuOpen, setMenu, poke, mood } = useStrobi();
@@ -36,7 +66,7 @@ export function StrobiDock() {
   return (
     <>
       {menuOpen && (
-        <div role="menu" aria-label="Strobi quick menu" className="pop-in fixed bottom-[104px] left-1/2 z-50 flex w-56 -translate-x-1/2 flex-col gap-1 rounded-[28px] border-[1.5px] border-ink bg-white p-2 text-ink shadow-xl sm:bottom-[132px] sm:left-auto sm:right-4 sm:translate-x-0">
+        <div role="menu" aria-label="Strobi quick menu" className="pop-in fixed bottom-[104px] left-1/2 z-[80] flex w-56 -translate-x-1/2 flex-col gap-1 rounded-[28px] border-[1.5px] border-ink bg-white p-2 text-ink shadow-2xl sm:bottom-6 sm:left-[84px] sm:translate-x-0">
           {[
             { l: "Ask AI", i: <Brain size={20} weight="duotone" />, f: () => router.push("/chat") },
             { l: "Start Focus", i: <Timer size={20} weight="duotone" />, f: () => router.push("/timer") },
@@ -52,7 +82,7 @@ export function StrobiDock() {
         aria-label={`Strobi the study guide, feeling ${mood}. Open quick menu`}
         aria-expanded={menuOpen}
         onClick={() => { poke(); setMenu(!menuOpen); }}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+22px)] left-1/2 z-50 size-[68px] -translate-x-1/2 cursor-pointer rounded-full transition-transform hover:scale-105 sm:bottom-4 sm:left-auto sm:right-4 sm:size-[104px] sm:translate-x-0"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+22px)] left-1/2 z-50 size-[68px] -translate-x-1/2 cursor-pointer rounded-full transition-transform hover:scale-105 sm:hidden"
       >
         {gl === null ? null : gl ? (
           <ErrorBoundary fallback={<Fallback />}><Scene /></ErrorBoundary>

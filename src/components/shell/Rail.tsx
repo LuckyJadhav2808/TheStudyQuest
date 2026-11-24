@@ -4,20 +4,21 @@ import { usePathname } from "next/navigation";
 import { GROUPS, groupForPath } from "./nav";
 import { useUI } from "./ui-store";
 import { cn } from "@/lib/utils";
+import { StrobiRailButton } from "@/features/strobi/StrobiDock";
 
 export function Rail() {
   const path = usePathname();
   const active = groupForPath(path);
   const setUI = useUI((s) => s.set);
   return (
-    <nav aria-label="Primary" className="hidden shrink-0 p-3 pr-0 sm:block sm:py-4 sm:pl-4">
+    <nav aria-label="Primary" className="relative z-[70] hidden shrink-0 p-3 pr-0 sm:block sm:py-4 sm:pl-4">
       <div className="flex h-full w-[68px] flex-col items-center gap-1 rounded-full bg-ink px-2 py-4 [data-theme=ink]:border [data-theme=ink]:border-white/10">
-        <span className="font-display mb-2 grid size-10 place-items-center rounded-full bg-lime text-lg text-ink" aria-hidden>S</span>
-        <div className="no-scrollbar flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto">
+        <span className="font-display mb-2 grid size-10 place-items-center rounded-full bg-lime text-lg text-ink shrink-0" aria-hidden>S</span>
+        <div className="no-scrollbar flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto w-full">
           {GROUPS.map((g) => {
             const Icon = g.icon;
             const on = g.id === active;
-            const cls = cn("group relative grid size-12 place-items-center rounded-full transition", on ? "bg-paper text-ink shadow-[0_0_0_4px_#0b0b0c]" : "text-paper/75 hover:bg-white/10 hover:text-paper");
+            const cls = cn("group relative grid size-12 place-items-center rounded-full transition shrink-0", on ? "bg-paper text-ink shadow-[0_0_0_4px_#0b0b0c]" : "text-paper/75 hover:bg-white/10 hover:text-paper");
             const tip = <span role="tooltip" className="pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-paper opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100">{g.label}</span>;
             const notchCut = (
               <>
@@ -35,6 +36,9 @@ export function Rail() {
               </button>
             );
           })}
+        </div>
+        <div className="mt-auto pt-2 shrink-0">
+          <StrobiRailButton />
         </div>
       </div>
     </nav>

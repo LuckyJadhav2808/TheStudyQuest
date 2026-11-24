@@ -1,9 +1,14 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Panels } from "@/components/shell/Panels";
-import { Card, CardTitle, PageFrame, ProgressBar } from "@/components/ui/misc";
+import { BentoCard } from "@/components/shell/BentoCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { PageFrame, ProgressBar, Segmented } from "@/components/ui/misc";
 import { Field, Select } from "@/components/ui/fields";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { useUI } from "@/components/shell/ui-store";
 import { DEFAULT_FLAGS, useFlags, type FlagName } from "@/core/flags";
 import { updateSettings, useSettings } from "@/core/settings";
@@ -12,65 +17,338 @@ import { strobiSay } from "@/features/strobi/toast";
 import { playSfx } from "@/lib/audio";
 import { exportBackup, importBackup, resetAll } from "./dataTools";
 
-const THEMES: { id: ThemeName; label: string; bg: string }[] = [{ id: "paper", label: "Paper", bg: "#F5F5F2" }, { id: "ink", label: "Ink", bg: "#0B0B0C" }, { id: "lavender", label: "Lavender", bg: "#E8E4FF" }, { id: "peach", label: "Peach", bg: "#FFE2D2" }];
+const THEMES: { id: ThemeName; label: string; bg: string }[] = [
+  { id: "paper", label: "Paper", bg: "#F5F5F2" },
+  { id: "ink", label: "Ink", bg: "#0B0B0C" },
+  { id: "lavender", label: "Lavender", bg: "#E8E4FF" },
+  { id: "peach", label: "Peach", bg: "#FFE2D2" },
+];
 const hue = (s: string) => [...s].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360;
 
-function Range({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
-  return <label className="flex items-center gap-3 text-sm font-bold"><span className="w-24 shrink-0">{label}</span><input type="range" min={0} max={1} step={0.05} value={value} onChange={(e) => onChange(+e.target.value)} className="min-w-0 flex-1 accent-ink" /></label>;
-}
+type TabKey = "profile" | "look" | "ai" | "data" | "features";
+
 export function SettingsPage() {
+  const router = useRouter();
   const s = useSettings();
   const flags = useFlags();
   const setUI = useUI((x) => x.set);
+  const [tab, setTab] = useState<TabKey>("profile");
   const [usage, setUsage] = useState<{ used: number; quota: number } | null>(null);
   const [confirm, setConfirm] = useState("");
   const file = useRef<HTMLInputElement>(null);
-  useEffect(() => { void navigator.storage?.estimate?.().then((e) => setUsage({ used: e.usage ?? 0, quota: e.quota ?? 1 })); }, []);
+
+  useEffect(() => {
+    void navigator.storage?.estimate?.().then((e) => setUsage({ used: e.usage ?? 0, quota: e.quota ?? 1 }));
+  }, []);
+
   const notify = async (on: boolean) => {
     if (!on) return void updateSettings({ notifications: false });
     if (!("Notification" in window)) return strobiSay("Notifications are not supported here.", "error");
     const p = await Notification.requestPermission();
-    if (p === "granted") void updateSettings({ notifications: true }); else strobiSay("No problem. Notifications stay off.", "tip");
+    if (p === "granted") void updateSettings({ notifications: true });
+    else strobiSay("No problem. Notifications stay off.", "tip");
   };
-  const profile = (
-    <Card className="gap-3 overflow-y-auto">
-      <CardTitle sub="Guest profile, stored on this device">Profile</CardTitle>
-      <div className="flex items-center gap-3"><span className="font-display grid size-16 place-items-center rounded-full border-[3px] border-ink text-2xl text-ink" style={{ background: `hsl(${hue(s.avatarSeed)} 80% 75%)` }} aria-hidden>{s.name.slice(0, 1).toUpperCase()}</span><div><p className="font-display text-xl">{s.name}</p><p className="text-xs text-muted">{s.title}</p></div></div>
-      <Field label="Display name"><input className="input" defaultValue={s.name} onBlur={(e) => void updateSettings({ name: e.target.value.trim() || "Scholar" })} /></Field>
-      <Field label="Avatar seed"><input className="input" defaultValue={s.avatarSeed} onBlur={(e) => void updateSettings({ avatarSeed: e.target.value })} /></Field>
-      <Field label="Main goal"><input className="input" defaultValue={s.goal} onBlur={(e) => void updateSettings({ goal: e.target.value })} /></Field>
-      <Field label="Daily focus goal (minutes)"><input className="input" type="number" min={10} defaultValue={s.focusGoalMin} onBlur={(e) => void updateSettings({ focusGoalMin: Math.max(10, Number(e.target.value) || 120) })} /></Field>
-      <label className="flex items-center gap-3 text-sm font-bold"><input type="checkbox" className="size-5 accent-ink" checked={s.notifications} onChange={(e) => void notify(e.target.checked)} />Notify me when a break ends or a streak is at risk</label>
-      <div className="flex flex-wrap gap-2"><Link className="btn btn-sm" href="/login">Character creation</Link><Link className="btn btn-sm" href="/privacy">Privacy</Link><button className="btn btn-sm" onClick={() => setUI({ changelog: true })}>Version 1.0.0</button><button className="btn btn-sm" onClick={() => setUI({ shortcuts: true })}>Shortcuts</button></div>
-    </Card>
-  );
-  const look = (
-    <Card className="gap-3 overflow-y-auto">
-      <CardTitle>Appearance and sound</CardTitle>
-      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Theme">{THEMES.map((t) => <button key={t.id} role="radio" aria-checked={s.theme === t.id} onClick={() => void updateSettings({ theme: t.id })} className={`flex min-h-12 items-center gap-2 rounded-full border-[1.5px] px-3 text-sm font-bold ${s.theme === t.id ? "border-line bg-lime text-ink" : "border-line/40"}`}><span className="size-6 rounded-full border border-ink/40" style={{ background: t.bg }} />{t.label}</button>)}</div>
-      <Range label="Master" value={s.masterVolume} onChange={(v) => void updateSettings({ masterVolume: v })} />
-      <Range label="Effects" value={s.sfxVolume} onChange={(v) => void updateSettings({ sfxVolume: v })} />
-      <Range label="Music" value={s.musicVolume} onChange={(v) => void updateSettings({ musicVolume: v })} />
-      <div className="flex gap-2"><label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" className="size-5 accent-ink" checked={s.muted} onChange={(e) => void updateSettings({ muted: e.target.checked })} />Mute all</label><button className="btn btn-sm ml-auto" onClick={() => playSfx("level")}>Test sound</button></div>
-      <p className="text-sm font-bold">AI provider</p>
-      <Select value={s.aiProvider} onChange={(v) => void updateSettings({ aiProvider: v as typeof s.aiProvider })} options={[{ value: "openrouter", label: "OpenRouter" }, { value: "openai", label: "OpenAI" }, { value: "google", label: "Google Gemini" }]} />
-      <Field label="Model"><input className="input" defaultValue={s.aiModel} onBlur={(e) => void updateSettings({ aiModel: e.target.value.trim() })} /></Field>
-      <Field label="API key (stored on this device, sent per request, never logged)"><input className="input" type="password" autoComplete="off" defaultValue={s.aiKey} onBlur={(e) => void updateSettings({ aiKey: e.target.value.trim() })} placeholder="sk-..." /></Field>
-    </Card>
-  );
-  const data = (
-    <Card className="gap-3 overflow-y-auto">
-      <CardTitle sub="Everything stays in this browser unless you export it">Data and features</CardTitle>
-      <div className="tile">{usage ? <><div className="mb-1 flex justify-between text-sm font-bold"><span>Storage used</span><span className="num">{(usage.used / 1048576).toFixed(1)} MB of {(usage.quota / 1073741824).toFixed(1)} GB</span></div><ProgressBar pct={Math.max(0.01, usage.used / usage.quota)} /></> : <p className="text-sm text-muted">Storage estimate is unavailable.</p>}<button className="btn btn-sm mt-2" onClick={async () => strobiSay((await navigator.storage?.persist?.()) ? "Storage will be kept." : "The browser declined to persist storage.", "tip")}>Request persistent storage</button></div>
-      <div className="flex flex-wrap gap-2"><button className="btn btn-ink" onClick={() => void exportBackup()}>Export backup</button><button className="btn" onClick={() => file.current?.click()}>Restore backup</button><input ref={file} hidden type="file" accept=".json" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; try { await importBackup(await f.text()); strobiSay("Backup restored.", "tip"); } catch (er) { strobiSay(er instanceof Error ? er.message : "Restore failed", "error"); } e.target.value = ""; }} /></div>
-      <p className="text-sm font-bold">Feature flags</p>
-      <div className="grid gap-1 sm:grid-cols-2">{(Object.keys(DEFAULT_FLAGS) as FlagName[]).map((k) => <label key={k} className="flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-ink" checked={flags[k]} onChange={(e) => void updateSettings({ flags: { ...s.flags, [k]: e.target.checked } })} />{k}</label>)}</div>
-      <div className="tile border-[1.5px] border-red-400"><p className="font-bold text-red-600">Reset all data</p><p className="text-xs text-muted">Type RESET to wipe every table on this device. This cannot be undone.</p><div className="mt-2 flex gap-2"><input className="input" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="Type RESET to confirm" /><button className="btn border-red-500 text-red-600" disabled={confirm !== "RESET"} onClick={async () => { await resetAll(); location.href = "/"; }}>Wipe</button></div></div>
-    </Card>
-  );
+
   return (
-    <PageFrame title="Settings" subtitle="Profile, look, sound, AI and your data.">
-      <Panels className="lg:grid-cols-12" panels={[{ id: "p", label: "Profile", className: "lg:col-span-4", node: profile }, { id: "l", label: "Look and AI", className: "lg:col-span-4", node: look }, { id: "d", label: "Data", className: "lg:col-span-4 sm:col-span-2", node: data }]} />
+    <PageFrame title="Settings" subtitle="Profile, look, sound, AI and data controls.">
+      <div className="h-full min-h-0 w-full">
+        <BentoCard
+          title="Preferences"
+          action={
+            <Segmented<TabKey>
+              value={tab}
+              onChange={setTab}
+              options={[
+                { value: "profile", label: "Profile" },
+                { value: "look", label: "Look & Sound" },
+                { value: "ai", label: "AI" },
+                { value: "data", label: "Data" },
+                { value: "features", label: "Features" },
+              ]}
+            />
+          }
+          className="h-full"
+        >
+          <ScrollArea className="flex-1 min-h-0 pr-2">
+            {tab === "profile" && (
+              <div className="flex max-w-xl flex-col gap-4 py-2">
+                <div className="flex items-center gap-3 pt-1">
+                  <span
+                    className="font-display grid size-14 place-items-center rounded-full border-[2px] border-ink text-xl text-ink shadow-xs shrink-0"
+                    style={{ background: `hsl(${hue(s.avatarSeed)} 80% 75%)` }}
+                    aria-hidden
+                  >
+                    {s.name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <div>
+                    <p className="font-display text-lg font-bold">{s.name}</p>
+                    <p className="text-xs text-muted">{s.title}</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Display name">
+                    <input
+                      className="input"
+                      defaultValue={s.name}
+                      onBlur={(e) => void updateSettings({ name: e.target.value.trim() || "Scholar" })}
+                    />
+                  </Field>
+                  <Field label="Avatar seed">
+                    <input
+                      className="input"
+                      defaultValue={s.avatarSeed}
+                      onBlur={(e) => void updateSettings({ avatarSeed: e.target.value })}
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Main goal">
+                    <input
+                      className="input"
+                      defaultValue={s.goal}
+                      onBlur={(e) => void updateSettings({ goal: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Daily focus goal (minutes)">
+                    <input
+                      className="input"
+                      type="number"
+                      min={10}
+                      defaultValue={s.focusGoalMin}
+                      onBlur={(e) => void updateSettings({ focusGoalMin: Math.max(10, Number(e.target.value) || 120) })}
+                    />
+                  </Field>
+                </div>
+
+                <label className="flex items-center justify-between rounded-2xl border border-line bg-soft/40 p-3 text-xs sm:text-sm font-bold cursor-pointer">
+                  <span>Notify me when a break ends or a streak is at risk</span>
+                  <Switch checked={s.notifications} onCheckedChange={(v) => void notify(v)} />
+                </label>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Link className="btn btn-sm text-xs" href="/login">Character creation</Link>
+                  <Link className="btn btn-sm text-xs" href="/privacy">Privacy</Link>
+                  <button className="btn btn-sm text-xs" onClick={() => setUI({ changelog: true })}>Version 1.0.0</button>
+                  <button className="btn btn-sm text-xs" onClick={() => setUI({ shortcuts: true })}>Shortcuts</button>
+                </div>
+              </div>
+            )}
+
+            {tab === "look" && (
+              <div className="flex max-w-xl flex-col gap-4 py-2">
+                <div>
+                  <p className="text-xs font-bold text-muted mb-2 uppercase tracking-wide">Theme palette</p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Theme">
+                    {THEMES.map((t) => (
+                      <button
+                        key={t.id}
+                        role="radio"
+                        aria-checked={s.theme === t.id}
+                        onClick={() => void updateSettings({ theme: t.id })}
+                        className={`flex min-h-11 items-center gap-2.5 rounded-full border-[1.5px] px-3.5 text-xs font-bold transition ${
+                          s.theme === t.id ? "border-ink bg-lime text-ink shadow-xs" : "border-line/60 bg-surface hover:border-ink"
+                        }`}
+                      >
+                        <span className="size-5 rounded-full border border-ink/40 shrink-0" style={{ background: t.bg }} />
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 rounded-2xl border border-line bg-soft/30 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted">Audio levels</p>
+                  <div className="flex items-center gap-4">
+                    <span className="w-16 shrink-0 text-xs font-bold">Master</span>
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={s.masterVolume}
+                      onChange={(e) => void updateSettings({ masterVolume: +e.target.value })}
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="w-16 shrink-0 text-xs font-bold">Effects</span>
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={s.sfxVolume}
+                      onChange={(e) => void updateSettings({ sfxVolume: +e.target.value })}
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="w-16 shrink-0 text-xs font-bold">Music</span>
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={s.musicVolume}
+                      onChange={(e) => void updateSettings({ musicVolume: +e.target.value })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-line/40">
+                    <label className="flex items-center gap-2.5 text-xs font-bold cursor-pointer">
+                      <Switch checked={s.muted} onCheckedChange={(v) => void updateSettings({ muted: v })} />
+                      Mute all audio
+                    </label>
+                    <button className="btn btn-sm text-xs py-1 px-3" onClick={() => playSfx("level")}>
+                      Test sound
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "ai" && (
+              <div className="flex max-w-xl flex-col gap-4 py-2">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-bold text-fg">AI provider</span>
+                  <Select
+                    value={s.aiProvider}
+                    onChange={(v) => void updateSettings({ aiProvider: v as typeof s.aiProvider })}
+                    options={[
+                      { value: "openrouter", label: "OpenRouter" },
+                      { value: "openai", label: "OpenAI" },
+                      { value: "google", label: "Google Gemini" },
+                    ]}
+                  />
+                </div>
+
+                <Field label="Model">
+                  <input
+                    className="input"
+                    defaultValue={s.aiModel}
+                    onBlur={(e) => void updateSettings({ aiModel: e.target.value.trim() })}
+                  />
+                </Field>
+
+                <Field label="API key (stored locally on this device, never logged)">
+                  <input
+                    className="input"
+                    type="password"
+                    autoComplete="off"
+                    defaultValue={s.aiKey}
+                    onBlur={(e) => void updateSettings({ aiKey: e.target.value.trim() })}
+                    placeholder="sk-..."
+                  />
+                </Field>
+              </div>
+            )}
+
+            {tab === "data" && (
+              <div className="flex max-w-xl flex-col gap-4 py-2">
+                <div className="tile p-4">
+                  {usage ? (
+                    <>
+                      <div className="mb-2 flex justify-between text-xs sm:text-sm font-bold">
+                        <span>Storage used</span>
+                        <span className="num">
+                          {(usage.used / 1048576).toFixed(1)} MB of {(usage.quota / 1073741824).toFixed(1)} GB
+                        </span>
+                      </div>
+                      <ProgressBar pct={Math.max(0.01, usage.used / usage.quota)} />
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted">Storage estimate unavailable in this context.</p>
+                  )}
+                  <button
+                    className="btn btn-sm text-xs mt-3"
+                    onClick={async () =>
+                      strobiSay(
+                        (await navigator.storage?.persist?.())
+                          ? "Storage will be kept."
+                          : "The browser declined to persist storage.",
+                        "tip"
+                      )
+                    }
+                  >
+                    Request persistent storage
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button className="btn btn-ink text-xs" onClick={() => void exportBackup()}>
+                    Export backup
+                  </button>
+                  <button className="btn text-xs" onClick={() => file.current?.click()}>
+                    Restore backup
+                  </button>
+                  <input
+                    ref={file}
+                    hidden
+                    type="file"
+                    accept=".json"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      try {
+                        await importBackup(await f.text());
+                        strobiSay("Backup restored.", "tip");
+                      } catch (er) {
+                        strobiSay(er instanceof Error ? er.message : "Restore failed", "error");
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+
+                <div className="tile border-[1.5px] border-red-300 p-4 mt-2">
+                  <p className="text-sm font-bold text-red-600">Reset all data</p>
+                  <p className="text-xs text-muted mt-0.5">
+                    Type RESET to wipe every database table on this device. This cannot be undone.
+                  </p>
+                  <div className="mt-2.5 flex gap-2">
+                    <input
+                      className="input !min-h-9"
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      aria-label="Type RESET to confirm"
+                      placeholder="Type RESET"
+                    />
+                    <button
+                      className="btn border-red-500 text-red-600 text-xs px-4"
+                      disabled={confirm !== "RESET"}
+                      onClick={async () => {
+                        await resetAll();
+                        router.push("/");
+                      }}
+                    >
+                      Wipe
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "features" && (
+              <div className="flex max-w-xl flex-col gap-3 py-2">
+                <p className="text-xs font-bold text-muted uppercase tracking-wide">Feature flags</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {(Object.keys(DEFAULT_FLAGS) as FlagName[]).map((k) => (
+                    <label
+                      key={k}
+                      className="tile flex min-h-11 items-center gap-3 p-3 text-xs sm:text-sm font-semibold cursor-pointer hover:bg-soft"
+                    >
+                      <Checkbox
+                        checked={flags[k]}
+                        onCheckedChange={(checked) =>
+                          void updateSettings({ flags: { ...s.flags, [k]: checked } })
+                        }
+                      />
+                      <span>{k}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+        </BentoCard>
+      </div>
     </PageFrame>
   );
 }

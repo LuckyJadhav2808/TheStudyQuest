@@ -11,7 +11,7 @@ export interface Panel { id: string; label: string; className?: string; node: Re
 export function Panels({ panels, className }: { panels: Panel[]; className?: string }) {
   const mobile = useIsMobile();
   const [idx, setIdx] = useState(0);
-  const wrap = "min-h-0 min-w-0 [&>*]:h-full [&>*]:w-full";
+  const wrap = "min-h-0 min-w-0 flex flex-col h-full";
   if (!mobile) {
     return <div className={cn("grid min-h-0 flex-1 gap-4", className)}>{panels.map((p) => <div key={p.id} className={cn(wrap, p.className)}>{p.node}</div>)}</div>;
   }

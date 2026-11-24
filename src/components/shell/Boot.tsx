@@ -21,7 +21,7 @@ export function Boot() {
   useEffect(() => {
     void ensureProfile();
     startEngine();
-    try { if ("serviceWorker" in navigator && location.protocol !== "http:" || location.hostname === "localhost") void navigator.serviceWorker?.register("/sw.js").catch(() => undefined); } catch { /* optional */ }
+    try { if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(() => undefined); } catch { /* optional */ }
     set({ online: navigator.onLine });
     const off = () => { set({ online: false }); emit("offline.entered", {}); };
     const on = () => { set({ online: true }); emit("online.restored", {}); };
@@ -61,5 +61,5 @@ export function Boot() {
     return () => window.clearTimeout(t);
   }, [g.updatedAt, g.streak, g.lastActive, s.notifications]);
 
-  return <Toaster position={mobile ? "top-center" : "bottom-right"} visibleToasts={3} offset={mobile ? 12 : { bottom: 140, right: 16 }} mobileOffset={{ top: 12 }} />;
+  return <Toaster position={mobile ? "top-center" : "bottom-left"} visibleToasts={3} offset={mobile ? 12 : { bottom: 20, left: 88 }} mobileOffset={{ top: 12 }} />;
 }

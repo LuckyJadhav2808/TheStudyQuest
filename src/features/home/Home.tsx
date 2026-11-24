@@ -5,6 +5,7 @@ import { Panels, type Panel } from "@/components/shell/Panels";
 import { Modal } from "@/components/ui/modal";
 import { PageFrame } from "@/components/ui/misc";
 import { updateSettings, useSettings } from "@/core/settings";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FlowStation, LoFiCard, NotesDeck, QuestsCard, VelocityCard } from "./HomeWidgets";
 
 const WIDGETS = [["streak", "Streak sticker"], ["chest", "Daily chest"], ["exam", "Exam radar"], ["velocity", "Study velocity"], ["lofi", "Lo-Fi player"], ["notes", "Notes deck"]] as const;
@@ -22,7 +23,7 @@ export function Home() {
   const span = SPAN[Math.max(1, bottom.length)];
   const panels: Panel[] = [
     { id: "flow", label: "Flow", className: "sm:col-span-2 lg:col-span-8 lg:row-span-4", node: <FlowStation hidden={hidden} onPicker={() => setPicker(true)} /> },
-    { id: "quests", label: "Quests", className: "lg:col-span-4 lg:row-span-4", node: <QuestsCard /> },
+    { id: "quests", label: "Quests", className: "lg:col-span-4 lg:row-span-4", node: <QuestsCard hidden={hidden} /> },
     ...bottom.map((b) => ({ ...b, className: `${span} lg:row-span-2` })),
   ];
   return (
@@ -31,7 +32,13 @@ export function Home() {
       <Modal open={picker} onClose={() => setPicker(false)} title="Dashboard widgets">
         <div className="flex flex-col gap-2">
           {WIDGETS.map(([id, label]) => (
-            <label key={id} className="tile flex min-h-12 items-center gap-3 text-sm font-bold"><input type="checkbox" className="size-5 accent-ink" checked={!hidden.includes(id)} onChange={() => void updateSettings({ hiddenWidgets: hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id] })} />{label}</label>
+            <label key={id} className="tile flex min-h-12 items-center gap-3 text-sm font-bold cursor-pointer">
+              <Checkbox
+                checked={!hidden.includes(id)}
+                onCheckedChange={() => void updateSettings({ hiddenWidgets: hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id] })}
+              />
+              {label}
+            </label>
           ))}
         </div>
       </Modal>

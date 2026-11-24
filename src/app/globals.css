@@ -65,6 +65,43 @@
   --soft: #fff0e6;
 }
 
+/* ---------- Density & Global Scrollbar defaults ---------- */
+:root {
+  --density-gap: 16px;
+  --density-pad: 20px;
+}
+
+@media (max-height: 700px) {
+  :root {
+    --density-gap: 12px;
+    --density-pad: 16px;
+  }
+  .density-hide-sub {
+    display: none !important;
+  }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0;
+  height: 0;
+}
+
 html,
 body {
   height: 100dvh;
