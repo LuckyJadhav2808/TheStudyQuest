@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import type { ReactNode } from "react";
 import { Providers } from "@/components/shell/Providers";
 import "./globals.css";
@@ -18,12 +19,9 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { themeColor: "#0B0B0C", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
-const themeScript = `try{var t=localStorage.getItem("sq-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`;
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
-      <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
       <body>
         <Providers>{children}</Providers>
       </body>
