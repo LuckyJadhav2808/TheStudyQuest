@@ -58,6 +58,7 @@ export function SettingsPage() {
   const [modelCached, setModelCached] = useState<boolean | null>(null);
   const [dlBusy, setDlBusy] = useState(false);
   const [dlPct, setDlPct] = useState(0);
+  const [dlStatus, setDlStatus] = useState("");
   const file = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -414,14 +415,20 @@ export function SettingsPage() {
                       disabled={dlBusy}
                       onClick={async () => {
                         setDlBusy(true);
-                        setDlPct(0);
+                        setDlPct(1);
+                        setDlStatus("Starting worker…");
                         try {
-                          await preloadLocalAi((pct) => setDlPct(pct));
+                          await preloadLocalAi((pct, status) => {
+                            setDlPct(pct);
+                            if (status) setDlStatus(status);
+                          });
                           setDlPct(100);
+                          setDlStatus("Model ready");
                           setModelCached(true);
                           strobiSay("Local AI model cached and ready offline!", "tip");
-                        } catch {
-                          strobiSay("Could not download local AI model.", "error");
+                        } catch (err) {
+                          setDlStatus("");
+                          strobiSay(err instanceof Error ? err.message : "Could not download local AI model.", "error");
                         }
                         setDlBusy(false);
                       }}
@@ -433,7 +440,7 @@ export function SettingsPage() {
                   {(dlBusy || dlPct > 0) && (
                     <div className="space-y-1">
                       <div className="flex justify-between text-[11px] font-bold text-muted">
-                        <span>{dlBusy ? `Downloading local AI… ${dlPct}%` : "Model ready"}</span>
+                        <span>{dlBusy ? (dlStatus || `Downloading local AI… ${dlPct}%`) : "Model ready"}</span>
                         <span className="num">{dlPct}%</span>
                       </div>
                       <ProgressBar pct={Math.max(0.02, dlPct / 100)} />
