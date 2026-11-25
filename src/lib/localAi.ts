@@ -15,7 +15,7 @@ export async function isLocalAiCached(): Promise<boolean> {
     if (typeof caches === "undefined") return false;
     const cache = await caches.open("transformers-cache");
     const keys = await cache.keys();
-    return keys.some((req) => /distilbart|onnx|xenova/i.test(req.url));
+    return keys.some((req) => /lamini|flan-t5|distilbart|onnx|xenova/i.test(req.url));
   } catch {
     return false;
   }

@@ -15,7 +15,7 @@ async function getSummarizer(onProgress?: (pct: number, status?: string) => void
     const files = new Map<string, { loaded: number; total: number }>();
     onProgress?.(1, "Connecting to HuggingFace…");
     summarizerPromise = (
-      pipeline("summarization", "Xenova/distilbart-cnn-6-6", {
+      pipeline("summarization", "Xenova/LaMini-Flan-T5-77M", {
         progress_callback: (info) => {
           const rec = info as { status?: string; file?: string; progress?: number; loaded?: number; total?: number };
           const fileName = rec.file ? rec.file.split("/").pop() : undefined;

@@ -397,7 +397,7 @@ export function SettingsPage() {
                       </span>
                     </div>
                     <p className="text-xs text-muted mt-1">
-                      Powered locally by Transformers.js (<code className="font-mono">distilbart-cnn-6-6</code>) and Compromise NLP inside a Web Worker. No API keys are needed and your notes never leave this device.
+                      Powered locally by Transformers.js (<code className="font-mono">LaMini-Flan-T5-77M</code>) and Compromise NLP inside a Web Worker. No API keys are needed and your notes never leave this device.
                     </p>
                   </div>
                 </div>
