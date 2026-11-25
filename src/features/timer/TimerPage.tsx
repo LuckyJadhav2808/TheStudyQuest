@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowsOut, Pause, Play, ArrowCounterClockwise, ShieldCheck, Headphones, X } from "@phosphor-icons/react";
+import { ArrowsOut, Pause, Play, ArrowCounterClockwise, ShieldCheck, Headphones, X, CloudRain, Fire, Coffee, Waves, Tree, Wind, Broadcast } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
 import { BentoCard } from "@/components/shell/BentoCard";
+import { HeroCard } from "@/components/ui/design-primitives";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageFrame, ProgressBar, Segmented } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
 import { Slider } from "@/components/ui/slider";
+import { useGame } from "@/core/settings";
 import { CHANNELS, useAmbient } from "@/lib/ambient";
 import { BINAURAL, binauralActive, setBinauralVolume, startBinaural, stopBinaural, type BinauralKey } from "@/lib/binaural";
 import { RadialTimer } from "./RadialTimer";
@@ -14,6 +16,16 @@ import { useTimer } from "./useTimer";
 import type { TimerKind } from "./store";
 
 const PRESETS: Record<TimerKind, number[]> = { focus: [25, 50], short: [5, 10], long: [15, 30] };
+const BINAURAL_HZ: Record<BinauralKey, string> = { delta: "2 Hz", theta: "6 Hz", alpha: "10 Hz", beta: "18 Hz", gamma: "40 Hz" };
+const CHANNEL_ICONS: Record<string, React.ReactNode> = {
+  rain: <CloudRain size={15} weight="duotone" />,
+  fire: <Fire size={15} weight="duotone" />,
+  cafe: <Coffee size={15} weight="duotone" />,
+  white: <Broadcast size={15} weight="duotone" />,
+  ocean: <Waves size={15} weight="duotone" />,
+  forest: <Tree size={15} weight="duotone" />,
+  wind: <Wind size={15} weight="duotone" />,
+};
 
 function SoundscapeCard() {
   const [mode, setMode] = useState<"binaural" | "ambient">("binaural");
@@ -49,10 +61,22 @@ function SoundscapeCard() {
       className="h-full"
     >
       {mode === "binaural" ? (
-        <div className="flex flex-col gap-4 pt-1">
-          <div className="flex items-center gap-2 rounded-2xl bg-soft px-3 py-2 text-xs text-muted">
-            <Headphones size={15} className="shrink-0 text-fg" />
-            <span className="truncate">Headphones required · Keep volume low</span>
+        <div className="flex h-full min-h-0 flex-col justify-between gap-3 pt-1">
+          {/* Dual wave visual + big Hz readout */}
+          <div className="flex items-center justify-between gap-3 rounded-[20px] border border-line/20 bg-soft/70 px-4 py-3">
+            <div className="min-w-0">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted">Carrier Beat</span>
+              <p className="font-display num text-3xl font-extrabold leading-none text-fg mt-0.5">
+                {BINAURAL_HZ[key] ?? "10 Hz"}
+              </p>
+              <span className="text-[11px] text-muted flex items-center gap-1 mt-1">
+                <Headphones size={12} /> Headphones · Low volume
+              </span>
+            </div>
+            <svg viewBox="0 0 120 44" className="h-11 w-28 shrink-0" aria-hidden>
+              <path d="M0 22 Q 15 4, 30 22 T 60 22 T 90 22 T 120 22" fill="none" stroke="var(--color-violet)" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M0 22 Q 20 38, 40 22 T 80 22 T 120 22" fill="none" stroke="var(--color-teal)" strokeWidth="2" strokeDasharray="3 3" strokeLinecap="round" opacity="0.8" />
+            </svg>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -83,7 +107,7 @@ function SoundscapeCard() {
           />
 
           <button
-            className={`btn ${on ? "btn-ink" : "btn-lime"} w-full font-bold`}
+            className={`btn ${on ? "btn-ink" : "btn-lime"} w-full font-bold mt-auto`}
             onClick={toggle}
           >
             {on ? "Fade out" : "Start tones"}
@@ -94,7 +118,8 @@ function SoundscapeCard() {
           <ScrollArea className="flex-1 min-h-0 pr-1">
             <div className="flex flex-col gap-3 pb-2">
               {CHANNELS.map((c) => (
-                <div key={c.id} className="flex items-center gap-3">
+                <div key={c.id} className="flex items-center gap-2.5">
+                  <span className="text-muted shrink-0">{CHANNEL_ICONS[c.id] ?? <Waves size={15} />}</span>
                   <span className="w-20 shrink-0 text-xs font-bold truncate">{c.label}</span>
                   <Slider
                     aria-label={`${c.label} volume`}
@@ -119,6 +144,7 @@ function SoundscapeCard() {
 
 export function TimerPage() {
   const t = useTimer();
+  const g = useGame();
   const [zen, setZen] = useState(false);
   const [custom, setCustom] = useState("");
 
@@ -146,7 +172,9 @@ export function TimerPage() {
   const label = t.kind === "focus" ? "Focus" : t.kind === "short" ? "Short break" : "Long break";
 
   const main = (
-    <BentoCard
+    <HeroCard
+      tint="focus"
+      hardShadow
       title="Focus Timer"
       action={
         <Segmented<TimerKind>
@@ -173,10 +201,10 @@ export function TimerPage() {
           >
             {t.running ? <><Pause weight="fill" size={18} /> Pause</> : <><Play weight="fill" size={18} /> Start</>}
           </button>
-          <button className="btn btn-icon size-10" aria-label="Reset timer" onClick={t.reset}>
+          <button className="btn btn-icon size-10 bg-surface" aria-label="Reset timer" onClick={t.reset}>
             <ArrowCounterClockwise size={18} weight="bold" />
           </button>
-          <button className="btn btn-icon size-10" aria-label="Zen mode" onClick={enterZen}>
+          <button className="btn btn-icon size-10 bg-surface" aria-label="Zen mode" onClick={enterZen}>
             <ArrowsOut size={18} weight="bold" />
           </button>
         </div>
@@ -210,8 +238,21 @@ export function TimerPage() {
             />
           </form>
         </div>
+
+        {/* Session summary stat chips */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-1 shrink-0">
+          <span className="chip !min-h-7 bg-surface/80 text-[11px] num">
+            <span className="text-muted">Sessions:</span> {Math.floor(g.focusMinutes / 25)}
+          </span>
+          <span className="chip !min-h-7 bg-surface/80 text-[11px] num">
+            <span className="text-muted">Focus:</span> {g.focusMinutes}m
+          </span>
+          <span className="chip !min-h-7 bg-surface/80 text-[11px] num">
+            <span className="text-muted">XP:</span> {g.xp}
+          </span>
+        </div>
       </div>
-    </BentoCard>
+    </HeroCard>
   );
 
   const rightCol = (

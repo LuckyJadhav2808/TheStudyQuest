@@ -202,37 +202,34 @@ export function NoteEditor({
         </div>
 
         <div className="flex items-center gap-1.5 ml-auto">
-          {setDock && (
-            <div className="relative inline-flex items-center">
-              <select
-                aria-label="Side dock"
-                value={dock ?? ""}
-                onChange={(e) => setDock(e.target.value)}
-                className="appearance-none rounded-full border border-line bg-surface py-1 pl-2.5 pr-6 text-xs font-bold text-fg hover:border-ink cursor-pointer outline-none"
-              >
-                <option value="">No side dock</option>
-                <option value="whiteboard">Dock: whiteboard</option>
-                <option value="code">Dock: code</option>
-                <option value="reader">Dock: reader</option>
-              </select>
-              <CaretDown size={12} className="pointer-events-none absolute right-2 text-muted" />
-            </div>
-          )}
-
           <div className="relative inline-flex items-center">
             <select
-              aria-label="Export note"
+              aria-label="More options"
               value=""
-              onChange={(e) => handleExport(e.target.value)}
-              className="appearance-none rounded-full border border-line bg-surface py-1 pl-2.5 pr-6 text-xs font-bold text-fg hover:border-ink cursor-pointer outline-none"
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v.startsWith("dock:")) setDock?.(v.slice(5));
+                else if (v.startsWith("exp:")) handleExport(v.slice(4));
+              }}
+              className="appearance-none rounded-full border border-line bg-surface py-1 pl-3 pr-7 text-xs font-bold text-fg hover:border-ink cursor-pointer outline-none"
             >
-              <option value="">Export</option>
-              <option value="md">Markdown (.md)</option>
-              <option value="html">HTML (.html)</option>
-              <option value="txt">Plain Text (.txt)</option>
-              <option value="print">Print / PDF</option>
+              <option value="">More</option>
+              {setDock && (
+                <optgroup label="Side dock">
+                  <option value="dock:">No side dock</option>
+                  <option value="dock:whiteboard">Dock: Whiteboard</option>
+                  <option value="dock:code">Dock: Code</option>
+                  <option value="dock:reader">Dock: Reader</option>
+                </optgroup>
+              )}
+              <optgroup label="Export">
+                <option value="exp:md">Export Markdown (.md)</option>
+                <option value="exp:html">Export HTML (.html)</option>
+                <option value="exp:txt">Export Text (.txt)</option>
+                <option value="exp:print">Print / PDF</option>
+              </optgroup>
             </select>
-            <DownloadSimple size={13} className="pointer-events-none absolute right-2 text-muted" />
+            <CaretDown size={12} className="pointer-events-none absolute right-2.5 text-muted" />
           </div>
         </div>
       </div>
@@ -247,7 +244,7 @@ export function NoteEditor({
         </div>
       )}
 
-      <div className="scroll-thin min-h-0 flex-1 rounded-[24px] border border-line/40 bg-white text-ink p-5 sm:p-6 shadow-2xs transition focus-within:border-ink focus-within:ring-2 focus-within:ring-lime">
+      <div className="scroll-thin min-h-0 flex-1 rounded-[24px] border-[1.5px] border-ink/25 bg-white text-ink px-6 sm:px-10 py-5 shadow-2xs transition focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(217,255,69,0.4)]">
         <div className="mx-auto h-full max-w-[72ch]">
           {mode === "rich" && <EditorContent editor={editor} className="h-full" />}
           {mode === "source" && (
@@ -268,7 +265,7 @@ export function NoteEditor({
       </div>
 
       <div className="flex items-center justify-between text-[11px] text-muted px-1 shrink-0">
-        <span>{words} words · autosaved locally</span>
+        <span className="num">{words} words · ~{Math.max(1, Math.ceil(words / 200))} min read · autosaved locally</span>
         <span className="font-mono text-[10px]">Markdown ready</span>
       </div>
 

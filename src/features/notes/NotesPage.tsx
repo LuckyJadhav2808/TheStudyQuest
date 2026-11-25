@@ -177,73 +177,84 @@ export function NotesPage() {
             action={<button className="btn btn-lime btn-sm" onClick={() => void create()}>New note</button>}
           />
         ) : (
-          <div style={{ height: virt.getTotalSize(), position: "relative" }}>
-            {virt.getVirtualItems().map((v) => {
-              const n = filtered[v.index];
-              return (
-                <div
-                  key={n.id}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: v.size,
-                    transform: `translateY(${v.start}px)`,
-                  }}
-                  className="pb-1.5"
-                >
+          <>
+            <div style={{ height: virt.getTotalSize(), position: "relative" }}>
+              {virt.getVirtualItems().map((v) => {
+                const n = filtered[v.index];
+                return (
                   <div
-                    className={`tile flex h-full items-center gap-2 border-[1.5px] p-2.5 transition hover:bg-lavender/35 ${
-                      n.id === id ? "border-ink bg-lime text-ink shadow-xs" : "border-transparent"
-                    }`}
+                    key={n.id}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: v.size,
+                      transform: `translateY(${v.start}px)`,
+                    }}
+                    className="pb-1.5"
                   >
-                    <button className="min-w-0 flex-1 text-left" onClick={() => void setId(n.id)}>
-                      <p className="truncate text-xs sm:text-sm font-bold">{n.title || "Untitled"}</p>
-                      <p className="truncate text-[11px] opacity-75">
-                        {n.content.replace(/[#*>`-]/g, "").trim().slice(0, 48) || "Empty note"}
-                      </p>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-[10px] opacity-70 num">
-                        <span>{n.content.trim() ? n.content.trim().split(/\s+/).length : 0}w</span>
-                        <span>·</span>
-                        <span>{format(n.updatedAt, "d MMM")}</span>
-                        {n.tags[0] && (
-                          <span className="rounded-full bg-lavender/70 px-1.5 py-px font-bold text-ink">
-                            #{n.tags[0]}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                    <button
-                      aria-label={n.pinned ? "Unpin" : "Pin"}
-                      onClick={() => void notesRepo.update(n.id, { pinned: !n.pinned })}
-                      className="p-1 hover:text-ink"
+                    <div
+                      className={`tile flex h-full items-center gap-2 border-[1.5px] p-2.5 transition hover:bg-lavender/35 ${
+                        n.id === id ? "border-ink bg-lime text-ink shadow-xs" : "border-transparent"
+                      }`}
                     >
-                      <PushPin size={14} weight={n.pinned ? "fill" : "regular"} />
-                    </button>
-                    <button
-                      aria-label="Rename note"
-                      title="Rename note"
-                      className="p-1 hover:text-ink"
-                      onClick={() => setRename(n.id)}
-                    >
-                      <PencilSimple size={14} />
-                    </button>
-                    <button
-                      aria-label="Delete note"
-                      onClick={() => {
-                        if (id === n.id) void setId(null);
-                        void deleteWithUndo(notesRepo, n.id, "note");
-                      }}
-                      className="p-1 hover:text-ink"
-                    >
-                      <Trash size={14} />
-                    </button>
+                      <button className="min-w-0 flex-1 text-left" onClick={() => void setId(n.id)}>
+                        <p className="truncate text-xs sm:text-sm font-bold">{n.title || "Untitled"}</p>
+                        <p className="truncate text-[11px] opacity-75">
+                          {n.content.replace(/[#*>`-]/g, "").trim().slice(0, 48) || "Empty note"}
+                        </p>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-[10px] opacity-70 num">
+                          <span>{n.content.trim() ? n.content.trim().split(/\s+/).length : 0}w</span>
+                          <span>·</span>
+                          <span>{format(n.updatedAt, "d MMM")}</span>
+                          {n.tags[0] && (
+                            <span className="rounded-full bg-lavender/70 px-1.5 py-px font-bold text-ink">
+                              #{n.tags[0]}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                      <button
+                        aria-label={n.pinned ? "Unpin" : "Pin"}
+                        onClick={() => void notesRepo.update(n.id, { pinned: !n.pinned })}
+                        className="p-1 hover:text-ink"
+                      >
+                        <PushPin size={14} weight={n.pinned ? "fill" : "regular"} />
+                      </button>
+                      <button
+                        aria-label="Rename note"
+                        title="Rename note"
+                        className="p-1 hover:text-ink"
+                        onClick={() => setRename(n.id)}
+                      >
+                        <PencilSimple size={14} />
+                      </button>
+                      <button
+                        aria-label="Delete note"
+                        onClick={() => {
+                          if (id === n.id) void setId(null);
+                          void deleteWithUndo(notesRepo, n.id, "note");
+                        }}
+                        className="p-1 hover:text-ink"
+                      >
+                        <Trash size={14} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            {filtered.length < 4 && (
+              <button
+                type="button"
+                onClick={() => void create()}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-line/50 bg-soft/40 py-3 text-xs font-bold text-muted opacity-70 transition hover:border-ink hover:text-fg hover:opacity-100"
+              >
+                <Plus size={14} weight="bold" /> New note
+              </button>
+            )}
+          </>
         )}
       </div>
     </BentoCard>

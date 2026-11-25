@@ -73,79 +73,136 @@ export function SettingsPage() {
         >
           <ScrollArea className="flex-1 min-h-0 pr-2">
             {tab === "profile" && (
-              <div className="grid gap-6 py-2 lg:grid-cols-12 items-start">
-                {/* Left Column: Profile Preview Card */}
-                <div className="tile lg:col-span-4 flex flex-col items-center text-center gap-3 p-5 border border-line/40 bg-soft/60">
-                  <span
-                    className="font-display grid size-20 place-items-center rounded-full border-[2px] border-ink text-3xl text-ink shadow-sm shrink-0"
-                    style={{ background: `hsl(${hue(s.avatarSeed)} 80% 75%)` }}
-                    aria-hidden
-                  >
-                    {s.name.slice(0, 1).toUpperCase()}
-                  </span>
-                  <div>
-                    <p className="font-display text-xl font-extrabold">{s.name}</p>
-                    <span className="inline-block mt-1 rounded-full border border-ink/40 bg-lime px-3 py-0.5 text-[11px] font-bold text-ink">
-                      {s.title}
+              <div className="grid gap-5 py-1 lg:grid-cols-12 items-stretch">
+                {/* Left Column: Tall Profile Preview + Lifetime Stats */}
+                <div className="tile lg:col-span-4 flex flex-col justify-between gap-4 p-5 border border-line/40 bg-lavender/25">
+                  <div className="flex flex-col items-center text-center gap-2.5">
+                    <span
+                      className="font-display grid size-20 place-items-center rounded-full border-[2px] border-ink text-3xl text-ink shadow-sm shrink-0"
+                      style={{ background: `hsl(${hue(s.avatarSeed)} 80% 75%)` }}
+                      aria-hidden
+                    >
+                      {s.name.slice(0, 1).toUpperCase()}
                     </span>
-                  </div>
-                  <div className="w-full pt-2 flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span>Lv {lp.level}</span>
-                      <span className="num text-muted">{lp.into} / {lp.need} XP</span>
+                    <div>
+                      <p className="font-display text-xl font-extrabold">{s.name}</p>
+                      <span className="inline-block mt-1 rounded-full border border-ink/40 bg-lime px-3 py-0.5 text-[11px] font-bold text-ink">
+                        {s.title}
+                      </span>
                     </div>
-                    <ProgressBar pct={lp.need > 0 ? lp.into / lp.need : 0} color="var(--color-violet)" />
+                    <div className="w-full pt-1 flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span>Lv {lp.level}</span>
+                        <span className="num text-muted">{lp.into} / {lp.need} XP</span>
+                      </div>
+                      <ProgressBar pct={lp.need > 0 ? lp.into / lp.need : 0} color="var(--color-violet)" />
+                    </div>
+                  </div>
+
+                  {/* Lifetime Stats */}
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-line/15">
+                    <div className="rounded-xl bg-surface/80 p-2.5 text-center">
+                      <span className="block text-[10px] font-extrabold uppercase tracking-wider text-muted">Focus</span>
+                      <span className="font-display num text-lg font-extrabold">{(g.focusMinutes / 60).toFixed(1)}h</span>
+                    </div>
+                    <div className="rounded-xl bg-surface/80 p-2.5 text-center">
+                      <span className="block text-[10px] font-extrabold uppercase tracking-wider text-muted">Quests</span>
+                      <span className="font-display num text-lg font-extrabold">{g.tasksDone}</span>
+                    </div>
+                    <div className="rounded-xl bg-surface/80 p-2.5 text-center">
+                      <span className="block text-[10px] font-extrabold uppercase tracking-wider text-muted">Streak</span>
+                      <span className="font-display num text-lg font-extrabold">{g.streak}d</span>
+                    </div>
+                    <div className="rounded-xl bg-surface/80 p-2.5 text-center">
+                      <span className="block text-[10px] font-extrabold uppercase tracking-wider text-muted">Coins</span>
+                      <span className="font-display num text-lg font-extrabold">{g.coins}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Column: Form Grid */}
-                <div className="lg:col-span-8 flex flex-col gap-4">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Display name">
-                      <input
-                        className="input"
-                        defaultValue={s.name}
-                        onBlur={(e) => void updateSettings({ name: e.target.value.trim() || "Scholar" })}
-                      />
-                    </Field>
-                    <Field label="Avatar seed">
-                      <input
-                        className="input"
-                        defaultValue={s.avatarSeed}
-                        onBlur={(e) => void updateSettings({ avatarSeed: e.target.value })}
-                      />
-                    </Field>
+                {/* Right Column: Form Grid + Achievements + Danger Strip */}
+                <div className="lg:col-span-8 flex flex-col justify-between gap-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label="Display name">
+                        <input
+                          className="input"
+                          defaultValue={s.name}
+                          onBlur={(e) => void updateSettings({ name: e.target.value.trim() || "Scholar" })}
+                        />
+                      </Field>
+                      <Field label="Avatar seed">
+                        <input
+                          className="input"
+                          defaultValue={s.avatarSeed}
+                          onBlur={(e) => void updateSettings({ avatarSeed: e.target.value })}
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label="Main goal">
+                        <input
+                          className="input"
+                          defaultValue={s.goal}
+                          onBlur={(e) => void updateSettings({ goal: e.target.value })}
+                        />
+                      </Field>
+                      <Field label="Daily focus goal (minutes)">
+                        <input
+                          className="input"
+                          type="number"
+                          min={10}
+                          defaultValue={s.focusGoalMin}
+                          onBlur={(e) => void updateSettings({ focusGoalMin: Math.max(10, Number(e.target.value) || 120) })}
+                        />
+                      </Field>
+                    </div>
+
+                    <label className="flex items-center justify-between gap-4 rounded-2xl border border-line bg-soft/40 p-3 text-xs sm:text-sm font-bold cursor-pointer">
+                      <span>Notify me when a break ends or a streak is at risk</span>
+                      <Switch checked={s.notifications} onCheckedChange={(v) => void notify(v)} />
+                    </label>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Main goal">
-                      <input
-                        className="input"
-                        defaultValue={s.goal}
-                        onBlur={(e) => void updateSettings({ goal: e.target.value })}
-                      />
-                    </Field>
-                    <Field label="Daily focus goal (minutes)">
-                      <input
-                        className="input"
-                        type="number"
-                        min={10}
-                        defaultValue={s.focusGoalMin}
-                        onBlur={(e) => void updateSettings({ focusGoalMin: Math.max(10, Number(e.target.value) || 120) })}
-                      />
-                    </Field>
+                  {/* Achievements / Titles grid */}
+                  <div className="rounded-2xl border border-line/20 bg-soft/30 p-3">
+                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted mb-2">Titles & Milestones</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { title: "Rookie Scholar", unlocked: true },
+                        { title: "Deep Diver", unlocked: g.focusMinutes >= 60 },
+                        { title: "Quest Hunter", unlocked: g.tasksDone >= 5 },
+                        { title: "7-Day Flame", unlocked: g.streak >= 7 },
+                      ].map((ach) => (
+                        <div
+                          key={ach.title}
+                          className={`rounded-xl border px-2.5 py-2 text-center text-xs font-bold ${
+                            ach.unlocked
+                              ? "border-ink bg-lime/70 text-ink"
+                              : "border-dashed border-line/50 bg-surface/50 text-muted opacity-50"
+                          }`}
+                        >
+                          {ach.title}
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  <label className="flex items-center justify-between gap-4 rounded-2xl border border-line bg-soft/40 p-3.5 text-xs sm:text-sm font-bold cursor-pointer">
-                    <span>Notify me when a break ends or a streak is at risk</span>
-                    <Switch checked={s.notifications} onCheckedChange={(v) => void notify(v)} />
-                  </label>
-
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <Link className="btn btn-sm text-xs" href="/login">Character creation</Link>
-                    <Link className="btn btn-sm text-xs" href="/privacy">Privacy</Link>
-                    <button className="btn btn-sm text-xs" onClick={() => setUI({ changelog: true })}>Version 1.0.0</button>
-                    <button className="btn btn-sm text-xs" onClick={() => setUI({ shortcuts: true })}>Shortcuts</button>
+                  {/* Action & Danger-zone strip */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-line/15">
+                    <div className="flex flex-wrap gap-2">
+                      <Link className="btn btn-sm text-xs" href="/login">Character creation</Link>
+                      <Link className="btn btn-sm text-xs" href="/privacy">Privacy</Link>
+                      <button className="btn btn-sm text-xs" onClick={() => setUI({ changelog: true })}>v1.0.0</button>
+                      <button className="btn btn-sm text-xs" onClick={() => setUI({ shortcuts: true })}>Shortcuts</button>
+                    </div>
+                    <button
+                      className="btn btn-sm text-xs border-red-500/60 text-red-600 hover:bg-red-500/10"
+                      onClick={() => setTab("data")}
+                    >
+                      Data & Reset
+                    </button>
                   </div>
                 </div>
               </div>

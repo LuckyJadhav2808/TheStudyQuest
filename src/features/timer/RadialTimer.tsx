@@ -76,14 +76,14 @@ export function RadialTimer({
       <div className="absolute text-center select-none pointer-events-none">
         <div
           className="font-display num font-extrabold leading-none text-fg"
-          style={{ fontSize: "clamp(22px, 20cqmin, 46px)" }}
+          style={{ fontSize: "clamp(28px, 24cqmin, 72px)" }}
         >
           {fmtClock(rem)}
         </div>
         {label && (
           <div
-            className="mt-1 font-bold uppercase tracking-widest text-muted"
-            style={{ fontSize: "clamp(9px, 5.5cqmin, 11px)" }}
+            className="mt-1.5 font-bold uppercase tracking-widest text-muted"
+            style={{ fontSize: "clamp(9px, 5.5cqmin, 12px)" }}
           >
             {label}
           </div>

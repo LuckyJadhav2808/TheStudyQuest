@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BlobBackdrop, CurvedCorner, StickerCard } from "@/components/shapes";
 import { BentoCard } from "@/components/shell/BentoCard";
+import { HeroCard } from "@/components/ui/design-primitives";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CountUp, Empty, IconBadge, Segmented } from "@/components/ui/misc";
 import { db } from "@/core/db";
@@ -91,7 +92,9 @@ export function FlowStation({ hidden, onPicker }: { hidden: string[]; onPicker: 
   };
 
   return (
-    <BentoCard
+    <HeroCard
+      tint="notes"
+      hardShadow
       title="Flow Station"
       subtitle="Pick a block, press start. XP lands when it ends."
       action={
@@ -109,50 +112,50 @@ export function FlowStation({ hidden, onPicker }: { hidden: string[]; onPicker: 
           </CurvedCorner>
         </div>
       }
-      decorations={<BlobBackdrop preset={0} color="var(--color-lavender)" className="-bottom-20 -left-12 size-80 pointer-events-none opacity-40" />}
       className="h-full gap-2"
     >
       <div className="flex h-full w-full flex-col items-center justify-around gap-3 sm:flex-row sm:justify-evenly py-1">
-        <div className="flex h-full max-h-[230px] w-full sm:w-auto items-center justify-center">
-          <RadialTimer
-            pct={t.pct}
-            rem={t.rem}
-            running={t.running}
-            label={t.kind === "focus" ? "Focus" : t.kind === "short" ? "Break" : "Long break"}
-          />
+        {/* Left column inside hero: Ring + Start button directly under time */}
+        <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2.5 flex-1">
+          <div className="flex h-full min-h-0 max-h-[210px] w-full items-center justify-center">
+            <RadialTimer
+              pct={t.pct}
+              rem={t.rem}
+              running={t.running}
+              label={t.kind === "focus" ? "Focus" : t.kind === "short" ? "Break" : "Long break"}
+            />
+          </div>
+          <button
+            className="btn btn-lime px-7 py-2 text-sm sm:text-base font-bold shadow-sm transition hover:scale-105 active:scale-95 shrink-0"
+            onClick={t.running ? t.pause : t.start}
+          >
+            {t.running ? <><Pause size={18} weight="fill" /> Pause</> : <><Play size={18} weight="fill" /> Start</>}
+          </button>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-3 shrink-0">
-          {/* Row 1: Start button + segmented preset control */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <button
-              className="btn btn-lime px-6 py-2 text-sm sm:text-base font-bold shadow-sm transition hover:scale-105 active:scale-95"
-              onClick={t.running ? t.pause : t.start}
-            >
-              {t.running ? <><Pause size={18} weight="fill" /> Pause</> : <><Play size={18} weight="fill" /> Start</>}
-            </button>
-            <div className="inline-flex rounded-full border-[1.5px] border-line bg-soft p-1">
-              <button className={`rounded-full px-3 py-1 text-xs font-bold transition ${t.kind === "focus" && t.mins.focus === 25 ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(25, "focus")}>25m</button>
-              <button className={`rounded-full px-3 py-1 text-xs font-bold transition ${t.kind === "focus" && t.mins.focus === 50 ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(50, "focus")}>50m</button>
-              <button className={`rounded-full px-3 py-1 text-xs font-bold transition ${t.kind === "long" ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(15, "long")}>15m</button>
-            </div>
+        {/* Right column inside hero: Presets + Chest + Exam */}
+        <div className="flex flex-col items-center sm:items-end justify-center gap-2.5 shrink-0">
+          <div className="inline-flex rounded-full border-[1.5px] border-line bg-surface p-1 shadow-2xs">
+            <button className={`rounded-full px-3.5 py-1 text-xs font-bold transition ${t.kind === "focus" && t.mins.focus === 25 ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(25, "focus")}>25m</button>
+            <button className={`rounded-full px-3.5 py-1 text-xs font-bold transition ${t.kind === "focus" && t.mins.focus === 50 ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(50, "focus")}>50m</button>
+            <button className={`rounded-full px-3.5 py-1 text-xs font-bold transition ${t.kind === "long" ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(15, "long")}>15m</button>
           </div>
 
-          {/* Row 2: Chest tile + Exam radar tile */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
             {!hidden.includes("chest") && <ChestTile />}
-            {!hidden.includes("exam") && <ExamTile />}
             <button
               onClick={onPicker}
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-line/60 px-3 py-1.5 text-xs font-bold text-muted hover:border-ink hover:text-fg transition"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-line/60 bg-surface/60 px-3 py-1.5 text-xs font-bold text-muted hover:border-ink hover:text-fg transition"
               aria-label="Customize widgets"
             >
               <Plus size={13} weight="bold" /> Widgets
             </button>
           </div>
+
+          {!hidden.includes("exam") && <ExamTile />}
         </div>
       </div>
-    </BentoCard>
+    </HeroCard>
   );
 }
 
@@ -232,10 +235,12 @@ export function QuestsCard() {
   );
 }
 
+const GHOST_BARS = [24, 48, 34, 62, 42, 54, 20];
+
 export function VelocityCard() {
   const logs = useLiveQuery(() => db.studyLogs.toArray(), [], []);
   const s = useSettings();
-  const data = useMemo(() => {
+  const raw = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const d = subDays(new Date(), 6 - i);
       const k = todayKey(d);
@@ -243,22 +248,25 @@ export function VelocityCard() {
       return {
         day: format(d, "EEE"),
         min,
-        displayMin: min > 0 ? min : Math.max(4, Math.round(s.focusGoalMin * 0.04)),
-        isEmpty: min === 0,
         isToday: i === 6,
       };
     });
-  }, [logs, s.focusGoalMin]);
+  }, [logs]);
 
-  const total = data.reduce((a, d) => a + d.min, 0);
-  const maxDomain = Math.max(s.focusGoalMin, ...data.map((d) => d.min));
+  const total = raw.reduce((a, d) => a + d.min, 0);
+  const allEmpty = total === 0;
+  const data = raw.map((d, i) => ({
+    ...d,
+    displayMin: allEmpty ? GHOST_BARS[i] : d.min > 0 ? d.min : Math.max(4, Math.round(s.focusGoalMin * 0.04)),
+  }));
+  const maxDomain = Math.max(s.focusGoalMin, ...data.map((d) => d.displayMin));
 
   return (
     <BentoCard
       title="Study velocity"
-      subtitle={`Goal ${s.focusGoalMin}m / day`}
+      subtitle={allEmpty ? "Your week starts here." : `Goal ${s.focusGoalMin}m / day`}
       action={<span className="font-display num text-base sm:text-lg font-bold text-teal">{(total / 60).toFixed(1)}h</span>}
-      className="h-full gap-0.5"
+      className="h-full gap-0.5 bg-teal/8"
     >
       <div className="h-full min-h-0 w-full flex-1 pt-0.5">
         <ResponsiveContainer width="100%" height="100%">
@@ -289,9 +297,15 @@ export function VelocityCard() {
               {data.map((entry, idx) => (
                 <Cell
                   key={idx}
-                  fill={entry.isToday ? "#D9FF45" : "color-mix(in srgb, var(--fg) 15%, transparent)"}
-                  stroke={entry.isToday ? "#0b0b0c" : "transparent"}
-                  strokeWidth={entry.isToday ? 1.2 : 0}
+                  fill={
+                    allEmpty
+                      ? "color-mix(in srgb, var(--fg) 10%, transparent)"
+                      : entry.isToday
+                      ? "#D9FF45"
+                      : "color-mix(in srgb, var(--fg) 18%, transparent)"
+                  }
+                  stroke={!allEmpty && entry.isToday ? "#0b0b0c" : "transparent"}
+                  strokeWidth={!allEmpty && entry.isToday ? 1.2 : 0}
                 />
               ))}
             </Bar>
@@ -302,6 +316,8 @@ export function VelocityCard() {
   );
 }
 
+const EQ_HEIGHTS = [42, 78, 56, 92, 64, 85, 48, 72];
+
 export function LoFiCard() {
   const { vols, preset, stopAll } = useAmbient();
   const playing = CHANNELS.some((c) => vols[c.id] > 0);
@@ -310,19 +326,10 @@ export function LoFiCard() {
   return (
     <BentoCard
       title="Lo-Fi"
-      subtitle="Rain and cafe murmur, local on device."
-      className="h-full gap-2"
-    >
-      <div className="flex h-full w-full items-center justify-center gap-3">
+      subtitle="Rain & Cafe Murmur · Local audio"
+      action={
         <button
-          className="btn btn-lime btn-icon size-11"
-          aria-label={playing ? "Pause lo-fi" : "Play lo-fi"}
-          onClick={() => (playing ? stopAll() : preset({ rain: 0.5, cafe: 0.3 }))}
-        >
-          {playing ? <Pause weight="fill" size={20} /> : <Play weight="fill" size={20} />}
-        </button>
-        <button
-          className={`chip text-xs ${bin ? "bg-teal text-ink font-bold" : ""}`}
+          className={`chip !min-h-7 text-[11px] ${bin ? "bg-teal text-ink font-bold" : ""}`}
           aria-pressed={bin}
           onClick={() => {
             if (bin) stopBinaural();
@@ -330,9 +337,45 @@ export function LoFiCard() {
             setBin(!bin);
           }}
         >
-          <Headphones size={15} weight="bold" />
-          Alpha 10Hz{bin ? " on" : ""}
+          <Headphones size={13} weight="bold" />
+          10Hz{bin ? " on" : ""}
         </button>
+      }
+      className="h-full gap-2"
+    >
+      <div className="flex h-full w-full flex-col justify-between gap-2 pt-1">
+        <div className="flex items-center gap-3">
+          <button
+            className="btn btn-lime btn-icon size-10 shrink-0"
+            aria-label={playing ? "Pause lo-fi" : "Play lo-fi"}
+            onClick={() => (playing ? stopAll() : preset({ rain: 0.5, cafe: 0.3 }))}
+          >
+            {playing ? <Pause weight="fill" size={18} /> : <Play weight="fill" size={18} />}
+          </button>
+
+          {/* Equaliser bars (animate when playing, paused when stopped) */}
+          <div className="flex h-9 flex-1 items-end gap-1.5 rounded-2xl bg-soft/70 px-3 py-1.5" aria-hidden>
+            {EQ_HEIGHTS.map((h, i) => (
+              <span
+                key={i}
+                className={`flex-1 rounded-full transition-all duration-300 ${playing ? "bg-lime border border-ink/50 animate-pulse" : "bg-fg/15"}`}
+                style={{
+                  height: playing ? `${h}%` : `${Math.round(h * 0.45)}%`,
+                  animationDelay: `${i * 110}ms`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Progress track */}
+        <div className="flex items-center gap-2 text-[10px] font-mono text-muted">
+          <span>{playing ? "LIVE" : "IDLE"}</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-soft">
+            <div className={`h-full rounded-full transition-all duration-500 ${playing ? "w-2/3 bg-teal" : "w-1/4 bg-fg/20"}`} />
+          </div>
+          <span>∞</span>
+        </div>
       </div>
     </BentoCard>
   );
@@ -361,11 +404,13 @@ export function NotesDeck({ onPicker }: { onPicker?: () => void }) {
       className="h-full gap-1 overflow-hidden bg-lavender/25"
     >
       {notes.length === 0 ? (
-        <Empty
-          title="No notes yet"
-          hint="Create quick markdown study notes."
-          action={<Link href="/notes" className="btn btn-lime btn-sm">Write one</Link>}
-        />
+        <div className="flex h-full items-center justify-between gap-3 rounded-2xl border border-dashed border-line/40 bg-surface/60 px-4 py-2">
+          <div className="min-w-0">
+            <p className="font-display text-sm font-extrabold">No notes yet</p>
+            <p className="text-[11px] text-muted truncate">Quick markdown & KaTeX notes.</p>
+          </div>
+          <Link href="/notes" className="btn btn-lime btn-sm shrink-0">Write one</Link>
+        </div>
       ) : (
         <div className="relative h-full min-h-0 w-full flex-1 pt-1">
           {notes.map((n, i) => (
