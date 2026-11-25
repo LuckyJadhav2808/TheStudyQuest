@@ -75,14 +75,18 @@ export function Header() {
       className="flex h-14 sm:h-16 shrink-0 items-center justify-between gap-3 pt-2 pb-1 border-b border-line/10 bg-canvas/80 backdrop-blur-sm z-30"
     >
       {/* Left: Avatar + Page Title + conditional subtitle */}
-      <div className="min-w-0 flex items-center gap-2.5">
-        <SeededAvatar seed={s.avatarSeed || "strobi"} size={32} className="hidden sm:inline-grid" />
-        <div className="min-w-0 flex items-baseline gap-3">
-          <h1 className="font-display text-balance text-lg sm:text-3xl font-extrabold text-fg leading-tight line-clamp-1 sm:line-clamp-none" suppressHydrationWarning>
+      <div className="min-w-0 flex-1 flex items-center gap-2.5">
+        <SeededAvatar seed={s.avatarSeed || "strobi"} size={32} className="hidden shrink-0 sm:inline-grid" />
+        <div className="min-w-0 flex-1 flex items-baseline gap-3">
+          <h1
+            title={title}
+            className="font-display truncate text-lg sm:text-2xl font-extrabold text-fg leading-tight"
+            suppressHydrationWarning
+          >
             {title}
           </h1>
           {subtitle && (
-            <span className="hidden md:[@media(min-height:800px)]:inline-block truncate text-xs text-muted font-medium" suppressHydrationWarning>
+            <span className="hidden shrink-0 md:[@media(min-height:800px)]:inline-block truncate text-xs text-muted font-medium" suppressHydrationWarning>
               {subtitle}
             </span>
           )}
