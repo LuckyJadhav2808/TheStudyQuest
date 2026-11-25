@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { FileArrowUp, Pause, Play, SpeakerHigh } from "@phosphor-icons/react";
+import { FileArrowUp, Pause, Play, SpeakerHigh, Clock } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
-import { BentoCard } from "@/components/shell/BentoCard";
+import { HeroCard } from "@/components/ui/design-primitives";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DashedDropzone } from "@/components/ui/dropzone";
 import { Empty, PageFrame, Segmented } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
 import { Slider } from "@/components/ui/slider";
@@ -20,7 +21,15 @@ export function ReaderPage() {
   const [speaking, setSpeaking] = useState(false);
   const [tts, setTts] = useState({ rate: 1, pitch: 1, voice: "" });
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [recent, setRecent] = useState<{ name: string; kind: string }[]>([]);
   const host = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("sq-recent-docs");
+      if (raw) setRecent(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     const l = () => setVoices(window.speechSynthesis?.getVoices() ?? []);
@@ -56,6 +65,11 @@ export function ReaderPage() {
       } else {
         setDoc({ name: f.name, kind: "text", text: await f.text() });
       }
+      setRecent((prev) => {
+        const next = [{ name: f.name, kind: f.name.split(".").pop()?.toUpperCase() || "DOC" }, ...prev.filter((r) => r.name !== f.name)].slice(0, 4);
+        try { localStorage.setItem("sq-recent-docs", JSON.stringify(next)); } catch { /* ignore */ }
+        return next;
+      });
     } catch {
       strobiSay("That file could not be opened.", "error");
     }
@@ -95,7 +109,9 @@ export function ReaderPage() {
     ));
 
   const viewer = (
-    <BentoCard
+    <HeroCard
+      tint="tools"
+      hardShadow
       title="Reader"
       subtitle={doc?.name ?? "PDF, DOCX, XLSX, CSV, TXT, EPUB"}
       action={
@@ -167,39 +183,68 @@ export function ReaderPage() {
         </div>
       )}
 
-      <ScrollArea className="flex-1 min-h-0 rounded-[24px] bg-soft/50 p-3">
-        {!doc && <Empty title="Open a document" hint="Everything is parsed on your device. Nothing uploads." mood="happy" />}
-        {doc?.kind === "pdf" && (mode === "page" ? <div ref={host} className="flex flex-col items-center" /> : textView)}
-        {doc?.kind === "docx" && (bio ? textView : <div className="prose-sq" dangerouslySetInnerHTML={{ __html: doc.html ?? "" }} />)}
-        {doc?.kind === "text" && textView}
-        {doc?.kind === "pptx" && (
-          <Empty
-            title="PowerPoint preview is not available"
-            hint="PPTX rendering is not supported yet. Export slides to PDF to read them here."
-            mood="thinking"
+      {!doc ? (
+        <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
+          <DashedDropzone
+            accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.md,.epub,.pptx"
+            files={[]}
+            onFilesChange={(fl) => {
+              if (fl[0]) void open(fl[0]);
+            }}
+            title="Drop a PDF, DOCX, XLSX or TXT here"
+            subtitle="Parsed 100% locally in your browser. Nothing uploads."
+            className="flex-1 min-h-0 justify-center bg-surface/75"
           />
-        )}
-        {doc?.kind === "sheet" && doc.rows && (
-          <table className="w-full text-left text-xs">
-            <tbody>
-              {doc.rows.map((r, i) => (
-                <tr key={i} className={i === 0 ? "font-bold bg-surface/50" : "border-t border-line/10"}>
-                  {r.map((c, j) => (
-                    <td key={j} className="num px-2 py-1.5">{c}</td>
-                  ))}
-                </tr>
+          <div className="flex flex-wrap items-center justify-between gap-2 shrink-0">
+            <div className="flex flex-wrap gap-1.5">
+              {["PDF", "DOCX", "XLSX", "EPUB", "TXT"].map((fmt) => (
+                <span key={fmt} className="chip !min-h-6 !px-2.5 text-[11px] font-bold bg-surface/90">
+                  {fmt}
+                </span>
               ))}
-            </tbody>
-          </table>
-        )}
-      </ScrollArea>
-    </BentoCard>
+            </div>
+            {recent.length > 0 && (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted overflow-hidden">
+                <Clock size={13} className="shrink-0" />
+                <span className="truncate font-semibold">Recent: {recent.map((r) => r.name).join(" · ")}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <ScrollArea className="flex-1 min-h-0 rounded-[24px] bg-surface/85 p-4 border border-line/20">
+          {doc.kind === "pdf" && (mode === "page" ? <div ref={host} className="flex flex-col items-center" /> : textView)}
+          {doc.kind === "docx" && (bio ? textView : <div className="prose-sq" dangerouslySetInnerHTML={{ __html: doc.html ?? "" }} />)}
+          {doc.kind === "text" && textView}
+          {doc.kind === "pptx" && (
+            <Empty
+              title="PowerPoint preview is not available"
+              hint="PPTX rendering is not supported yet. Export slides to PDF to read them here."
+              mood="thinking"
+            />
+          )}
+          {doc.kind === "sheet" && doc.rows && (
+            <table className="w-full text-left text-xs">
+              <tbody>
+                {doc.rows.map((r, i) => (
+                  <tr key={i} className={i === 0 ? "font-bold bg-surface/50" : "border-t border-line/10"}>
+                    {r.map((c, j) => (
+                      <td key={j} className="num px-2 py-1.5">{c}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </ScrollArea>
+      )}
+    </HeroCard>
   );
 
   return (
     <PageFrame title="Reader" subtitle="Read, listen, and edit documents without leaving the app.">
       <Panels
-        className="lg:grid-cols-12"
+        className="lg:grid-cols-12 lg:grid-rows-[minmax(0,1fr)]"
         panels={[
           { id: "view", label: "Reader", className: "lg:col-span-7", node: viewer },
           { id: "studio", label: "Studio", className: "lg:col-span-5", node: <StudioTools /> },

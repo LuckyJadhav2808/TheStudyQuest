@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Card, CardTitle } from "@/components/ui/misc";
+import { BentoCard } from "@/components/shell/BentoCard";
 import { scoresRepo } from "@/core/repos";
 import { payout } from "./arcadeUtils";
 
 interface Critter { x: number; y: number; r: number; born: number; life: number; color: string }
-const W = 360, H = 260, DURATION = 20000, COLORS = ["#D9FF45", "#FF8B4A", "#1FD6C1", "#B9A6FF"];
+const W = 400, H = 220, DURATION = 20000, COLORS = ["#D9FF45", "#FF8B4A", "#1FD6C1", "#B9A6FF"];
 export function PetCatch() {
   const ref = useRef<HTMLCanvasElement>(null);
   const [state, setState] = useState<"idle" | "play" | "done">("idle");
@@ -43,10 +43,33 @@ export function PetCatch() {
     if (idx >= 0) { critters.current.splice(idx, 1); scoreRef.current += 1; }
   };
   return (
-    <Card className="items-center gap-3">
-      <CardTitle sub="Tap the critters before they vanish. 20 seconds.">Pet Catch</CardTitle>
-      <canvas ref={ref} width={W} height={H} onPointerDown={hit} aria-label="Pet Catch game area" className="max-h-full w-full max-w-md touch-none rounded-[24px] border-[1.5px] border-line bg-paper" />
-      {state !== "play" && <div className="text-center">{state === "done" && <p className="mb-2 font-display text-xl" role="status">Caught {score}. {paid > 0 ? `+${paid} coins` : "No coins (cap reached or score too low)"}</p>}<button className="btn btn-lime" onClick={() => { setPaid(0); setState("play"); }}>{state === "done" ? "Play again" : "Start"}</button></div>}
-    </Card>
+    <BentoCard
+      title="Pet Catch"
+      subtitle="Tap the critters before they vanish. 20s."
+      action={
+        state !== "play" ? (
+          <button className="btn btn-lime btn-sm !min-h-8 text-xs" onClick={() => { setPaid(0); setState("play"); }}>
+            {state === "done" ? "Play again" : "Start"}
+          </button>
+        ) : undefined
+      }
+      className="h-full"
+    >
+      <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2">
+        <canvas
+          ref={ref}
+          width={W}
+          height={H}
+          onPointerDown={hit}
+          aria-label="Pet Catch game area"
+          className="h-full min-h-0 w-full flex-1 object-contain touch-none rounded-[20px] border-[1.5px] border-line/60 bg-paper"
+        />
+        {state === "done" && (
+          <p className="font-display text-sm font-bold shrink-0" role="status">
+            Caught {score}. {paid > 0 ? `+${paid} coins` : "No coins (cap reached or score too low)"}
+          </p>
+        )}
+      </div>
+    </BentoCard>
   );
 }

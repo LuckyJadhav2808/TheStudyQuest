@@ -171,7 +171,9 @@ export function Header() {
         </button>
 
         <button
-          className="btn btn-lime btn-icon shadow-sm hover:scale-105 active:scale-95"
+          className={`btn btn-icon shadow-sm hover:scale-105 active:scale-95 ${
+            ui.pageHeader?.actions ? "bg-surface text-fg hover:bg-soft" : "btn-lime"
+          }`}
           aria-label="Quick add task (C)"
           title="Quick add (C)"
           onClick={() => ui.set({ quickAdd: "task" })}

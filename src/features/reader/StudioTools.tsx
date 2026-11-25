@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
+import { ArrowClockwise, ArrowLeft, ArrowsMerge, FileText, Image as ImageIcon, Scan, Scissors, Stamp, Swap } from "@phosphor-icons/react";
 import { BentoCard } from "@/components/shell/BentoCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Segmented } from "@/components/ui/misc";
+import { ToolTile } from "@/components/ui/design-primitives";
 import { Field } from "@/components/ui/fields";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DashedDropzone } from "@/components/ui/dropzone";
@@ -14,20 +15,20 @@ import { downloadBlob } from "@/lib/utils";
 import { pdfText } from "./docUtils";
 
 type Tool = "merge" | "split" | "rotate" | "text" | "mark" | "convert" | "image" | "scan";
-const TOOLS: { value: Tool; label: string }[] = [
-  { value: "merge", label: "Merge" },
-  { value: "split", label: "Split" },
-  { value: "rotate", label: "Rotate" },
-  { value: "text", label: "Text" },
-  { value: "mark", label: "Watermark" },
-  { value: "convert", label: "Convert" },
-  { value: "image", label: "Image" },
-  { value: "scan", label: "Scan" },
+const TOOLS: { value: Tool; label: string; desc: string; icon: React.ReactNode }[] = [
+  { value: "merge", label: "Merge PDFs", desc: "Combine multiple files", icon: <ArrowsMerge size={18} weight="duotone" /> },
+  { value: "split", label: "Split pages", desc: "Extract page range", icon: <Scissors size={18} weight="duotone" /> },
+  { value: "rotate", label: "Rotate 90°", desc: "Fix page orientation", icon: <ArrowClockwise size={18} weight="duotone" /> },
+  { value: "text", label: "Extract text", desc: "Pull plain text", icon: <FileText size={18} weight="duotone" /> },
+  { value: "mark", label: "Watermark", desc: "Stamp or redact", icon: <Stamp size={18} weight="duotone" /> },
+  { value: "convert", label: "Convert", desc: "PDF to MD / HTML", icon: <Swap size={18} weight="duotone" /> },
+  { value: "image", label: "Compress img", desc: "Shrink image size", icon: <ImageIcon size={18} weight="duotone" /> },
+  { value: "scan", label: "OCR scan", desc: "Image to text + AI", icon: <Scan size={18} weight="duotone" /> },
 ];
 const save = (name: string, bytes: Uint8Array) => downloadBlob(name, bytes as BlobPart, "application/pdf");
 
 export function StudioTools() {
-  const [tool, setTool] = useState<Tool>("merge");
+  const [tool, setTool] = useState<Tool | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [range, setRange] = useState("1-1");
   const [mark, setMark] = useState("CONFIDENTIAL");
@@ -35,6 +36,7 @@ export function StudioTools() {
   const [busy, setBusy] = useState(false);
   const [out, setOut] = useState("");
   const [info, setInfo] = useState("");
+  const activeTool = TOOLS.find((t) => t.value === tool);
   const accept =
     tool === "image" || tool === "scan"
       ? "image/*"
@@ -168,108 +170,115 @@ export function StudioTools() {
 
   return (
     <BentoCard
-      title="Document studio"
-      subtitle="Local processing, files never upload."
+      title={activeTool ? activeTool.label : "Document studio"}
+      subtitle={activeTool ? activeTool.desc : "Local processing, files never upload."}
+      action={
+        activeTool ? (
+          <button
+            type="button"
+            className="btn btn-sm !min-h-8 !px-3 text-xs"
+            onClick={() => {
+              setTool(null);
+              setFiles([]);
+              setOut("");
+              setInfo("");
+            }}
+          >
+            <ArrowLeft size={14} weight="bold" /> All tools
+          </button>
+        ) : undefined
+      }
       className="gap-2.5 h-full"
     >
-      <div className="overflow-x-auto no-scrollbar shrink-0 pb-1">
-        <Segmented
-          value={tool}
-          onChange={(t) => {
-            setTool(t);
-            setFiles([]);
-            setOut("");
-            setInfo("");
-          }}
-          options={TOOLS}
-          className="shrink-0"
-        />
-      </div>
-
-      <ScrollArea className="flex-1 min-h-0 pr-1">
-        <div className="flex flex-col gap-3 pb-2">
-          <DashedDropzone
-            accept={accept}
-            multiple={tool === "merge"}
-            files={files}
-            onFilesChange={setFiles}
-            title={tool === "merge" ? "Drop PDF files (or click to pick several)" : "Drop document here or click to browse"}
-            subtitle="Processed entirely in-browser with WebAssembly"
-          />
-
-          {tool === "split" && (
-            <Field label="Page range (e.g. 1-3)">
-              <input
-                className="input !min-h-9 text-xs"
-                value={range}
-                onChange={(e) => setRange(e.target.value)}
-                placeholder="1-3"
+      {!tool ? (
+        <ScrollArea className="flex-1 min-h-0 pr-1">
+          <div className="grid grid-cols-2 gap-2.5 pb-2">
+            {TOOLS.map((t) => (
+              <ToolTile
+                key={t.value}
+                icon={t.icon}
+                label={t.label}
+                desc={t.desc}
+                onClick={() => {
+                  setTool(t.value);
+                  setFiles([]);
+                  setOut("");
+                  setInfo("");
+                }}
               />
-            </Field>
-          )}
-
-          {tool === "mark" && (
-            <div className="flex flex-col gap-2 rounded-2xl border border-line bg-soft/30 p-3">
-              <label className="flex items-center gap-2.5 text-xs font-bold cursor-pointer">
-                <Checkbox checked={redact} onCheckedChange={(c) => setRedact(Boolean(c))} />
-                <span>Redact mode (black bar near top)</span>
-              </label>
-              {!redact && (
-                <Field label="Watermark text">
-                  <input
-                    className="input !min-h-9 text-xs"
-                    value={mark}
-                    onChange={(e) => setMark(e.target.value)}
-                  />
-                </Field>
-              )}
-            </div>
-          )}
-
-          <button
-            className="btn btn-lime self-start px-5 py-2 text-xs font-bold shadow-xs hover:scale-105 active:scale-95 transition"
-            onClick={() => void go()}
-            disabled={busy || !files.length}
-          >
-            {busy ? "Processing..." : "Run tool"}
-          </button>
-
-          {!out && !info && (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line/60 bg-soft/25 p-4 text-center mt-1">
-              <p className="text-xs font-bold text-fg">Ready to run</p>
-              <p className="text-[11px] text-muted max-w-xs mt-0.5">
-                {tool === "merge" && "Select 2 or more PDFs to merge into a single file."}
-                {tool === "split" && "Extract a sub-range of pages into a new PDF."}
-                {tool === "rotate" && "Rotates all pages 90° clockwise."}
-                {tool === "text" && "Extracts text from PDF into a .txt file."}
-                {tool === "mark" && "Stamps watermark or confidential redaction bars."}
-                {tool === "convert" && "Converts markdown to PDF or PDF to markdown."}
-                {tool === "image" && "Optimizes and compresses image attachments."}
-                {tool === "scan" && "OCR extraction from photos and scans."}
-              </p>
-            </div>
-          )}
-
-          {info && (
-            <div className="tile p-3 text-xs">
-              {tool === "scan" ? (
-                <MarkdownView source={info} className="!text-xs" />
-              ) : (
-                <p className="text-xs text-muted" role="status">{info}</p>
-              )}
-            </div>
-          )}
-
-          {out && (
-            <textarea
-              readOnly
-              className="input !min-h-32 font-mono text-xs rounded-2xl bg-surface border border-line p-3"
-              value={out}
-              aria-label="Tool output"
+            ))}
+          </div>
+        </ScrollArea>
+      ) : (
+        <ScrollArea className="flex-1 min-h-0 pr-1">
+          <div className="flex flex-col gap-3 pb-2">
+            <DashedDropzone
+              accept={accept}
+              multiple={tool === "merge"}
+              files={files}
+              onFilesChange={setFiles}
+              title={tool === "merge" ? "Drop PDF files (or click to pick several)" : "Drop document here or click to browse"}
+              subtitle="Processed entirely in-browser with WebAssembly"
             />
-          )}
-        </div>
-      </ScrollArea>
+
+            {tool === "split" && (
+              <Field label="Page range (e.g. 1-3)">
+                <input
+                  className="input !min-h-9 text-xs"
+                  value={range}
+                  onChange={(e) => setRange(e.target.value)}
+                  placeholder="1-3"
+                />
+              </Field>
+            )}
+
+            {tool === "mark" && (
+              <div className="flex flex-col gap-2 rounded-2xl border border-line bg-soft/30 p-3">
+                <label className="flex items-center gap-2.5 text-xs font-bold cursor-pointer">
+                  <Checkbox checked={redact} onCheckedChange={(c) => setRedact(Boolean(c))} />
+                  <span>Redact mode (black bar near top)</span>
+                </label>
+                {!redact && (
+                  <Field label="Watermark text">
+                    <input
+                      className="input !min-h-9 text-xs"
+                      value={mark}
+                      onChange={(e) => setMark(e.target.value)}
+                    />
+                  </Field>
+                )}
+              </div>
+            )}
+
+            <button
+              className="btn btn-lime self-start px-5 py-2 text-xs font-bold shadow-xs hover:scale-105 active:scale-95 transition"
+              onClick={() => void go()}
+              disabled={busy || !files.length}
+            >
+              {busy ? "Processing..." : "Run tool"}
+            </button>
+
+            {info && (
+              <div className="tile p-3 text-xs">
+                {tool === "scan" ? (
+                  <MarkdownView source={info} className="!text-xs" />
+                ) : (
+                  <p className="text-xs text-muted" role="status">{info}</p>
+                )}
+              </div>
+            )}
+
+            {out && (
+              <textarea
+                readOnly
+                className="input !min-h-32 font-mono text-xs rounded-2xl bg-surface border border-line p-3"
+                value={out}
+                aria-label="Tool output"
+              />
+            )}
+          </div>
+        </ScrollArea>
+      )}
     </BentoCard>
   );
 }

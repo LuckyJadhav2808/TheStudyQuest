@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FilePlus, Play, Robot, Trash, X, Eye } from "@phosphor-icons/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Panels } from "@/components/shell/Panels";
-import { Card, CardTitle, Skeleton } from "@/components/ui/misc";
+import { BentoCard } from "@/components/shell/BentoCard";
+import { Card, Skeleton } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
 import { db } from "@/core/db";
 import { emit } from "@/core/events";
@@ -75,49 +76,118 @@ export function CodeWorkspace({ project }: { project: Project }) {
   if (!files) return <Card><Skeleton className="h-full" /></Card>;
 
   const tree = (
-    <Card className="gap-2">
-      <CardTitle right={<button className="btn btn-sm btn-icon" aria-label="New file" onClick={() => void addFile()}><FilePlus size={18} /></button>}>{project === "ide" ? "Project" : "Files"}</CardTitle>
-      <div className="scroll-thin min-h-0 flex-1 space-y-1">
-        {files.map((f) => (
-          <div key={f.id} className={`flex items-center rounded-full ${f.id === active ? "bg-lime text-ink" : "hover:bg-soft"}`}>
-            <button className="min-h-9 flex-1 truncate px-3 text-left font-mono text-xs font-bold" onClick={() => { setActive(f.id); setOpen((o) => (o.includes(f.id) ? o : [...o, f.id])); }}>{f.name}</button>
-            <button aria-label={`Delete ${f.name}`} className="px-2" onClick={() => { void codeFilesRepo.remove(f.id); setOpen((o) => o.filter((x) => x !== f.id)); if (active === f.id) setActive(null); }}><Trash size={14} /></button>
-          </div>
-        ))}
+    <BentoCard
+      title={project === "ide" ? "Project" : "Files"}
+      action={
+        <button className="btn btn-sm btn-icon" aria-label="New file" onClick={() => void addFile()}>
+          <FilePlus size={16} />
+        </button>
+      }
+      className="h-full bg-lavender/20"
+    >
+      <div className="flex h-full min-h-0 flex-col justify-between gap-2">
+        <div className="scroll-thin min-h-0 flex-1 space-y-1">
+          {files.map((f) => (
+            <div key={f.id} className={`flex items-center rounded-full ${f.id === active ? "bg-lime text-ink" : "hover:bg-soft"}`}>
+              <button className="min-h-9 flex-1 truncate px-3 text-left font-mono text-xs font-bold" onClick={() => { setActive(f.id); setOpen((o) => (o.includes(f.id) ? o : [...o, f.id])); }}>{f.name}</button>
+              <button aria-label={`Delete ${f.name}`} className="px-2" onClick={() => { void codeFilesRepo.remove(f.id); setOpen((o) => o.filter((x) => x !== f.id)); if (active === f.id) setActive(null); }}><Trash size={14} /></button>
+            </div>
+          ))}
+        </div>
+        <div className="shrink-0 pt-1">
+          <Select value={theme} onChange={(v) => setTheme(v as CmTheme)} options={[{ value: "one-dark", label: "One Dark" }, { value: "nord", label: "Nord" }, { value: "dracula", label: "Dracula" }]} />
+        </div>
       </div>
-      <Select value={theme} onChange={(v) => setTheme(v as CmTheme)} options={[{ value: "one-dark", label: "One Dark" }, { value: "nord", label: "Nord" }, { value: "dracula", label: "Dracula" }]} />
-    </Card>
+    </BentoCard>
   );
+
   const editor = (
-    <Card className="gap-2">
-      <div className="flex shrink-0 items-center gap-1 overflow-x-auto no-scrollbar">
-        {open.map((id) => { const f = files.find((x) => x.id === id); return f ? (
-          <span key={id} className={`flex items-center rounded-full border-[1.5px] border-line ${id === active ? "bg-ink text-paper" : ""}`}><button className="min-h-9 px-3 font-mono text-xs font-bold" onClick={() => setActive(id)}>{f.name}</button><button aria-label={`Close ${f.name}`} className="pr-2" onClick={() => { setOpen((o) => o.filter((x) => x !== id)); if (active === id) setActive(open.find((x) => x !== id) ?? null); }}><X size={12} /></button></span>
-        ) : null; })}
-        <button className="btn btn-lime btn-sm ml-auto shrink-0" onClick={() => void run()} disabled={!cur || kernel.status === "busy"}><Play size={14} weight="fill" />Run</button>
+    <BentoCard className="h-full !bg-ink !text-paper border-ink" lift={false}>
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto no-scrollbar">
+          {open.map((id) => {
+            const f = files.find((x) => x.id === id);
+            return f ? (
+              <span key={id} className={`flex items-center rounded-full border border-white/20 ${id === active ? "bg-paper text-ink" : "text-paper/80 hover:bg-white/10"}`}>
+                <button className="min-h-8 px-3 font-mono text-xs font-bold" onClick={() => setActive(id)}>{f.name}</button>
+                <button aria-label={`Close ${f.name}`} className="pr-2.5" onClick={() => { setOpen((o) => o.filter((x) => x !== id)); if (active === id) setActive(open.find((x) => x !== id) ?? null); }}><X size={12} /></button>
+              </span>
+            ) : null;
+          })}
+          <button className="btn btn-lime btn-sm ml-auto shrink-0" onClick={() => void run()} disabled={!cur || kernel.status === "busy"}>
+            <Play size={14} weight="fill" /> Run
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-hidden rounded-[20px] border border-white/10">
+          {cur ? <CodeEditor value={value} onChange={edit} language={lang} theme={theme} /> : <p className="p-4 text-sm text-paper/60">Open a file from the tree.</p>}
+        </div>
+        {issue && <p className="text-xs font-bold text-red-400 shrink-0" role="alert">Syntax: {issue}</p>}
+        {lang === "python" && kernel.status === "loading" && <p className="text-xs text-paper/70 shrink-0">{kernel.message}...</p>}
       </div>
-      <div className="min-h-0 flex-1">{cur ? <CodeEditor value={value} onChange={edit} language={lang} theme={theme} /> : <p className="p-4 text-sm text-muted">Open a file from the tree.</p>}</div>
-      {issue && <p className="text-xs font-bold text-red-600" role="alert">Syntax: {issue}</p>}
-      {lang === "python" && kernel.status === "loading" && <p className="text-xs text-muted">{kernel.message}...</p>}
-    </Card>
+    </BentoCard>
   );
+
   const out = (
-    <Card className="gap-2">
-      <CardTitle right={<span className="flex gap-1"><Eye size={18} aria-hidden /><Robot size={18} aria-hidden /></span>}>Output</CardTitle>
-      {preview && <iframe ref={frame} title="Live preview" sandbox="allow-scripts" srcDoc={preview} className="h-1/2 min-h-24 w-full shrink-0 rounded-[20px] border border-line/30 bg-white" />}
-      <div className="scroll-thin min-h-16 flex-1 rounded-[20px] bg-ink p-3 font-mono text-xs text-paper" role="log" aria-label="Console">
-        {lines.length === 0 ? <span className="opacity-60">Console output appears here.</span> : lines.map((l, i) => <pre key={i} className={`whitespace-pre-wrap ${l.level === "error" ? "text-red-400" : l.level === "warn" ? "text-yellow-300" : ""}`}>{l.text}</pre>)}
-      </div>
-      <div className="flex flex-wrap gap-1">{AI_ACTIONS.map(([l, p]) => <button key={l} className="chip !min-h-8 text-xs" disabled={ai.busy || !cur} onClick={() => void ask(p)}>{l}</button>)}</div>
-      {(ai.out || ai.busy) && <div className="scroll-thin max-h-48 rounded-[20px] bg-soft p-3">{ai.out ? <MarkdownView source={ai.out} className="!text-xs" /> : "Thinking..."}</div>}
-    </Card>
+    <div style={{ gap: "var(--gutter, 16px)" }} className="flex h-full min-h-0 flex-col">
+      {/* Top: Live Preview */}
+      <BentoCard
+        title="Preview"
+        action={<Eye size={18} className="text-muted" aria-hidden />}
+        className="flex-1 min-h-0"
+      >
+        {preview ? (
+          <iframe ref={frame} title="Live preview" sandbox="allow-scripts" srcDoc={preview} className="h-full w-full rounded-[18px] border border-line/20 bg-white" />
+        ) : (
+          <div className="grid h-full place-items-center rounded-[18px] border border-dashed border-line/40 bg-soft/40 p-4 text-center">
+            <p className="text-xs font-semibold text-muted">Click <span className="font-bold text-fg">Run</span> to render HTML/CSS/JS preview</p>
+          </div>
+        )}
+      </BentoCard>
+
+      {/* Bottom: AI pills above Console */}
+      <BentoCard
+        title="Console & AI"
+        action={<Robot size={18} className="text-violet" aria-hidden />}
+        className="flex-1 min-h-0"
+      >
+        <div className="flex h-full min-h-0 flex-col gap-2">
+          <div className="flex flex-wrap gap-1 shrink-0">
+            {AI_ACTIONS.map(([l, p]) => (
+              <button key={l} className="chip !min-h-7 !px-2.5 text-[11px] hover:bg-lavender/50" disabled={ai.busy || !cur} onClick={() => void ask(p)}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div className="scroll-thin min-h-0 flex-1 rounded-[18px] bg-ink p-3 font-mono text-xs text-paper" role="log" aria-label="Console">
+            {lines.length === 0 ? (
+              <span className="opacity-60">Console output appears here.</span>
+            ) : (
+              lines.map((l, i) => (
+                <pre key={i} className={`whitespace-pre-wrap ${l.level === "error" ? "text-red-400" : l.level === "warn" ? "text-yellow-300" : ""}`}>
+                  {l.text}
+                </pre>
+              ))
+            )}
+          </div>
+          {(ai.out || ai.busy) && (
+            <div className="scroll-thin max-h-36 shrink-0 rounded-[18px] bg-lavender/30 p-3 border border-line/20">
+              {ai.out ? <MarkdownView source={ai.out} className="!text-xs" /> : "Thinking..."}
+            </div>
+          )}
+        </div>
+      </BentoCard>
+    </div>
   );
+
   return (
-    <Panels className="lg:grid-cols-12 sm:grid-cols-2" panels={[
-      { id: "files", label: "Files", className: "lg:col-span-2 sm:col-span-2", node: tree },
-      { id: "editor", label: "Editor", className: "lg:col-span-6", node: editor },
-      { id: "out", label: "Output", className: "lg:col-span-4", node: out },
-    ]} />
+    <Panels
+      className="lg:grid-cols-12 lg:grid-rows-[minmax(0,1fr)] sm:grid-cols-2"
+      panels={[
+        { id: "files", label: "Files", className: "lg:col-span-2 sm:col-span-2", node: tree },
+        { id: "editor", label: "Editor", className: "lg:col-span-6", node: editor },
+        { id: "out", label: "Output", className: "lg:col-span-4", node: out },
+      ]}
+    />
   );
 }
 export type { CodeFile };
