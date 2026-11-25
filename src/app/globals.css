@@ -17,8 +17,9 @@
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --radius-card: 32px;
-  --radius-tile: 24px;
+  --radius-card: 36px;
+  --radius-hero: 40px;
+  --radius-tile: 28px;
 }
 
 /* ---------- Runtime (themeable) tokens ---------- */
@@ -151,7 +152,8 @@
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s;
   }
   .bento-card.lift:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.24);
   }
   .tile {
     border-radius: var(--radius-tile);

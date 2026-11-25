@@ -63,6 +63,25 @@ export function StickerCard({ children, className, tilt = -3 }: { children: Reac
   );
 }
 
+/** Gentle SVG wavy divider between card header and body. */
+export function WavyDivider({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 400 12"
+      preserveAspectRatio="none"
+      className={cn("h-2.5 w-full shrink-0 text-line/15", className)}
+    >
+      <path
+        d="M0 6 Q 25 1, 50 6 T 100 6 T 150 6 T 200 6 T 250 6 T 300 6 T 350 6 T 400 6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
 export function DashedAddTile({ label, onClick, className }: { label: string; onClick?: () => void; className?: string }) {
   return (
     <button type="button" onClick={onClick} className={cn("grid min-h-11 w-full place-items-center rounded-[24px] border-2 border-dashed border-current/40 p-3 text-sm font-bold text-muted transition hover:border-current hover:text-fg", className)}>

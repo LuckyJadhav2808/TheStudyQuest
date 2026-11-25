@@ -69,9 +69,9 @@ export function HeroCard({
           : rest.blob
       }
       className={cn(
-        "h-full",
+        "h-full !rounded-[40px]",
         TINT_CLASS[tint],
-        hardShadow && "!shadow-[4px_4px_0_var(--line)]",
+        hardShadow && "!shadow-[6px_6px_0_var(--line)]",
         className
       )}
       {...rest}

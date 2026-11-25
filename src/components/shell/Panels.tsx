@@ -1,8 +1,9 @@
 "use client";
 import { AnimatePresence, motion } from "motion/react";
 import { useState, type ReactNode } from "react";
-import { useIsMobile } from "@/components/ui/useMedia";
+import { useIsMobile, useReducedMotion } from "@/components/ui/useMedia";
 import { NotchTab } from "@/components/shapes";
+import { cardEnter } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 export interface Panel { id: string; label: string; className?: string; node: ReactNode }
@@ -10,6 +11,7 @@ export interface Panel { id: string; label: string; className?: string; node: Re
 /** Desktop/tablet: renders all panels in a grid. Mobile: one panel at a time with swipe + segmented notch tabs. */
 export function Panels({ panels, className }: { panels: Panel[]; className?: string }) {
   const mobile = useIsMobile();
+  const reduced = useReducedMotion();
   const [idx, setIdx] = useState(0);
   const wrap = "min-h-0 min-w-0 flex flex-col h-full";
   if (!mobile) {
@@ -18,10 +20,14 @@ export function Panels({ panels, className }: { panels: Panel[]; className?: str
         style={{ gap: "var(--gutter, 16px)" }}
         className={cn("grid min-h-0 flex-1", className)}
       >
-        {panels.map((p) => (
-          <div key={p.id} className={cn(wrap, p.className)}>
+        {panels.map((p, i) => (
+          <motion.div
+            key={p.id}
+            {...cardEnter(i, reduced)}
+            className={cn(wrap, p.className)}
+          >
             {p.node}
-          </div>
+          </motion.div>
         ))}
       </div>
     );

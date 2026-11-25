@@ -1,10 +1,11 @@
 "use client";
-import { animate } from "motion/react";
-import { useEffect, useRef, type ReactNode } from "react";
+import { animate, motion } from "motion/react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BlobBackdrop } from "@/components/shapes";
 import { StrobiFace } from "@/features/strobi/StrobiFace";
 import type { Mood } from "@/features/strobi/store";
+import { useMotionConfig } from "@/lib/motion";
 
 import { useUI } from "@/components/shell/ui-store";
 
@@ -30,13 +31,34 @@ export function ProgressBar({ pct, className, color = "var(--color-teal)" }: { p
   );
 }
 export function Segmented<T extends string>({ value, onChange, options, className }: { value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode }[]; className?: string }) {
+  const id = useId();
+  const { snappy } = useMotionConfig();
   return (
     <div role="tablist" className={cn("inline-flex rounded-full border-[1.5px] border-line bg-soft p-1", className)}>
-      {options.map((o) => (
-        <button key={o.value} role="tab" aria-selected={o.value === value} onClick={() => onChange(o.value)} className={cn("min-h-9 rounded-full px-3.5 text-[13px] font-bold transition", o.value === value ? "bg-ink text-paper" : "text-muted hover:text-fg")}>
-          {o.label}
-        </button>
-      ))}
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <button
+            key={o.value}
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(o.value)}
+            className={cn(
+              "relative min-h-9 rounded-full px-3.5 text-[13px] font-bold transition-colors cursor-pointer",
+              active ? "text-paper" : "text-muted hover:text-fg"
+            )}
+          >
+            {active && (
+              <motion.span
+                layoutId={`seg-${id}`}
+                transition={snappy}
+                className="absolute inset-0 rounded-full bg-ink"
+              />
+            )}
+            <span className="relative z-10">{o.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
