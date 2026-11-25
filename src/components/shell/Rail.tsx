@@ -11,7 +11,7 @@ import { useRows } from "@/features/shared/hooks";
 export function Rail() {
   const path = usePathname();
   const active = groupForPath(path);
-  const setUI = useUI((s) => s.set);
+  const { launcher, set: setUI } = useUI();
   const tasks = useRows(tasksRepo) ?? [];
   const hasDueTasks = tasks.some((t) => t.status !== "done");
 
@@ -21,10 +21,11 @@ export function Rail() {
   const renderItem = (g: (typeof GROUPS)[number]) => {
     const Icon = g.icon;
     const on = g.id === active;
+    const isOpen = launcher === g.id;
     const showDot = g.id === "plan" && hasDueTasks;
     const cls = cn(
-      "group relative grid place-items-center rounded-full transition shrink-0",
-      on ? "bg-paper text-ink shadow-[0_0_0_4px_#0b0b0c]" : "text-paper/75 hover:bg-white/10 hover:text-paper"
+      "group relative grid place-items-center rounded-full transition shrink-0 cursor-pointer",
+      on || isOpen ? "bg-paper text-ink shadow-[0_0_0_4px_#0b0b0c]" : "text-paper/75 hover:bg-white/10 hover:text-paper"
     );
     const sizeStyle = { width: "clamp(36px, 5.5vh, 48px)", height: "clamp(36px, 5.5vh, 48px)" };
     const tip = (
@@ -54,15 +55,32 @@ export function Rail() {
     ) : null;
 
     return g.href ? (
-      <Link key={g.id} href={g.href} aria-label={g.label} aria-current={on ? "page" : undefined} style={sizeStyle} className={cls}>
+      <Link
+        key={g.id}
+        href={g.href}
+        onClick={() => setUI({ launcher: null })}
+        aria-label={g.label}
+        aria-current={on ? "page" : undefined}
+        style={sizeStyle}
+        className={cls}
+      >
         <Icon size={22} weight={on ? "fill" : "duotone"} />
         {dot}
         {notchCut}
         {tip}
       </Link>
     ) : (
-      <button key={g.id} aria-label={`${g.label} pages`} aria-haspopup="dialog" onClick={() => setUI({ launcher: g.id })} style={sizeStyle} className={cls}>
-        <Icon size={22} weight={on ? "fill" : "duotone"} />
+      <button
+        key={g.id}
+        type="button"
+        aria-label={`${g.label} pages`}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        onClick={() => setUI({ launcher: isOpen ? null : g.id })}
+        style={sizeStyle}
+        className={cls}
+      >
+        <Icon size={22} weight={on || isOpen ? "fill" : "duotone"} />
         {dot}
         {notchCut}
         {tip}
@@ -72,7 +90,7 @@ export function Rail() {
 
   return (
     <nav aria-label="Primary" className="relative z-[70] hidden w-[84px] shrink-0 p-3 pr-0 sm:block sm:py-4 sm:pl-4">
-      <div className="flex h-full w-[68px] flex-col items-center justify-between rounded-full bg-ink px-2 py-3 overflow-hidden [data-theme=ink]:border [data-theme=ink]:border-white/10">
+      <div className="flex h-full w-[68px] flex-col items-center justify-between rounded-full bg-ink px-2 py-3 [data-theme=ink]:border [data-theme=ink]:border-white/10">
         {/* Top: Strobi docked at top of rail */}
         <div className="shrink-0">
           <StrobiRailButton />
@@ -81,7 +99,7 @@ export function Rail() {
         {/* Middle: Main navigation items */}
         <div
           style={{ gap: "clamp(4px, 1vh, 12px)" }}
-          className="no-scrollbar flex flex-col items-center justify-center overflow-hidden w-full"
+          className="no-scrollbar flex flex-col items-center justify-center w-full"
         >
           {mainGroups.map(renderItem)}
         </div>

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import { Drawer } from "vaul";
 import { useFlags } from "@/core/flags";
@@ -10,10 +11,15 @@ import { IconBadge } from "@/components/ui/misc";
 
 export function Launcher() {
   const { launcher, set } = useUI();
+  const pathname = usePathname();
   const flags = useFlags();
   const mobile = useIsMobile();
   const groups = GROUPS.filter((g) => g.items.length && (launcher === "all" || g.id === launcher));
   const close = useCallback(() => set({ launcher: null }), [set]);
+
+  useEffect(() => {
+    set({ launcher: null });
+  }, [pathname, set]);
 
   useEffect(() => {
     if (!launcher) return;
