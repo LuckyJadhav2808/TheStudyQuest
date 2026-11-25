@@ -1,6 +1,7 @@
 import type { EntityTable } from "dexie";
 import { db } from "../db";
 import type { Base, Gamification, Settings } from "../types";
+import { markPendingSync } from "@/lib/cloudSync";
 import { uid, todayKey } from "@/lib/utils";
 
 type NewOf<T extends { id: string }> = Omit<T, "id" | "createdAt" | "updatedAt"> & Partial<Pick<T, "id">>;
@@ -12,6 +13,7 @@ export function makeRepo<T extends { id: string; createdAt: number; updatedAt: n
       const now = Date.now();
       const row = { ...data, id: data.id ?? uid(), createdAt: now, updatedAt: now } as unknown as T;
       await table.put(row);
+      markPendingSync();
       return row;
     },
     async get(id: string): Promise<T | undefined> {
@@ -19,7 +21,10 @@ export function makeRepo<T extends { id: string; createdAt: number; updatedAt: n
     },
     async update(id: string, patch: Partial<T>): Promise<void> {
       const cur = await table.get(id as never);
-      if (cur) await table.put({ ...cur, ...patch, updatedAt: Date.now() });
+      if (cur) {
+        await table.put({ ...cur, ...patch, updatedAt: Date.now() });
+        markPendingSync();
+      }
     },
     async active(): Promise<T[]> {
       return (await table.toArray()).filter((r) => !r.deletedAt);
@@ -91,6 +96,7 @@ export const settingsRepo = {
   async patch(patch: Partial<Settings>): Promise<Settings> {
     const next = { ...(await this.get()), ...patch, updatedAt: Date.now() };
     await db.settings.put(next);
+    markPendingSync();
     return next;
   },
 };
@@ -104,6 +110,7 @@ export const gameRepo = {
       const cur = (await db.gamification.get("main")) ?? DEFAULT_GAME;
       const next = { ...fn(cur), id: "main" as const, updatedAt: Date.now() };
       await db.gamification.put(next);
+      markPendingSync();
       return next;
     });
   },

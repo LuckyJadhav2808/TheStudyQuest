@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import NumberFlow from "@number-flow/react";
-import { ArrowsIn, ArrowsOut, Coins, Command, Fire, Lightning, Moon, PawPrint, Plus, Sun, WifiSlash, Question } from "@phosphor-icons/react";
+import { ArrowsIn, ArrowsOut, CloudArrowUp, Coins, Command, Fire, Lightning, Moon, PawPrint, Plus, Sun, WifiSlash, Question } from "@phosphor-icons/react";
 import { useGame, useSettings } from "@/core/settings";
 import { levelProgress } from "@/core/gamification";
+import { syncWithCloud, useSyncQueue } from "@/lib/cloudSync";
 import { switchThemeWithRipple } from "@/lib/themeRipple";
 import { useUI } from "./ui-store";
 import { ALL_PAGES } from "./nav";
@@ -21,6 +22,7 @@ export function Header() {
   const s = useSettings();
   const g = useGame();
   const ui = useUI();
+  const syncQueue = useSyncQueue();
   const path = usePathname();
   const [mounted, setMounted] = useState(false);
   const [xpPulse, setXpPulse] = useState(false);
@@ -106,6 +108,23 @@ export function Header() {
             <WifiSlash size={15} weight="bold" />
             <span className="hidden sm:inline">Offline</span>
           </span>
+        )}
+
+        {(syncQueue.pending > 0 || syncQueue.syncing) && (
+          <button
+            type="button"
+            onClick={() => {
+              if (ui.online && !syncQueue.syncing) void syncWithCloud().catch(() => undefined);
+            }}
+            className="chip bg-[var(--warning-tint)] text-[var(--warning-text)] font-bold text-xs"
+            title={syncQueue.syncing ? "Syncing changes to cloud…" : `${syncQueue.pending} offline change(s) pending sync`}
+            role="status"
+          >
+            <CloudArrowUp size={15} weight="bold" className={syncQueue.syncing ? "animate-pulse" : ""} />
+            <span className="hidden sm:inline">
+              {syncQueue.syncing ? "Syncing…" : `Pending sync (${syncQueue.pending})`}
+            </span>
+          </button>
         )}
 
         {/* Streak chip - single source of truth from useGame */}

@@ -10,7 +10,8 @@ import { audioPrefs } from "@/lib/audio";
 import { useStrobi } from "@/features/strobi/store";
 import { useIsMobile } from "@/components/ui/useMedia";
 import { todayKey } from "@/lib/utils";
-import { syncWithCloud } from "@/lib/cloudSync";
+import { hydrateSyncQueue, syncWithCloud, useSyncQueue } from "@/lib/cloudSync";
+import { strobiSay } from "@/features/strobi/toast";
 import { startDesktopTour } from "@/lib/tour";
 import { initWebVitals } from "@/lib/vitals";
 import { useUI, type QuickKind } from "./ui-store";
@@ -79,6 +80,7 @@ export function Boot() {
       /* optional */
     }
     set({ online: navigator.onLine });
+    hydrateSyncQueue();
     const off = () => {
       set({ online: false });
       emit("offline.entered", {});
@@ -86,7 +88,14 @@ export function Boot() {
     const on = () => {
       set({ online: true });
       emit("online.restored", {});
-      void syncWithCloud().catch(() => undefined);
+      const hadPending = useSyncQueue.getState().pending > 0;
+      void syncWithCloud()
+        .then((res) => {
+          if (hadPending || res.pushed > 0) {
+            strobiSay(`Synced ${res.pushed || "queued"} offline change${res.pushed === 1 ? "" : "s"} to cloud!`, "tip");
+          }
+        })
+        .catch(() => undefined);
     };
     window.addEventListener("offline", off);
     window.addEventListener("online", on);

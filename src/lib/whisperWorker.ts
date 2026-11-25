@@ -7,11 +7,33 @@ type AsrPipeline = (audio: Float32Array) => Promise<{ text: string } | Array<{ t
 
 let asrPromise: Promise<AsrPipeline> | null = null;
 
+async function pickDevice(): Promise<"webgpu" | "wasm"> {
+  try {
+    const nav = navigator as Navigator & { gpu?: { requestAdapter?: () => Promise<unknown> } };
+    if (nav.gpu?.requestAdapter && (await nav.gpu.requestAdapter())) return "webgpu";
+  } catch {
+    /* fallback to wasm */
+  }
+  return "wasm";
+}
+
 async function getAsr(): Promise<AsrPipeline> {
   if (!asrPromise) {
-    asrPromise = (
-      pipeline("automatic-speech-recognition", "Xenova/whisper-tiny.en") as unknown as Promise<AsrPipeline>
-    ).catch((err) => {
+    asrPromise = (async () => {
+      const device = await pickDevice();
+      try {
+        return (await pipeline("automatic-speech-recognition", "Xenova/whisper-tiny.en", {
+          device,
+        })) as unknown as AsrPipeline;
+      } catch (err) {
+        if (device === "webgpu") {
+          return (await pipeline("automatic-speech-recognition", "Xenova/whisper-tiny.en", {
+            device: "wasm",
+          })) as unknown as AsrPipeline;
+        }
+        throw err;
+      }
+    })().catch((err) => {
       asrPromise = null;
       throw err;
     });

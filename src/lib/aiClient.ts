@@ -1,5 +1,5 @@
 "use client";
-import { summarizeWithLocalAi } from "@/lib/localAi";
+import { runLocalAi, type LocalAiMode } from "@/lib/localAi";
 import { extractTopics, generateLocalStudyQuestion } from "@/lib/localNlp";
 
 export class AiError extends Error {
@@ -17,22 +17,37 @@ export function aiUsage(): { calls: number; chars: number } {
   }
 }
 
-async function buildTransformerReply(prompt: string, onProgress?: (pct: number) => void): Promise<string> {
+function pickMode(prompt: string, system?: string): LocalAiMode {
+  const combined = `${system ?? ""} ${prompt}`.toLowerCase();
+  if (/\b(eli5|like i'm five|simple|analogy)\b/.test(combined)) return "eli5";
+  if (/\b(quiz|question|test me)\b/.test(combined)) return "quiz";
+  if (prompt.trim().length >= 160 && !prompt.trim().endsWith("?")) return "summarize";
+  return "qa";
+}
+
+async function buildTransformerReply(
+  prompt: string,
+  system?: string,
+  onProgress?: (pct: number) => void
+): Promise<string> {
   const clean = prompt.trim();
   if (!clean) return "Share a topic, excerpt, or question and the local transformer will analyse it.";
   const topics = extractTopics(clean, 4);
+  const mode = pickMode(clean, system);
 
-  if (clean.length >= 100) {
-    const summary = await summarizeWithLocalAi(clean, onProgress);
+  try {
+    const out = await runLocalAi(clean, mode, onProgress);
     const topicLine = topics.length ? `\n\n**Key concepts:** ${topics.map((t) => `\`${t}\``).join(", ")}` : "";
-    return `${summary}${topicLine}`;
+    return `${out}${topicLine}`;
+  } catch (err) {
+    if (clean.length < 100) {
+      const question = generateLocalStudyQuestion(topics[0] ?? "this topic", clean);
+      return topics.length
+        ? `**Key concepts detected:** ${topics.join(", ")}\n\n- Focus on defining **${topics[0]}** in your own words.\n- ${question}`
+        : `**Local Study Assistant:** ${question}`;
+    }
+    throw err;
   }
-
-  const question = generateLocalStudyQuestion(topics[0] ?? "this topic", clean);
-  if (topics.length) {
-    return `**Key concepts detected:** ${topics.join(", ")}\n\n- Focus on defining **${topics[0]}** in your own words.\n- ${question}`;
-  }
-  return `**Local Study Assistant:** ${question}`;
 }
 
 /** Runs on-device transformer + compromise NLP inference (no API keys required). */
@@ -44,7 +59,7 @@ export async function streamAI(
   const last = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   try {
     opts.onChunk?.("Thinking with on-device transformer...");
-    const full = await buildTransformerReply(last, (pct) => {
+    const full = await buildTransformerReply(last, opts.system, (pct) => {
       opts.onProgress?.(pct);
       if (pct < 100) opts.onChunk?.(`Downloading local AI… ${pct}%`);
     });
