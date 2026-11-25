@@ -78,7 +78,7 @@
     "drizzle-orm": "0.45.2",
     "firebase": "^13.4.0",
     "howler": "^2.2.4",
-    "katex": "^0.19.1",
+    "katex": "^0.18.10",
     "lowlight": "^3.3.0",
     "mammoth": "^1.13.0",
     "mermaid": "^12.3.0",
