@@ -2,7 +2,6 @@
 import { emit } from "@/core/events";
 import { flashcardsRepo, notesRepo } from "@/core/repos";
 import type { Note } from "@/core/types";
-import { askAI } from "@/lib/aiClient";
 import { summarizeWithLocalAi } from "@/lib/localAi";
 import { extractTopics } from "@/lib/localNlp";
 import { renderMarkdown, mdToText } from "@/lib/markdown";
@@ -258,7 +257,6 @@ export const AI_ACTIONS: { id: AiAction; label: string }[] = [
   { id: "summary", label: "Summarise" }, { id: "flashcards", label: "Make flashcards" }, { id: "quiz", label: "5-question quiz" },
   { id: "eli5", label: "Explain like I'm 5" }, { id: "advanced", label: "Advanced explanation" }, { id: "beautify", label: "Beautify formatting" },
 ];
-const SYS = "You are a study assistant. Reply in clean Markdown only, no preamble.";
 function buildLocalCards(note: Note): { front: string; back: string }[] {
   const topics = extractTopics(`${note.title}. ${note.content}`, 8);
   const sentences = mdToText(note.content)
@@ -289,59 +287,31 @@ export async function runAiAction(
   const src = note.content.slice(0, 12000);
   switch (action) {
     case "flashcards": {
-      try {
-        const raw = await askAI(`Create 8 flashcards from these notes. Reply with ONLY a JSON array of {"front":string,"back":string}.\n\n${src}`, "You output strict JSON only.", onProgress);
-        const json = /\[[\s\S]*\]/.exec(raw)?.[0] ?? "[]";
-        const cards = (JSON.parse(json) as { front: string; back: string }[]).filter((c) => c.front && c.back);
-        for (const c of cards) await flashcardsRepo.add({ front: c.front, back: c.back, noteId: note.id, due: Date.now() });
-        return { content: null, message: `Saved ${cards.length} flashcards` };
-      } catch {
-        const cards = buildLocalCards(note);
-        for (const c of cards) await flashcardsRepo.add({ front: c.front, back: c.back, noteId: note.id, due: Date.now() });
-        return { content: null, message: `Saved ${cards.length} flashcards (Local NLP)` };
-      }
+      const cards = buildLocalCards(note);
+      for (const c of cards) await flashcardsRepo.add({ front: c.front, back: c.back, noteId: note.id, due: Date.now() });
+      return { content: null, message: `Saved ${cards.length} flashcards (Local NLP)` };
     }
     case "beautify": {
-      try {
-        return { content: await askAI(`Reformat these notes with clear headings, lists, tables and callouts. Keep every fact. Return the full note.\n\n${src}`, SYS), message: "Formatting updated" };
-      } catch {
-        return { content: beautifyLocally(note.content), message: "Formatting cleaned (Local)" };
-      }
+      return { content: beautifyLocally(note.content), message: "Formatting cleaned (Local)" };
     }
     case "summary": {
-      try {
-        return { content: `${note.content}\n\n## AI summary\n\n${await askAI(`Summarise in 5 bullet points:\n\n${src}`, SYS, onProgress)}\n`, message: "Summary added" };
-      } catch {
-        const local = await summarizeWithLocalAi(src, onProgress);
-        return { content: `${note.content}\n\n## Local AI summary\n\n${local}\n`, message: "Offline summary added (Local Transformer)" };
-      }
+      const local = await summarizeWithLocalAi(src, onProgress);
+      return { content: `${note.content}\n\n## Local AI summary\n\n${local}\n`, message: "Summary added (Local AI)" };
     }
     case "quiz": {
-      try {
-        return { content: `${note.content}\n\n## Quick quiz\n\n${await askAI(`Write a 5-question quiz with answers hidden under an "Answers" heading at the end:\n\n${src}`, SYS)}\n`, message: "Quiz added" };
-      } catch {
-        const cards = buildLocalCards(note);
-        const qs = cards.map((c, i) => `${i + 1}. **${c.front}**`).join("\n");
-        const ans = cards.map((c, i) => `${i + 1}. ${c.back}`).join("\n");
-        return { content: `${note.content}\n\n## Quick quiz (Local AI)\n\n${qs}\n\n### Answers\n\n${ans}\n`, message: "Quiz generated (Local NLP)" };
-      }
+      const cards = buildLocalCards(note);
+      const qs = cards.map((c, i) => `${i + 1}. **${c.front}**`).join("\n");
+      const ans = cards.map((c, i) => `${i + 1}. ${c.back}`).join("\n");
+      return { content: `${note.content}\n\n## Quick quiz (Local AI)\n\n${qs}\n\n### Answers\n\n${ans}\n`, message: "Quiz generated (Local NLP)" };
     }
     case "eli5": {
-      try {
-        return { content: `${note.content}\n\n## Explained simply\n\n${await askAI(`Explain these notes like I'm five, with an analogy:\n\n${src}`, SYS, onProgress)}\n`, message: "Simple explanation added" };
-      } catch {
-        const local = await summarizeWithLocalAi(src, onProgress);
-        return { content: `${note.content}\n\n## Explained simply (Local AI)\n\n${local}\n`, message: "Simple summary added (Local Transformer)" };
-      }
+      const local = await summarizeWithLocalAi(src, onProgress);
+      return { content: `${note.content}\n\n## Explained simply (Local AI)\n\n${local}\n`, message: "Simple summary added (Local AI)" };
     }
     case "advanced": {
-      try {
-        return { content: `${note.content}\n\n## Going deeper\n\n${await askAI(`Give an advanced, rigorous extension of these notes for an expert reader:\n\n${src}`, SYS)}\n`, message: "Advanced section added" };
-      } catch {
-        const topics = extractTopics(src, 5);
-        const list = topics.map((t) => `- **${t}:** Edge cases, trade-offs, and real-world constraints.`).join("\n");
-        return { content: `${note.content}\n\n## Going deeper (Local AI)\n\n${list || "- Explore edge cases and formal proofs."}\n`, message: "Deep-dive prompts added (Local NLP)" };
-      }
+      const topics = extractTopics(src, 5);
+      const list = topics.map((t) => `- **${t}:** Edge cases, trade-offs, and real-world constraints.`).join("\n");
+      return { content: `${note.content}\n\n## Going deeper (Local AI)\n\n${list || "- Explore edge cases and formal proofs."}\n`, message: "Deep-dive prompts added (Local NLP)" };
     }
   }
 }
