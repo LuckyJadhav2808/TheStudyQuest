@@ -1,22 +1,26 @@
 "use client";
-import { useEffect, useState } from "react";
-import { ArrowsOut, Pause, Play, ArrowCounterClockwise, ShieldCheck, Headphones, X, CloudRain, Fire, Coffee, Waves, Tree, Wind, Broadcast } from "@phosphor-icons/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { useEffect, useRef, useState } from "react";
+import { ArrowsOut, MagnifyingGlass, Pause, Play, ArrowCounterClockwise, ShieldCheck, ShieldWarning, X, CloudRain, Fire, Coffee, Waves, Tree, Wind, Broadcast, MusicNotes, SkipBack, SkipForward, Trash } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
 import { BentoCard } from "@/components/shell/BentoCard";
 import { HeroCard } from "@/components/ui/design-primitives";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageFrame, ProgressBar, Segmented } from "@/components/ui/misc";
-import { Select } from "@/components/ui/fields";
 import { Slider } from "@/components/ui/slider";
-import { useGame } from "@/core/settings";
+import { db } from "@/core/db";
+import { useSettings } from "@/core/settings";
+import { StrobiFace, type StrobiPose } from "@/features/strobi/StrobiFace";
+import { strobiSay } from "@/features/strobi/toast";
+import { Illustration } from "@/components/illustrations/Illustration";
+import { fmtClock, todayKey } from "@/lib/utils";
 import { CHANNELS, useAmbient } from "@/lib/ambient";
-import { BINAURAL, binauralActive, setBinauralVolume, startBinaural, stopBinaural, type BinauralKey } from "@/lib/binaural";
+import { parseYtUrl, useYtMusic, ytThumb, type YtTrack } from "@/lib/ytMusic";
 import { RadialTimer } from "./RadialTimer";
 import { useTimer } from "./useTimer";
 import type { TimerKind } from "./store";
 
 const PRESETS: Record<TimerKind, number[]> = { focus: [25, 50], short: [5, 10], long: [15, 30] };
-const BINAURAL_HZ: Record<BinauralKey, string> = { delta: "2 Hz", theta: "6 Hz", alpha: "10 Hz", beta: "18 Hz", gamma: "40 Hz" };
 const CHANNEL_ICONS: Record<string, React.ReactNode> = {
   rain: <CloudRain size={15} weight="duotone" />,
   fire: <Fire size={15} weight="duotone" />,
@@ -28,90 +32,194 @@ const CHANNEL_ICONS: Record<string, React.ReactNode> = {
 };
 
 function SoundscapeCard() {
-  const [mode, setMode] = useState<"binaural" | "ambient">("binaural");
-  const [key, setKey] = useState<BinauralKey>("alpha");
-  const [vol, setVol] = useState(0.5);
-  const [on, setOn] = useState(binauralActive());
+  const [mode, setMode] = useState<"yt" | "ambient">("yt");
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState<YtTrack[] | null>(null);
+  const yt = useYtMusic();
   const { vols, set, stopAll } = useAmbient();
 
-  const toggle = () => {
-    if (on) {
-      stopBinaural();
-      setOn(false);
-    } else {
-      startBinaural(key, vol);
-      setOn(true);
+  const current = yt.tracks.find((t) => t.id === yt.activeId) ?? yt.tracks[0];
+  const displayList = results ?? yt.tracks;
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) {
+      setResults(null);
+      return;
     }
+    if (parseYtUrl(q)) {
+      const added = yt.addFromUrl(q);
+      if (added) {
+        setQuery("");
+        setResults(null);
+        strobiSay(`Playing "${added.title}"`);
+      }
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/music/search?q=${encodeURIComponent(q)}`);
+      const data = (await res.json()) as { results?: YtTrack[]; error?: string };
+      if (!res.ok) throw new Error(data.error || "Search failed");
+      setResults(data.results ?? []);
+    } catch (err) {
+      strobiSay(err instanceof Error ? err.message : "Could not search YouTube", "error");
+    }
+    setSearching(false);
   };
 
   return (
     <BentoCard
       title="Soundscape"
-      subtitle={mode === "binaural" ? "Sine tones, one per ear." : "Synthesised loops, offline."}
+      subtitle={mode === "yt" ? "Search any song on YouTube Music." : "Synthesised loops, offline."}
       action={
         <Segmented
           value={mode}
           onChange={setMode}
           options={[
-            { value: "binaural", label: "Binaural" },
+            { value: "yt", label: "YT Music" },
             { value: "ambient", label: "Ambient" },
           ]}
         />
       }
-      className="h-full"
+      className="h-full surface-inverse"
     >
-      {mode === "binaural" ? (
-        <div className="flex h-full min-h-0 flex-col justify-between gap-3 pt-1">
-          {/* Dual wave visual + big Hz readout */}
-          <div className="flex items-center justify-between gap-3 rounded-[20px] border border-line/20 bg-soft/70 px-4 py-3">
-            <div className="min-w-0">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted">Carrier Beat</span>
-              <p className="font-display num text-3xl font-extrabold leading-none text-fg mt-0.5">
-                {BINAURAL_HZ[key] ?? "10 Hz"}
-              </p>
-              <span className="text-[11px] text-muted flex items-center gap-1 mt-1">
-                <Headphones size={12} /> Headphones · Low volume
-              </span>
+      {mode === "yt" ? (
+        <div className="flex h-full min-h-0 flex-col gap-2.5 pt-1">
+          {/* Now Playing Bar */}
+          <div className="flex items-center justify-between gap-2.5 rounded-[20px] border border-line/20 bg-soft/70 px-3.5 py-2.5 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {ytThumb(current) ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={ytThumb(current)!}
+                  alt={current?.title ?? "Song cover"}
+                  className="size-10 shrink-0 rounded-xl border border-line/30 object-cover"
+                />
+              ) : (
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime text-ink">
+                  <MusicNotes size={18} weight="duotone" />
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-xs font-extrabold text-fg">{current ? current.title : "No song selected"}</p>
+                <p className="truncate text-[10px] text-muted">{current ? current.artist : "Search any song below to play"}</p>
+              </div>
             </div>
-            <svg viewBox="0 0 120 44" className="h-11 w-28 shrink-0" aria-hidden>
-              <path d="M0 22 Q 15 4, 30 22 T 60 22 T 90 22 T 120 22" fill="none" stroke="var(--color-violet)" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M0 22 Q 20 38, 40 22 T 80 22 T 120 22" fill="none" stroke="var(--color-teal)" strokeWidth="2" strokeDasharray="3 3" strokeLinecap="round" opacity="0.8" />
-            </svg>
+            <div className="flex items-center gap-1 shrink-0">
+              <button type="button" disabled={!current} className="btn btn-icon size-8 bg-surface/10 text-fg hover:bg-surface/20 disabled:opacity-40" aria-label="Previous track" onClick={yt.prev}>
+                <SkipBack size={14} weight="fill" />
+              </button>
+              <button type="button" disabled={!current} className="btn btn-lime btn-icon size-9 disabled:opacity-40" aria-label={yt.playing ? "Pause music" : "Play music"} onClick={yt.toggle}>
+                {yt.playing ? <Pause size={16} weight="fill" /> : <Play size={16} weight="fill" />}
+              </button>
+              <button type="button" disabled={!current} className="btn btn-icon size-8 bg-surface/10 text-fg hover:bg-surface/20 disabled:opacity-40" aria-label="Next track" onClick={yt.next}>
+                <SkipForward size={14} weight="fill" />
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-bold text-muted">Frequency preset</span>
-            <Select
-              ariaLabel="Binaural frequency mode"
-              value={key}
-              onChange={(v) => {
-                setKey(v as BinauralKey);
-                if (on) startBinaural(v as BinauralKey, vol);
+          {/* Search Any Song or Paste URL */}
+          <form onSubmit={(e) => void handleSearch(e)} className="flex items-center gap-1.5 shrink-0">
+            <input
+              className="input !min-h-8 flex-1 text-xs"
+              placeholder="Search any song or paste YT URL..."
+              aria-label="Search YouTube songs"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (!e.target.value.trim()) setResults(null);
               }}
-              options={Object.entries(BINAURAL).map(([k, v]) => ({ value: k, label: `${v.label} · ${v.hint}` }))}
             />
+            <button type="submit" disabled={searching} className="btn btn-lime btn-sm !min-h-8 gap-1 shrink-0">
+              <MagnifyingGlass size={13} weight="bold" />
+              {searching ? "..." : "Search"}
+            </button>
+          </form>
+
+          <div className="flex items-center justify-between gap-2 shrink-0 px-0.5">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted">
+              {results ? `Results (${results.length})` : `Recent (${yt.tracks.length})`}
+            </span>
+            <div className="flex items-center gap-2">
+              {results && (
+                <button type="button" onClick={() => { setResults(null); setQuery(""); }} className="text-[10px] font-bold text-lime hover:underline">
+                  Show recent
+                </button>
+              )}
+              <div className="w-24">
+                <Slider
+                  aria-label="YT Music volume"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={yt.volume}
+                  onChange={(e) => yt.setVolume(+e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
-          <Slider
-            label="Tone volume"
-            showValue
-            min={0}
-            max={1}
-            step={0.05}
-            value={vol}
-            onChange={(e) => {
-              const v = +e.target.value;
-              setVol(v);
-              setBinauralVolume(v);
-            }}
-          />
-
-          <button
-            className={`btn ${on ? "btn-ink" : "btn-lime"} w-full font-bold mt-auto`}
-            onClick={toggle}
-          >
-            {on ? "Fade out" : "Start tones"}
-          </button>
+          <ScrollArea className="min-h-0 flex-1 pr-1">
+            {displayList.length === 0 ? (
+              <div className="grid h-full min-h-28 place-items-center rounded-2xl border border-dashed border-line/25 p-4 text-center">
+                <p className="text-xs font-semibold text-muted">
+                  {results ? "No songs matched that search." : "Search for any artist, song, or album above."}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5 pb-1">
+                {displayList.map((tr) => {
+                  const active = current?.id === tr.id;
+                  return (
+                    <div
+                      key={tr.id}
+                      className={`flex items-center gap-2 rounded-xl border px-2.5 py-1.5 transition ${
+                        active ? "border-lime bg-lime/15 text-fg" : "border-line/15 bg-soft/40 hover:border-line/40"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => (active ? yt.toggle() : yt.playTrack(tr))}
+                        className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {ytThumb(tr) && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={ytThumb(tr)!}
+                              alt=""
+                              loading="lazy"
+                              className="size-8 shrink-0 rounded-lg border border-line/20 object-cover"
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-bold">{tr.title}</p>
+                            <p className="truncate text-[10px] text-muted">{tr.artist}</p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-surface/15 px-2 py-0.5 text-[9px] font-extrabold num">
+                          {active && yt.playing ? "Playing" : tr.duration || "Play"}
+                        </span>
+                      </button>
+                      {!results && (
+                        <button
+                          type="button"
+                          aria-label={`Remove ${tr.title}`}
+                          onClick={() => yt.removeTrack(tr.id)}
+                          className="p-1 text-muted hover:text-fg"
+                        >
+                          <Trash size={12} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
         </div>
       ) : (
         <div className="flex h-full min-h-0 flex-col gap-3">
@@ -144,9 +252,44 @@ function SoundscapeCard() {
 
 export function TimerPage() {
   const t = useTimer();
-  const g = useGame();
+  const s = useSettings();
+  const logs = useLiveQuery(() => db.studyLogs.toArray(), [], []);
   const [zen, setZen] = useState(false);
   const [custom, setCustom] = useState("");
+  const [period, setPeriod] = useState<"day" | "week" | "month">("day");
+
+  const today = todayKey();
+  const cutoff = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - (period === "week" ? 6 : period === "month" ? 29 : 0));
+    return todayKey(d);
+  })();
+  const inPeriod = (dateStr: string) => (period === "day" ? dateStr === today : dateStr >= cutoff && dateStr <= today);
+
+  const periodLogs = logs.filter((l) => !l.deletedAt && inPeriod(l.date));
+  const periodMinutes = periodLogs.reduce((a, l) => a + l.minutes, 0);
+  const periodBlocks = periodLogs.length;
+  const periodAbandoned = (t.abandonedLogs ?? []).filter((a) => inPeriod(a.date)).length;
+  const periodGoal = s.focusGoalMin * (period === "week" ? 7 : period === "month" ? 30 : 1);
+  const goalPct = periodGoal > 0 ? periodMinutes / periodGoal : 0;
+  const periodLabel = period === "day" ? "Today's harvest" : period === "week" ? "7-day harvest" : "30-day harvest";
+
+  const companionMood: StrobiPose =
+    t.shield < 60 && t.running
+      ? "worried"
+      : t.running && t.kind === "focus"
+      ? "headphones"
+      : t.kind !== "focus"
+      ? "happy"
+      : "idle";
+  const companionLine =
+    t.shield < 60 && t.running
+      ? "Shield cracked — stay on tab!"
+      : t.running && t.kind === "focus"
+      ? "Don't interrupt me!"
+      : t.kind !== "focus"
+      ? "Break time. Stretch & hydrate."
+      : "Ready when you are.";
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -161,13 +304,22 @@ export function TimerPage() {
     return () => window.removeEventListener("keydown", k);
   });
 
+  const zenEnteredFs = useRef(false);
   const enterZen = () => {
     setZen(true);
-    void document.documentElement.requestFullscreen?.().catch(() => undefined);
+    if (!document.fullscreenElement) {
+      zenEnteredFs.current = true;
+      void document.documentElement.requestFullscreen?.().catch(() => undefined);
+    } else {
+      zenEnteredFs.current = false;
+    }
   };
   const exitZen = () => {
     setZen(false);
-    if (document.fullscreenElement) void document.exitFullscreen();
+    if (zenEnteredFs.current && document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    }
+    zenEnteredFs.current = false;
   };
   const label = t.kind === "focus" ? "Focus" : t.kind === "short" ? "Short break" : "Long break";
 
@@ -176,6 +328,7 @@ export function TimerPage() {
       tint="focus"
       hardShadow
       title="Focus Timer"
+      decorations={<Illustration name="horizon" tone="focus" className="pointer-events-none absolute inset-x-0 bottom-0 h-28 w-full opacity-50" />}
       action={
         <Segmented<TimerKind>
           value={t.kind}
@@ -190,7 +343,16 @@ export function TimerPage() {
       className="h-full"
     >
       <div className="flex h-full min-h-0 w-full flex-col items-center justify-between gap-2 py-1">
-        <div className="flex h-full min-h-0 flex-1 w-full items-center justify-center">
+        {/* Live Companion Status Pill */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-border-strong/30 bg-surface/85 px-3 py-1 shadow-2xs shrink-0">
+          <StrobiFace mood={companionMood} size={24} />
+          <span className="text-xs font-extrabold tracking-tight text-fg">{companionLine}</span>
+        </div>
+
+        <div
+          style={{ containerType: "size" }}
+          className="flex min-h-36 flex-1 w-full items-center justify-center overflow-hidden"
+        >
           <RadialTimer pct={t.pct} rem={t.rem} label={label} running={t.running} />
         </div>
 
@@ -229,6 +391,7 @@ export function TimerPage() {
             }}
           >
             <input
+              suppressHydrationWarning
               className="input !min-h-8 w-20 !px-3 text-xs rounded-full border border-line bg-surface"
               inputMode="numeric"
               placeholder="Custom"
@@ -239,37 +402,102 @@ export function TimerPage() {
           </form>
         </div>
 
-        {/* Session summary stat chips */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-1 shrink-0">
-          <span className="chip !min-h-7 bg-surface/80 text-[11px] num">
-            <span className="text-muted">Sessions:</span> {Math.floor(g.focusMinutes / 25)}
-          </span>
-          <span className="chip !min-h-7 bg-surface/80 text-[11px] num">
-            <span className="text-muted">Focus:</span> {g.focusMinutes}m
-          </span>
-          <span className="chip !min-h-7 bg-surface/80 text-[11px] num">
-            <span className="text-muted">XP:</span> {g.xp}
-          </span>
+        {/* Harvest Tally: Day / Week / Month switcher + Completed vs Abandoned */}
+        <div className="flex w-full max-w-md flex-col gap-2 rounded-2xl border border-border-strong/20 bg-surface/85 px-3.5 py-2.5 shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted">{periodLabel}</span>
+            <Segmented
+              size="xs"
+              ariaLabel="History period"
+              value={period}
+              onChange={setPeriod}
+              options={[
+                { value: "day", label: "Day" },
+                { value: "week", label: "Week" },
+                { value: "month", label: "Month" },
+              ]}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between text-[11px] font-extrabold mb-1">
+                <span className="num text-fg">{periodMinutes}m / {periodGoal}m</span>
+                <span className="num text-muted">
+                  {periodBlocks} done
+                  {periodAbandoned > 0 && (
+                    <span className="ml-1.5 rounded-full bg-[var(--danger-tint)] px-1.5 py-px text-[10px] font-extrabold text-[var(--danger-text)]">
+                      {periodAbandoned} abandoned
+                    </span>
+                  )}
+                  {periodAbandoned === 0 && " · 0 abandoned"}
+                </span>
+              </div>
+              <ProgressBar pct={goalPct} variant="hatched" color="var(--domain-stats-fill)" className="!h-2.5" />
+            </div>
+            <div className="flex items-center gap-1 shrink-0" aria-label={`${periodBlocks} focus blocks completed`}>
+              {periodBlocks === 0 ? (
+                <span className="opacity-30" title="Complete a block to earn your first orb">
+                  <StrobiFace mood="idle" size={20} />
+                </span>
+              ) : (
+                Array.from({ length: Math.min(5, periodBlocks) }, (_, idx) => (
+                  <StrobiFace key={idx} mood="happy" size={20} />
+                ))
+              )}
+              {periodBlocks > 5 && <span className="num text-[11px] font-extrabold text-muted">+{periodBlocks - 5}</span>}
+            </div>
+          </div>
         </div>
       </div>
     </HeroCard>
   );
 
+  const shieldDanger = t.shield < 60;
+  const shieldWarn = t.shield >= 60 && t.shield < 95;
   const rightCol = (
     <div style={{ gap: "var(--gutter, 16px)" }} className="flex h-full min-h-0 flex-col">
-      {/* Slim Focus Defense Status Strip */}
-      <BentoCard autoHeight className="shrink-0">
+      {/* State-reactive Focus Defense Strip with Forgiving Recovery */}
+      <BentoCard
+        autoHeight
+        className={`shrink-0 transition-colors ${
+          shieldDanger
+            ? "bg-[var(--danger-tint)] !border-[var(--danger)]"
+            : shieldWarn
+            ? "bg-[var(--warning-tint)]"
+            : ""
+        }`}
+      >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <ShieldCheck size={20} weight="duotone" className="text-teal shrink-0" />
+            {shieldDanger ? (
+              <ShieldWarning size={20} weight="duotone" className="text-[var(--danger-text)] shrink-0" />
+            ) : (
+              <ShieldCheck size={20} weight="duotone" className="text-[var(--domain-stats-fill)] shrink-0" />
+            )}
             <div className="min-w-0">
-              <p className="text-xs font-extrabold leading-tight truncate">Focus defense</p>
-              <p className="text-[11px] text-muted truncate">Leave tab and shield cracks</p>
+              <p className="text-xs font-extrabold leading-tight truncate">
+                {shieldDanger ? "Focus shield cracked" : "Focus defense"}
+              </p>
+              <p className="text-[11px] text-muted truncate">
+                {t.shield < 100 ? "Tab switched during focus" : "Leave tab and shield cracks"}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-24 hidden sm:block">
-              <ProgressBar pct={t.shield / 100} color={t.shield > 50 ? "var(--color-teal)" : "var(--color-orange)"} />
+          <div className="flex items-center gap-2.5 shrink-0">
+            {t.shield < 100 && (
+              <button
+                className="btn btn-sm !min-h-7 !px-2.5 text-[11px]"
+                onClick={() => t.set({ shield: 100 })}
+              >
+                Repair
+              </button>
+            )}
+            <div className="w-20 hidden sm:block">
+              <ProgressBar
+                pct={t.shield / 100}
+                color={shieldDanger ? "var(--danger)" : shieldWarn ? "var(--warning)" : "var(--domain-stats-fill)"}
+              />
             </div>
             <span className="font-display num text-lg font-black">{Math.round(t.shield)}%</span>
           </div>
@@ -292,13 +520,17 @@ export function TimerPage() {
         ]}
       />
       {zen && (
-        <div className="fixed inset-0 z-[90] grid place-items-center bg-ink text-paper" role="dialog" aria-label="Zen mode">
-          <button className="btn btn-icon absolute right-6 top-6 border-paper/30 text-paper" aria-label="Exit zen mode" onClick={exitZen}>
+        <div className="fixed inset-0 z-[90] grid place-items-center bg-surface-inverse text-on-inverse" role="dialog" aria-label="Zen mode">
+          <button className="btn btn-icon absolute right-6 top-6 border-line text-on-inverse" aria-label="Exit zen mode" onClick={exitZen}>
             <X size={22} weight="bold" />
           </button>
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-5">
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-line bg-soft px-4 py-1.5">
+              <StrobiFace mood={companionMood} size={32} />
+              <span className="text-sm font-extrabold">{companionLine}</span>
+            </div>
             <div className="font-display num text-[22vw] leading-none sm:text-[16vw]">
-              {String(Math.floor(Math.ceil(t.rem / 1000) / 60)).padStart(2, "0")}:{String(Math.ceil(t.rem / 1000) % 60).padStart(2, "0")}
+              {fmtClock(t.rem)}
             </div>
             <button className="btn btn-lime min-w-40 py-3 text-lg font-bold" onClick={t.running ? t.pause : t.start}>
               {t.running ? "Pause" : "Start"}

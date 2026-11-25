@@ -6,7 +6,9 @@ import { useMemo, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { ArrowSquareOut, CheckCircle, Circle, ArrowsClockwise, Robot } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
-import { Badge, Card, CardTitle, Empty, PageFrame, ProgressBar, Segmented } from "@/components/ui/misc";
+import { BentoCard } from "@/components/shell/BentoCard";
+import { EmptyState, HeroCard } from "@/components/ui/design-primitives";
+import { Badge, CountUp, PageFrame, ProgressBar, Segmented } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
 import { db } from "@/core/db";
 import { emit } from "@/core/events";
@@ -18,7 +20,7 @@ import { streamAI } from "@/lib/aiClient";
 import { MarkdownView } from "@/lib/MarkdownView";
 import { strobiSay } from "@/features/strobi/toast";
 
-const DIFF_COLOR = { easy: "#1FD6C1", medium: "#FFB020", hard: "#FF5A4A" };
+const DIFF_COLOR = { easy: "var(--success)", medium: "var(--warning)", hard: "var(--danger)" };
 type Status = DsaProblem["status"];
 
 export function DsaPage() {
@@ -65,10 +67,10 @@ export function DsaPage() {
   const current = open ? byKey.get(open.key) : undefined;
 
   const main = (
-    <Card className="gap-2">
+    <HeroCard tint="notes" hardShadow className="h-full" bodyClassName="gap-2">
       <div className="flex flex-wrap items-center gap-2">
         <Segmented value={sheetId} onChange={setSheetId} options={SHEETS.map((x) => ({ value: x.id, label: x.label }))} className="max-w-full overflow-x-auto no-scrollbar" />
-        <span className="num ml-auto text-sm font-bold">{solved}/{sheet.problems.length}</span>
+        <span className="num ml-auto text-sm font-bold"><CountUp value={solved} />/{sheet.problems.length}</span>
       </div>
       <ProgressBar pct={solved / sheet.problems.length} />
       <div className="flex flex-wrap gap-2">
@@ -78,11 +80,11 @@ export function DsaPage() {
         <Select className="max-w-32" value={status} onChange={setStatus} options={[{ value: "all", label: "Any status" }, { value: "todo", label: "To do" }, { value: "solved", label: "Solved" }, { value: "review", label: "Review" }]} />
       </div>
       <div ref={list} className="scroll-thin min-h-0 flex-1">
-        {filtered.length === 0 ? <Empty title="No problems match" hint="Loosen a filter to see more." /> : (
+        {filtered.length === 0 ? <EmptyState title="No problems match" hint="Loosen a filter to see more." mood="thinking" /> : (
           <div style={{ height: virt.getTotalSize(), position: "relative" }}>
             {virt.getVirtualItems().map((v) => { const p = filtered[v.index]; const x = st(p); return (
               <div key={p.key} style={{ position: "absolute", top: 0, width: "100%", height: v.size, transform: `translateY(${v.start}px)` }} className="pb-1.5">
-                <div className="tile flex h-full items-center gap-3 !py-1.5">
+                <div className="tile bg-surface/90 flex h-full items-center gap-3 !py-1.5">
                   <button aria-label={`Status ${x}. Click to change`} onClick={() => cycle(p)}>{x === "solved" ? <CheckCircle size={26} weight="fill" className="text-teal" /> : x === "review" ? <ArrowsClockwise size={26} weight="bold" className="text-orange" /> : <Circle size={26} />}</button>
                   <button className="min-w-0 flex-1 text-left" onClick={() => { setOpen(p); setAi({ out: "", busy: false }); setCode(""); }}><p className="truncate text-sm font-bold">{p.title}</p><p className="truncate text-xs text-muted">{p.topic}</p></button>
                   <Badge color={DIFF_COLOR[p.difficulty]}>{p.difficulty}</Badge>
@@ -92,27 +94,30 @@ export function DsaPage() {
           </div>
         )}
       </div>
-    </Card>
+    </HeroCard>
   );
   const insight = (
-    <Card className="gap-3">
-      <CardTitle right={<Segmented value={side} onChange={setSide} options={[{ value: "roadmap", label: "Roadmap" }, { value: "stats", label: "Stats" }]} />}>Insights</CardTitle>
+    <BentoCard
+      title="Insights"
+      action={<Segmented value={side} onChange={setSide} options={[{ value: "roadmap", label: "Roadmap" }, { value: "stats", label: "Stats" }]} />}
+      className="h-full surface-inverse"
+    >
       <div className="scroll-thin min-h-0 flex-1">
         {side === "roadmap" ? (
-          <ol className="relative ml-3 space-y-3 border-l-2 border-dashed border-line/40 pl-5" aria-label="Topic roadmap">
+          <ol className="relative ml-3 space-y-3 border-l-2 border-dashed border-line pl-5" aria-label="Topic roadmap">
             {mastery.map((m) => (
-              <li key={m.t} className="relative"><span className="absolute -left-[31px] top-2 size-4 rounded-full border-[1.5px] border-line" style={{ background: m.done === m.n ? "var(--color-lime)" : "var(--surface)" }} />
+              <li key={m.t} className="relative"><span className="absolute -left-[31px] top-2 size-4 rounded-full border-[1.5px] border-border-strong" style={{ background: m.done === m.n ? "var(--primary)" : "var(--surface)" }} />
                 <button className="tile w-full text-left" onClick={() => setTopic(m.t)}><div className="flex justify-between text-sm font-bold"><span>{m.t}</span><span className="num">{m.done}/{m.n}</span></div><ProgressBar pct={m.done / m.n} className="mt-1.5 !h-2" /></button></li>
             ))}
           </ol>
         ) : (
           <div className="space-y-4">
-            <div><p className="mb-2 text-sm font-bold">Weekly solves</p><div className="flex h-28 items-end gap-2">{weekly.map((w) => <div key={w.w} className="flex flex-1 flex-col items-center gap-1"><div className="w-full rounded-xl border-[1.5px] border-line bg-lime" style={{ height: `${(w.n / maxW) * 100}%`, minHeight: 4 }} /><span className="text-[10px] text-muted">{w.w}</span><span className="num text-xs font-bold">{w.n}</span></div>)}</div></div>
-            <div><p className="mb-2 text-sm font-bold">LeetCode sync</p><div className="flex gap-2"><input className="input" placeholder="LeetCode username" aria-label="LeetCode username" defaultValue={s.leetcodeUser} onBlur={(e) => void updateSettings({ leetcodeUser: e.target.value.trim() })} /><button className="btn btn-ink" onClick={() => void sync()}>Sync</button></div></div>
+            <div><p className="mb-2 text-sm font-bold">Weekly solves</p><div className="flex h-28 items-end gap-2">{weekly.map((w) => <div key={w.w} className="flex flex-1 flex-col items-center gap-1"><div className="w-full rounded-xl border-[1.5px] border-border-strong bg-primary" style={{ height: `${(w.n / maxW) * 100}%`, minHeight: 4 }} /><span className="text-[10px] text-muted">{w.w}</span><span className="num text-xs font-bold">{w.n}</span></div>)}</div></div>
+            <div><p className="mb-2 text-sm font-bold">LeetCode sync</p><div className="flex gap-2"><input className="input" placeholder="LeetCode username" aria-label="LeetCode username" defaultValue={s.leetcodeUser} onBlur={(e) => void updateSettings({ leetcodeUser: e.target.value.trim() })} /><button className="btn btn-lime" onClick={() => void sync()}>Sync</button></div></div>
           </div>
         )}
       </div>
-    </Card>
+    </BentoCard>
   );
   return (
     <PageFrame title="DSA Sheets" subtitle="Track the famous lists. Solve to earn XP, coins and crystals.">

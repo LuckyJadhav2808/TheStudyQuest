@@ -18,8 +18,11 @@ export function downloadBlob(name: string, data: BlobPart, type = "text/plain"):
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
+  a.style.display = "none";
+  document.body.appendChild(a);
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 export function readFileText(file: File): Promise<string> {
   return file.text();

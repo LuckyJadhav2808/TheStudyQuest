@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, X } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
 import { BentoCard } from "@/components/shell/BentoCard";
+import { EmptyState } from "@/components/ui/design-primitives";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Empty, PageFrame, ProgressBar } from "@/components/ui/misc";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,10 +18,10 @@ import type { Exam } from "@/core/types";
 
 const radar = (d: number) =>
   d > 30
-    ? { c: "#1FD6C1", l: "Comfortable" }
+    ? { c: "var(--success)", l: "Comfortable" }
     : d >= 7
-    ? { c: "#FFB020", l: "Closing in" }
-    : { c: "#FF5A4A", l: "Crunch time" };
+    ? { c: "var(--warning)", l: "Closing in" }
+    : { c: "var(--danger)", l: "Crunch time" };
 
 function Mock({ onClose }: { onClose: () => void }) {
   const qs = useMemo(() => [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10), []);
@@ -169,7 +170,7 @@ export function ExamsPage() {
         <div className="grid content-start gap-2.5 sm:grid-cols-2 pb-2">
           {sorted.length === 0 && (
             <div className="col-span-full">
-              <Empty title="No exams on the radar" hint="Add one above to watch the countdown." />
+              <EmptyState title="No exams on the radar" hint="Add one above to watch the countdown." mood="thinking" ghostCount={2} ghostLabel="Exam" />
             </div>
           )}
           {sorted.map((e) => {
@@ -197,7 +198,7 @@ export function ExamsPage() {
                 <div className="flex items-center justify-between pt-1">
                   <span className="num text-[11px] text-muted">{Math.round(cov * 100)}% coverage</span>
                   <button
-                    className="text-[11px] font-semibold text-muted hover:text-red-500"
+                    className="text-[11px] font-semibold text-muted hover:text-[var(--danger-text)]"
                     onClick={() => void deleteWithUndo(examsRepo, e.id, "exam")}
                   >
                     Remove
@@ -215,11 +216,11 @@ export function ExamsPage() {
     <BentoCard
       title="Coverage checklists"
       subtitle="Linked to syllabus topics"
-      className="gap-2.5 h-full"
+      className="gap-2.5 h-full surface-inverse"
     >
       <ScrollArea className="flex-1 min-h-0 pr-1">
         <div className="space-y-3 pb-2">
-          {sorted.length === 0 && <Empty title="Nothing to cover yet" />}
+          {sorted.length === 0 && <EmptyState title="Nothing to cover yet" hint="Add an exam to track its syllabus topics." mood="idle" />}
           {sorted.map((e) => (
             <section key={e.id} className="tile p-3">
               <div className="flex items-center justify-between gap-2 mb-2">

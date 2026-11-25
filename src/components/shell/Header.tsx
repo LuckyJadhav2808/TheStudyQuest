@@ -1,12 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Coins, Command, Fire, Lightning, PawPrint, Plus, WifiSlash, Question } from "@phosphor-icons/react";
+import NumberFlow from "@number-flow/react";
+import Balancer from "react-wrap-balancer";
+import { ArrowsIn, ArrowsOut, Coins, Command, Fire, Lightning, Moon, PawPrint, Plus, Sun, WifiSlash, Question } from "@phosphor-icons/react";
 import { useGame, useSettings } from "@/core/settings";
 import { levelProgress } from "@/core/gamification";
-import { CountUp } from "@/components/ui/misc";
+import { switchThemeWithRipple } from "@/lib/themeRipple";
 import { useUI } from "./ui-store";
 import { ALL_PAGES } from "./nav";
+import { SeededAvatar } from "@/components/illustrations/SeededAvatar";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -22,11 +25,24 @@ export function Header() {
   const path = usePathname();
   const [mounted, setMounted] = useState(false);
   const [xpPulse, setXpPulse] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const prevXp = useRef<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    const syncFs = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    syncFs();
+    document.addEventListener("fullscreenchange", syncFs);
+    return () => document.removeEventListener("fullscreenchange", syncFs);
   }, []);
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    } else {
+      void document.documentElement.requestFullscreen?.().catch(() => undefined);
+    }
+  };
 
   useEffect(() => {
     if (prevXp.current !== null && g.xp > prevXp.current) {
@@ -61,19 +77,13 @@ export function Header() {
     >
       {/* Left: Avatar + Page Title + conditional subtitle */}
       <div className="min-w-0 flex items-center gap-2.5">
-        <span
-          className="font-display hidden sm:grid size-8 shrink-0 place-items-center rounded-full border-[1.5px] border-ink text-xs font-extrabold text-ink"
-          style={{ background: `hsl(${hue(s.avatarSeed || "strobi")} 80% 75%)` }}
-          aria-hidden
-        >
-          {(s.name || "S").slice(0, 1).toUpperCase()}
-        </span>
+        <SeededAvatar seed={s.avatarSeed || "strobi"} size={32} className="hidden sm:inline-grid" />
         <div className="min-w-0 flex items-baseline gap-3">
-          <h1 className="font-display truncate text-2xl sm:text-3xl font-extrabold text-fg leading-none" suppressHydrationWarning>
-            {title}
+          <h1 className="font-display text-lg sm:text-3xl font-extrabold text-fg leading-tight line-clamp-1 sm:line-clamp-none" suppressHydrationWarning>
+            <Balancer>{title}</Balancer>
           </h1>
           {subtitle && (
-            <span className="hidden [@media(min-height:800px)]:inline-block truncate text-xs text-muted font-medium" suppressHydrationWarning>
+            <span className="hidden md:[@media(min-height:800px)]:inline-block truncate text-xs text-muted font-medium" suppressHydrationWarning>
               {subtitle}
             </span>
           )}
@@ -102,11 +112,12 @@ export function Header() {
           aria-label={`${g.streak} day streak`}
         >
           <Fire size={16} weight="fill" className="text-orange" />
-          <CountUp value={g.streak} />
+          <NumberFlow value={g.streak} className="num font-bold" />
         </span>
 
         {/* Level / XP with thin progress arc */}
         <span
+          data-tour="xp-chip"
           className={`chip transition-transform duration-300 ${xpPulse ? "scale-110 bg-lime text-ink" : ""}`}
           title={`${lp.into}/${lp.need} XP to level ${lp.level + 1} (${g.xp.toLocaleString()} total XP)`}
           aria-label={`Level ${lp.level}, ${g.xp} XP`}
@@ -128,8 +139,8 @@ export function Header() {
             </svg>
             <Lightning size={11} weight="fill" className="text-violet relative z-10" />
           </span>
-          <span className="num font-bold">Lv {lp.level}</span>
-          <span className="num hidden text-muted sm:inline text-xs">{g.xp.toLocaleString()} XP</span>
+          <span className="num font-bold">Lv <NumberFlow value={lp.level} /></span>
+          <span className="num hidden text-muted sm:inline text-xs"><NumberFlow value={g.xp} /> XP</span>
         </span>
 
         {/* Coins */}
@@ -139,10 +150,20 @@ export function Header() {
           aria-label={`${g.coins} coins`}
         >
           <Coins size={16} weight="fill" className="text-legend" />
-          <CountUp value={g.coins} />
+          <NumberFlow value={g.coins} className="num font-bold" />
         </span>
 
         {/* Icon Action Buttons with proper tooltips & aria-labels */}
+        <button
+          type="button"
+          className="btn btn-icon btn-ghost border-0 inline-flex hover:bg-soft"
+          aria-label={s.theme === "ink" ? "Switch to light mode" : "Switch to dark mode"}
+          title={s.theme === "ink" ? "Light mode" : "Dark mode"}
+          onClick={(e) => switchThemeWithRipple(s.theme === "ink" ? "paper" : "ink", e)}
+        >
+          {s.theme === "ink" ? <Sun size={19} weight="duotone" /> : <Moon size={19} weight="duotone" />}
+        </button>
+
         <button
           className="btn btn-icon btn-ghost hidden border-0 sm:inline-flex hover:bg-soft"
           aria-label="Open companions (Pets)"
@@ -153,12 +174,22 @@ export function Header() {
         </button>
 
         <button
+          data-tour="command-palette"
           className="btn btn-icon btn-ghost hidden border-0 sm:inline-flex hover:bg-soft"
           aria-label="Open command palette (Ctrl+K)"
           title="Command Palette (Ctrl+K)"
           onClick={() => ui.set({ palette: true })}
         >
           <Command size={20} weight="duotone" />
+        </button>
+
+        <button
+          className="btn btn-icon btn-ghost hidden border-0 sm:inline-flex hover:bg-soft"
+          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+          onClick={toggleFullscreen}
+        >
+          {isFullscreen ? <ArrowsIn size={20} weight="duotone" /> : <ArrowsOut size={20} weight="duotone" />}
         </button>
 
         <button
@@ -171,6 +202,7 @@ export function Header() {
         </button>
 
         <button
+          data-tour="quick-add"
           className={`btn btn-icon shadow-sm hover:scale-105 active:scale-95 ${
             ui.pageHeader?.actions ? "bg-surface text-fg hover:bg-soft" : "btn-lime"
           }`}

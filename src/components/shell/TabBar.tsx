@@ -16,10 +16,9 @@ const TABS = [
 export function TabBar() {
   const path = usePathname();
   const setUI = useUI((s) => s.set);
-  const mask = "radial-gradient(circle 44px at 50% 0, transparent 42px, #000 43px)";
   return (
     <nav aria-label="Primary mobile" className="fixed inset-x-0 bottom-0 z-40 sm:hidden">
-      <div className="mx-2 mb-[max(8px,env(safe-area-inset-bottom))] grid h-[62px] grid-cols-[1fr_1fr_76px_1fr_1fr_1fr] items-center rounded-full bg-ink px-2 text-paper" style={{ WebkitMaskImage: mask, maskImage: mask }}>
+      <div className="tabbar-mask mx-2 mb-[max(8px,env(safe-area-inset-bottom))] grid h-[62px] grid-cols-[1fr_1fr_76px_1fr_1fr_1fr] items-center rounded-full bg-ink px-2 text-paper">
         {TABS.map((t, i) => {
           if (!t) return <span key={i} aria-hidden />;
           const on = t.href === "/" ? path === "/" : path.startsWith(t.href);

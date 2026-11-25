@@ -73,7 +73,6 @@ export const skillsRepo = {
 export const DEFAULT_SETTINGS: Settings = {
   id: "main", theme: "paper", name: "Scholar", avatarSeed: "strobi", title: "Rookie Scholar", goal: "Ace my exams",
   masterVolume: 0.7, sfxVolume: 0.6, musicVolume: 0.5, muted: false,
-  aiProvider: "openrouter", aiKey: "", aiModel: "google/gemini-2.0-flash-001",
   flags: {}, hiddenWidgets: [], onboarded: false, profileCreated: false, notifications: false,
   lastChest: 0, leetcodeUser: "", focusGoalMin: 120, ownedBorders: [], updatedAt: 0,
 };

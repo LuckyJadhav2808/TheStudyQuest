@@ -46,7 +46,7 @@ export function PetPanel({ pet, compact = false }: { pet: Pet; compact?: boolean
         <PetSprite species={pet.species} stage={pet.stage} accessory={pet.accessory} size={compact ? 96 : 150} sleepy={moodOf(pet) === "sleepy"} />
         <div className="min-w-0 flex-1 space-y-2">
           <p className="font-display text-2xl leading-none">{pet.name}</p><p className="text-xs font-bold text-muted">{STAGES[pet.stage]} · {pet.feedings} feedings</p>
-          {([["Hunger", pet.hunger, "#FF8B4A"], ["Happiness", pet.happiness, "#D9FF45"], ["Energy", pet.energy, "#1FD6C1"]] as const).map(([l, v, c]) => <div key={l}><div className="flex justify-between text-[11px] font-bold"><span>{l}</span><span className="num">{Math.round(v)}</span></div><ProgressBar pct={v / 100} color={c} className="!h-2.5" /></div>)}
+          {([["Hunger", pet.hunger, "var(--domain-quests-fill)"], ["Happiness", pet.happiness, "var(--primary)"], ["Energy", pet.energy, "var(--domain-stats-fill)"]] as const).map(([l, v, c]) => <div key={l}><div className="flex justify-between text-[11px] font-bold"><span>{l}</span><span className="num">{Math.round(v)}</span></div><ProgressBar pct={v / 100} color={c} className="!h-2.5" /></div>)}
         </div>
       </div>
       <div className="flex flex-wrap gap-2">

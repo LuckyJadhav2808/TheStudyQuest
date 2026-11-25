@@ -3,7 +3,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Microphone, PaperPlaneTilt, Plus, SpeakerHigh, Trash } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
-import { Card, CardTitle, Empty, PageFrame } from "@/components/ui/misc";
+import { BentoCard } from "@/components/shell/BentoCard";
+import { EmptyState, HeroCard } from "@/components/ui/design-primitives";
+import { PageFrame } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
 import { chatRepo } from "@/core/repos";
 import type { ChatMessage, ChatThread } from "@/core/types";
@@ -54,36 +56,40 @@ export function ChatPage() {
   };
   const speak = (t: string) => { window.speechSynthesis?.cancel(); window.speechSynthesis?.speak(new SpeechSynthesisUtterance(t.replace(/[#*`$]/g, ""))); };
   const list = (
-    <Card className="gap-2">
-      <CardTitle right={<button className="btn btn-sm btn-icon" aria-label="New chat" onClick={() => { setId(null); setErr(null); }}><Plus size={16} weight="bold" /></button>}>Threads</CardTitle>
+    <BentoCard
+      title="Threads"
+      action={<button className="btn btn-sm btn-icon" aria-label="New chat" onClick={() => { setId(null); setErr(null); }}><Plus size={16} weight="bold" /></button>}
+      className="h-full surface-inverse"
+      bodyClassName="gap-2"
+    >
       <Select value={persona} onChange={setPersona} options={PERSONAS.map((p) => ({ value: p.id, label: p.name }))} />
       <p className="text-xs text-muted">{getPersona(persona).blurb}</p>
       <div className="scroll-thin min-h-0 flex-1 space-y-1">
-        {threads.sort((a, b) => b.updatedAt - a.updatedAt).map((t) => <div key={t.id} className={`flex items-center rounded-full ${t.id === id ? "bg-lime text-ink" : "hover:bg-soft"}`}><button className="min-h-10 flex-1 truncate px-3 text-left text-sm font-bold" onClick={() => { setId(t.id); setPersona(t.persona); }}>{t.title}</button><button className="px-2" aria-label="Delete thread" onClick={() => { if (id === t.id) setId(null); void deleteWithUndo(chatRepo, t.id, "thread"); }}><Trash size={14} /></button></div>)}
+        {threads.sort((a, b) => b.updatedAt - a.updatedAt).map((t) => <div key={t.id} className={`flex items-center rounded-full ${t.id === id ? "bg-primary text-on-primary" : "hover:bg-soft"}`}><button className="min-h-10 flex-1 truncate px-3 text-left text-sm font-bold" onClick={() => { setId(t.id); setPersona(t.persona); }}>{t.title}</button><button className="px-2" aria-label="Delete thread" onClick={() => { if (id === t.id) setId(null); void deleteWithUndo(chatRepo, t.id, "thread"); }}><Trash size={14} /></button></div>)}
       </div>
-    </Card>
+    </BentoCard>
   );
   const chat = (
-    <Card className="gap-2">
+    <HeroCard tint="tools" hardShadow className="h-full" bodyClassName="gap-2">
       <div className="scroll-thin min-h-0 flex-1 space-y-3" aria-live="polite">
-        {!cur && live === null && <Empty title="Ask me anything" hint={`Chatting as ${getPersona(persona).name}. Your threads stay on this device.`} mood="happy" />}
+        {!cur && live === null && <EmptyState title="Ask me anything" hint={`Chatting as ${getPersona(persona).name}. Your threads stay on this device.`} mood="happy" ghostCount={2} ghostLabel="Prompt" />}
         {[...(cur?.messages ?? []), ...(live !== null ? [{ role: "assistant" as const, content: live || "...", at: 0 }] : [])].map((m, i) => (
-          <div key={i} className={`max-w-[92%] rounded-[24px] p-3 ${m.role === "user" ? "ml-auto bg-lime text-ink" : "bg-soft"}`}>
+          <div key={i} className={`max-w-[92%] rounded-[24px] p-3 ${m.role === "user" ? "ml-auto bg-primary text-on-primary border border-border-strong/30" : "bg-surface border border-border-strong/20"}`}>
             {m.role === "user" ? <p className="whitespace-pre-wrap text-sm">{m.content}</p> : <MarkdownView source={m.content} className="!text-sm" />}
             {m.role === "assistant" && m.at > 0 && <button className="mt-1 text-xs text-muted" aria-label="Read aloud" onClick={() => speak(m.content)}><SpeakerHigh size={14} className="mr-1 inline" />Read aloud</button>}
           </div>
         ))}
         {err && (
-          <div className="tile border-[1.5px] border-line bg-peach text-ink" role="alert"><p className="font-bold">{err.code === "no-key" ? "Add an API key in Settings" : "Chat hit a snag"}</p><p className="text-sm">{err.message}</p>{err.code === "no-key" && <Link className="btn btn-lime btn-sm mt-2" href="/settings">Open settings</Link>}</div>
+          <div className="tile border-[1.5px] border-border-strong bg-[var(--danger-tint)] text-[var(--danger-text)]" role="alert"><p className="font-bold">Chat hit a snag</p><p className="text-sm">{err.message}</p></div>
         )}
         <div ref={end} />
       </div>
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void send(input); }}>
-        <button type="button" className={`btn btn-icon shrink-0 ${listening ? "bg-orange" : ""}`} aria-label="Voice input" onClick={voice}><Microphone size={20} /></button>
+        <button type="button" className={`btn btn-icon shrink-0 ${listening ? "bg-[var(--domain-quests-fill)]" : ""}`} aria-label="Voice input" onClick={voice}><Microphone size={20} /></button>
         <input className="input" aria-label="Message" placeholder="Type your question" value={input} onChange={(e) => setInput(e.target.value)} />
         {live !== null ? <button type="button" className="btn shrink-0" onClick={() => abort.current?.abort()}>Stop</button> : <button className="btn btn-lime btn-icon shrink-0" type="submit" aria-label="Send"><PaperPlaneTilt size={20} weight="fill" /></button>}
       </form>
-    </Card>
+    </HeroCard>
   );
   return (
     <PageFrame title="AI Chat" subtitle="Five tutors, streaming answers, math and code rendered properly.">

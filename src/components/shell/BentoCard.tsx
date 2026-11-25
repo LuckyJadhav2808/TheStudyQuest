@@ -1,5 +1,6 @@
 "use client";
 import type { CSSProperties, ReactNode } from "react";
+import Balancer from "react-wrap-balancer";
 import { cn } from "@/lib/utils";
 import { BlobBackdrop } from "@/components/shapes";
 
@@ -86,14 +87,14 @@ export function BentoCard({
         >
           <div className="min-w-0 flex-1">
             {typeof title === "string" ? (
-              <h2 className="card-title truncate text-base sm:text-lg font-display font-extrabold text-fg leading-tight">
-                {title}
+              <h2 className="card-title text-base sm:text-lg font-display font-extrabold text-fg leading-tight break-words">
+                <Balancer>{title}</Balancer>
               </h2>
             ) : (
               title
             )}
             {subtitle && (
-              <p className="mt-0.5 truncate text-[11px] text-muted font-medium line-clamp-1 leading-normal density-hide-sub">
+              <p className="mt-0.5 text-[11px] text-muted font-medium line-clamp-2 leading-normal density-hide-sub">
                 {subtitle}
               </p>
             )}

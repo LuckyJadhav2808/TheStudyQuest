@@ -14,7 +14,7 @@ function Block({ code }: { code: string }) {
     <div className="my-3 overflow-hidden rounded-[24px] bg-ink text-paper">
       <textarea aria-label="Python code" spellCheck={false} className="block w-full resize-y bg-transparent p-4 font-mono text-xs outline-none" rows={Math.min(10, src.split("\n").length + 1)} value={src} onChange={(e) => setSrc(e.target.value)} />
       <div className="flex items-center gap-3 border-t border-white/10 px-4 py-2"><button className="btn btn-lime btn-sm" onClick={() => void run()} disabled={k.status === "busy"}><Play size={14} weight="fill" />Run</button><span className="text-xs opacity-70">{k.status === "loading" ? k.message : ""}</span></div>
-      {res && <pre className="whitespace-pre-wrap border-t border-white/10 p-4 font-mono text-xs">{res.stdout}{res.stderr}{res.error && <span className="text-red-400">{res.error}</span>}{res.images.map((b, i) => <img key={i} alt="Plot output" src={`data:image/png;base64,${b}`} className="mt-2 rounded-xl bg-white" />)}</pre>}
+      {res && <pre className="whitespace-pre-wrap border-t border-white/10 p-4 font-mono text-xs">{res.stdout}{res.stderr}{res.error && <span className="text-[var(--danger)]">{res.error}</span>}{res.images.map((b, i) => <img key={i} alt="Plot output" src={`data:image/png;base64,${b}`} className="mt-2 rounded-xl bg-white" />)}</pre>}
     </div>
   );
 }

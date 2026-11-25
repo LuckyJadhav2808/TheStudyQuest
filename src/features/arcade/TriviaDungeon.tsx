@@ -68,13 +68,13 @@ export function TriviaDungeon() {
 
   return (
     <HeroCard
-      tint="play"
+      tint="ink"
       title="Trivia Dungeon"
       subtitle="Right answers hurt the monster. Wrong ones hurt you."
       action={
         <span className="flex items-center gap-0.5">
           {Array.from({ length: 3 }, (_, n) => (
-            <Heart key={n} size={22} weight={n < lives ? "fill" : "regular"} className="text-red-500" />
+            <Heart key={n} size={22} weight={n < lives ? "fill" : "regular"} className="text-[var(--danger)]" />
           ))}
         </span>
       }
@@ -83,19 +83,19 @@ export function TriviaDungeon() {
       <div className="flex h-full min-h-0 flex-col justify-between gap-4">
         {/* Monster card */}
         <div
-          className={`relative flex items-center gap-4 rounded-[24px] border-[1.5px] border-line/40 bg-surface/90 p-3.5 shadow-xs shrink-0 transition-transform duration-150 ${
+          className={`relative flex items-center gap-4 rounded-[24px] border-[1.5px] border-line bg-soft p-3.5 shadow-xs shrink-0 transition-transform duration-150 ${
             dmgPop?.startsWith("-") && dmgPop.includes("HP") ? "scale-x-105 scale-y-90" : ""
           }`}
         >
-          <div className="grid size-14 shrink-0 place-items-center rounded-2xl border border-ink/30 bg-orange/20 text-ink">
+          <div className="grid size-14 shrink-0 place-items-center rounded-2xl border border-line bg-[var(--domain-play-tint)] text-[var(--domain-play-fill)]">
             <Skull size={34} weight="duotone" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between mb-1.5">
               <p className="font-display text-sm font-extrabold">Bug Golem</p>
-              <span className="font-display num text-xs font-extrabold text-red-600">{hp} / 100 HP</span>
+              <span className="font-display num text-xs font-extrabold text-[var(--danger)]">{hp} / 100 HP</span>
             </div>
-            <ProgressBar pct={hp / 100} color="#FF5A4A" />
+            <ProgressBar pct={hp / 100} color="var(--danger)" />
           </div>
           {dmgPop && (
             <span className="pop-in absolute -top-3 right-4 rounded-full border border-ink bg-lime px-2.5 py-0.5 font-display text-xs font-extrabold text-ink shadow-sm">
@@ -128,7 +128,7 @@ export function TriviaDungeon() {
                     : k === q.answer
                     ? "border-ink bg-lime text-ink scale-[1.03]"
                     : picked === k
-                    ? "border-ink bg-red-300 text-ink -translate-x-1"
+                    ? "border-border-strong bg-[var(--danger-tint)] text-[var(--danger-text)] -translate-x-1"
                     : "border-line/20 bg-surface/60 opacity-60";
                 return (
                   <button

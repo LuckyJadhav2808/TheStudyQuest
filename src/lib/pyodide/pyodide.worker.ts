@@ -8,7 +8,7 @@ interface PyodideLike {
   loadPackagesFromImports: (code: string) => Promise<void>;
   setStdout: (o: { batched: (s: string) => void }) => void;
   setStderr: (o: { batched: (s: string) => void }) => void;
-  FS: { writeFile: (p: string, d: string) => void };
+  FS: { writeFile: (p: string, d: string | Uint8Array) => void; unlink: (p: string) => void };
 }
 const CDN = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
 let py: PyodideLike | null = null;
@@ -59,8 +59,11 @@ const api = {
     res.stdout = stdout; res.stderr = stderr;
     return res;
   },
-  async writeFile(path: string, text: string): Promise<void> {
-    py?.FS.writeFile(path, text);
+  async writeFile(path: string, data: string | Uint8Array): Promise<void> {
+    py?.FS.writeFile(path, data);
+  },
+  async removeFile(path: string): Promise<void> {
+    try { py?.FS.unlink(path); } catch { /* ignore missing file */ }
   },
 };
 export type PyWorkerApi = typeof api;

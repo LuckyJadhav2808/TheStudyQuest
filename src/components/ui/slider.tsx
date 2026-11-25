@@ -33,13 +33,14 @@ export function Slider({
       )}
       <div className="relative flex h-6 items-center">
         <input
+          suppressHydrationWarning
           type="range"
           min={min}
           max={max}
           value={value}
-          className="sq-slider peer h-2 w-full cursor-pointer appearance-none rounded-full border border-line bg-soft outline-none transition focus-visible:ring-2 focus-visible:ring-lime"
+          className="sq-slider peer h-2 w-full cursor-pointer appearance-none rounded-full border border-border-strong bg-surface-2 outline-none transition focus-visible:ring-2 focus-visible:ring-focus"
           style={{
-            background: `linear-gradient(to right, #D9FF45 0%, #D9FF45 ${pct}%, rgba(11,11,12,0.12) ${pct}%, rgba(11,11,12,0.12) 100%)`
+            backgroundImage: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${pct}%, var(--surface-2) ${pct}%, var(--surface-2) 100%)`
           }}
           {...props}
         />

@@ -22,8 +22,8 @@ export function Switch({
       disabled={disabled}
       onClick={() => onCheckedChange?.(!checked)}
       className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-[1.5px] border-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime disabled:cursor-not-allowed disabled:opacity-50",
-        checked ? "bg-lime" : "bg-soft",
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-[1.5px] border-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:cursor-not-allowed disabled:opacity-50",
+        checked ? "bg-primary" : "bg-surface-2",
         className
       )}
       {...props}
@@ -32,7 +32,7 @@ export function Switch({
         style={{ width: 16, height: 16 }}
         className={cn(
           "pointer-events-none block h-4 w-4 rounded-full transition-transform",
-          checked ? "translate-x-5 bg-ink" : "translate-x-1 bg-muted"
+          checked ? "translate-x-5 bg-on-primary" : "translate-x-1 bg-ink-muted"
         )}
       />
     </button>

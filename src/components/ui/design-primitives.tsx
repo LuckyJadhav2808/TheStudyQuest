@@ -3,32 +3,32 @@ import type { ReactNode } from "react";
 import { BentoCard, type BentoCardProps } from "@/components/shell/BentoCard";
 import { Segmented } from "@/components/ui/misc";
 import { BlobBackdrop } from "@/components/shapes";
-import { StrobiFace } from "@/features/strobi/StrobiFace";
-import type { Mood } from "@/features/strobi/store";
+import { StrobiFace, type StrobiPose } from "@/features/strobi/StrobiFace";
+import { Illustration, type IllustrationName } from "@/components/illustrations/Illustration";
 import { cn } from "@/lib/utils";
 
 export type DomainTint = "focus" | "notes" | "quests" | "stats" | "play" | "tools" | "ink" | "neutral";
 
 const TINT_CLASS: Record<DomainTint, string> = {
-  focus: "bg-[#f4ffc4]/65 dark:bg-lime/10",
-  notes: "bg-lavender/35",
-  quests: "bg-peach/35",
-  stats: "bg-teal/12",
-  play: "bg-orange/12",
-  tools: "bg-[#e3f2ff]/65 dark:bg-strobi/10",
-  ink: "!bg-ink !text-paper border-ink",
+  focus: "bg-[var(--domain-focus-tint)]",
+  notes: "bg-[var(--domain-notes-tint)]",
+  quests: "bg-[var(--domain-quests-tint)]",
+  stats: "bg-[var(--domain-stats-tint)]",
+  play: "bg-[var(--domain-play-tint)]",
+  tools: "bg-[var(--domain-tools-tint)]",
+  ink: "surface-inverse",
   neutral: "",
 };
 
 const BLOB_COLOR: Record<DomainTint, string> = {
-  focus: "var(--color-lime)",
-  notes: "var(--color-lavender)",
-  quests: "var(--color-peach)",
-  stats: "var(--color-teal)",
-  play: "var(--color-orange)",
-  tools: "var(--color-strobi)",
-  ink: "var(--color-violet)",
-  neutral: "var(--color-lavender)",
+  focus: "var(--domain-focus-fill)",
+  notes: "var(--domain-notes-fill)",
+  quests: "var(--domain-quests-fill)",
+  stats: "var(--domain-stats-fill)",
+  play: "var(--domain-play-fill)",
+  tools: "var(--domain-tools-fill)",
+  ink: "var(--domain-notes-fill)",
+  neutral: "var(--domain-notes-tint)",
 };
 
 /** Stretching page grid: forces rows to fill available viewport height (minmax(0, 1fr)). */
@@ -71,7 +71,7 @@ export function HeroCard({
       className={cn(
         "h-full !rounded-[40px]",
         TINT_CLASS[tint],
-        hardShadow && "!shadow-[6px_6px_0_var(--line)]",
+        hardShadow && "!shadow-[var(--shadow-hard)]",
         className
       )}
       {...rest}
@@ -146,12 +146,14 @@ export function GhostList({
   );
 }
 
-/** EmptyState: vertically centered Strobi mood + witty line + CTA + optional ghost placeholders. */
+/** EmptyState: vertically centered Strobi pose or spot illustration + witty line + CTA + optional ghost placeholders. */
 export function EmptyState({
   title,
   hint,
   action,
   mood = "idle",
+  illustration,
+  tone = "focus",
   ghostCount = 0,
   ghostLabel,
   className,
@@ -159,7 +161,9 @@ export function EmptyState({
   title: string;
   hint?: string;
   action?: ReactNode;
-  mood?: Mood;
+  mood?: StrobiPose;
+  illustration?: IllustrationName;
+  tone?: Exclude<DomainTint, "ink" | "neutral">;
   ghostCount?: number;
   ghostLabel?: string;
   className?: string;
@@ -168,7 +172,11 @@ export function EmptyState({
     <div className={cn("relative flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-hidden p-4 text-center", className)}>
       <BlobBackdrop preset={1} className="size-56 opacity-35 pointer-events-none" />
       <div className="relative z-10 flex max-w-xs flex-col items-center gap-2">
-        <StrobiFace mood={mood} size={52} />
+        {illustration ? (
+          <Illustration name={illustration} tone={tone} className="w-20 h-18" />
+        ) : (
+          <StrobiFace mood={mood} size={52} />
+        )}
         <h3 className="font-display text-lg font-extrabold leading-tight text-fg">{title}</h3>
         {hint && <p className="text-xs text-muted leading-relaxed">{hint}</p>}
         {action && <div className="mt-1">{action}</div>}
@@ -189,7 +197,7 @@ export function ToolTile({
   desc,
   active = false,
   onClick,
-  color = "#e3f2ff",
+  color = "var(--domain-tools-tint)",
 }: {
   icon: ReactNode;
   label: string;
@@ -210,8 +218,8 @@ export function ToolTile({
       )}
     >
       <span
-        className="grid size-9 place-items-center rounded-xl border border-ink/40 text-ink shrink-0"
-        style={{ background: active ? "#ffffff" : color }}
+        className="grid size-9 place-items-center rounded-xl border border-border-strong/40 text-ink shrink-0"
+        style={{ background: active ? "var(--surface)" : color }}
       >
         {icon}
       </span>

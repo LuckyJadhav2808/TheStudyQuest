@@ -12,6 +12,7 @@ import { CommandPalette } from "./CommandPalette";
 import { QuickAdd } from "./QuickAdd";
 import { Changelog, Onboarding, Shortcuts } from "./Overlays";
 import { Boot } from "./Boot";
+import { YtMusicHost } from "./YtMusicHost";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -35,6 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Changelog />
       <CompanionDrawer />
       <Onboarding />
+      <YtMusicHost />
       <Boot />
     </div>
   );

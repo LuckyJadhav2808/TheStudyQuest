@@ -1,14 +1,29 @@
 "use client";
+import { useEffect } from "react";
 import { StrobiFace } from "@/features/strobi/StrobiFace";
 
-export default function Error({ error, reset }: { error: Error; reset: () => void }) {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error("[StudyQuest Route Error]", error);
+  }, [error]);
+
   return (
-    <div className="grid h-full place-items-center p-4">
-      <div className="bento-card flex max-w-md flex-col items-center gap-3 text-center">
-        <StrobiFace mood="alert" size={104} />
-        <h1 className="font-display text-3xl">Something broke</h1>
-        <p className="text-sm text-muted">{error.message || "Unexpected error."} Your data is still safe on this device.</p>
-        <button className="btn btn-lime" onClick={reset}>Retry</button>
+    <div className="flex min-h-dvh w-full items-center justify-center p-6">
+      <div className="flex max-w-md flex-col items-center gap-4 rounded-[32px] border-[1.5px] border-border-strong bg-surface p-8 text-center shadow-sm">
+        <StrobiFace mood="worried" size={76} />
+        <h2 className="font-display text-2xl font-extrabold text-fg">Something tripped up</h2>
+        <p className="text-sm text-muted">
+          Your local notes and progress are safe in IndexedDB. Try reloading this view.
+        </p>
+        <button type="button" onClick={reset} className="btn btn-lime">
+          Try again
+        </button>
       </div>
     </div>
   );

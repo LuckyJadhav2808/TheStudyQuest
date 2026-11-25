@@ -16,10 +16,8 @@ export async function POST(req: Request): Promise<Response> {
   const parsed = body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "bad-request" }, { status: 400 });
   const { messages, system, provider, model } = parsed.data;
-  const userKey = req.headers.get("x-user-key")?.trim();
-  const serverKey = provider === "openrouter" ? env.OPENROUTER_API_KEY : provider === "openai" ? env.OPENAI_API_KEY : env.GEMINI_API_KEY;
-  const apiKey = userKey || serverKey;
-  if (!apiKey) return Response.json({ error: "no-key" }, { status: 401 });
+  const apiKey = provider === "openrouter" ? env.OPENROUTER_API_KEY : provider === "openai" ? env.OPENAI_API_KEY : env.GEMINI_API_KEY;
+  if (!apiKey) return Response.json({ error: "not-configured" }, { status: 503 });
   try {
     const languageModel =
       provider === "google"

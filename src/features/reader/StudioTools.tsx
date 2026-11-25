@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowClockwise, ArrowLeft, ArrowsMerge, FileText, Image as ImageIcon, Scan, Scissors, Stamp, Swap } from "@phosphor-icons/react";
+import { ArrowClockwise, ArrowLeft, ArrowsInLineVertical, ArrowsMerge, FileDoc, FileText, Image as ImageIcon, Scan, Scissors, Stamp, Swap } from "@phosphor-icons/react";
 import { BentoCard } from "@/components/shell/BentoCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToolTile } from "@/components/ui/design-primitives";
@@ -12,16 +12,18 @@ import { MarkdownView } from "@/lib/MarkdownView";
 import { renderMarkdown } from "@/lib/markdown";
 import { strobiSay } from "@/features/strobi/toast";
 import { downloadBlob } from "@/lib/utils";
-import { pdfText } from "./docUtils";
+import { compressPdf, pdfText, pptxText, textToDocxBlob } from "./docUtils";
 
-type Tool = "merge" | "split" | "rotate" | "text" | "mark" | "convert" | "image" | "scan";
+type Tool = "merge" | "split" | "rotate" | "compress" | "text" | "mark" | "convert" | "docx" | "image" | "scan";
 const TOOLS: { value: Tool; label: string; desc: string; icon: React.ReactNode }[] = [
   { value: "merge", label: "Merge PDFs", desc: "Combine multiple files", icon: <ArrowsMerge size={18} weight="duotone" /> },
   { value: "split", label: "Split pages", desc: "Extract page range", icon: <Scissors size={18} weight="duotone" /> },
   { value: "rotate", label: "Rotate 90°", desc: "Fix page orientation", icon: <ArrowClockwise size={18} weight="duotone" /> },
+  { value: "compress", label: "Compress PDF", desc: "Shrink PDF file size", icon: <ArrowsInLineVertical size={18} weight="duotone" /> },
   { value: "text", label: "Extract text", desc: "Pull plain text", icon: <FileText size={18} weight="duotone" /> },
   { value: "mark", label: "Watermark", desc: "Stamp or redact", icon: <Stamp size={18} weight="duotone" /> },
   { value: "convert", label: "Convert", desc: "PDF to MD / HTML", icon: <Swap size={18} weight="duotone" /> },
+  { value: "docx", label: "Export DOCX", desc: "PDF, PPTX, MD to Word", icon: <FileDoc size={18} weight="duotone" /> },
   { value: "image", label: "Compress img", desc: "Shrink image size", icon: <ImageIcon size={18} weight="duotone" /> },
   { value: "scan", label: "OCR scan", desc: "Image to text + AI", icon: <Scan size={18} weight="duotone" /> },
 ];
@@ -42,6 +44,8 @@ export function StudioTools() {
       ? "image/*"
       : tool === "convert"
       ? ".pdf,.md,.markdown,.txt"
+      : tool === "docx"
+      ? ".pdf,.pptx,.md,.markdown,.txt"
       : ".pdf";
 
   async function go() {
@@ -64,8 +68,10 @@ export function StudioTools() {
         const [a, b] = range.split("-").map((n) => parseInt(n, 10));
         const d = await PDFDocument.load(await f.arrayBuffer());
         const n = d.getPageCount();
-        const s = Math.max(1, a || 1),
-          e = Math.min(n, b || s);
+        if (n === 0) throw new Error("PDF has no pages.");
+        const rawA = Math.max(1, Math.min(n, a || 1));
+        const rawB = Math.max(1, Math.min(n, b || rawA));
+        const [s, e] = rawA <= rawB ? [rawA, rawB] : [rawB, rawA];
         const o = await PDFDocument.create();
         (await o.copyPages(d, Array.from({ length: e - s + 1 }, (_, i) => s - 1 + i))).forEach((p) => o.addPage(p));
         save(`pages-${s}-${e}.pdf`, await o.save());
@@ -74,6 +80,24 @@ export function StudioTools() {
         const d = await PDFDocument.load(await f.arrayBuffer());
         d.getPages().forEach((p) => p.setRotation(degrees((p.getRotation().angle + 90) % 360)));
         save("rotated.pdf", await d.save());
+      }
+      if (tool === "compress") {
+        const outBytes = await compressPdf(await f.arrayBuffer());
+        setInfo(`${(f.size / 1024).toFixed(0)} KB to ${(outBytes.byteLength / 1024).toFixed(0)} KB`);
+        save(`compressed-${f.name}`, outBytes);
+      }
+      if (tool === "docx") {
+        const n = f.name.toLowerCase();
+        const text = n.endsWith(".pdf")
+          ? await pdfText(await f.arrayBuffer())
+          : n.endsWith(".pptx")
+          ? await pptxText(await f.arrayBuffer())
+          : await f.text();
+        const title = f.name.replace(/\.\w+$/, "") || "Document";
+        if (!text.trim()) throw new Error("No selectable text found in that file.");
+        const blob = await textToDocxBlob(title, text);
+        setInfo(`Exported ${title}.docx (${(blob.size / 1024).toFixed(0)} KB)`);
+        downloadBlob(`${title}.docx`, blob, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
       }
       if (tool === "text") {
         const t = await pdfText(await f.arrayBuffer());
@@ -159,7 +183,7 @@ export function StudioTools() {
             )
           );
         } catch {
-          setInfo("OCR complete. Configure an API key in Settings for AI explanations.");
+          setInfo("OCR complete.");
         }
       }
     } catch (e) {
@@ -188,25 +212,49 @@ export function StudioTools() {
           </button>
         ) : undefined
       }
-      className="gap-2.5 h-full"
+      className={`gap-2.5 h-full ${activeTool ? "surface-inverse" : ""}`}
     >
       {!tool ? (
         <ScrollArea className="flex-1 min-h-0 pr-1">
-          <div className="grid grid-cols-2 gap-2.5 pb-2">
-            {TOOLS.map((t) => (
-              <ToolTile
-                key={t.value}
-                icon={t.icon}
-                label={t.label}
-                desc={t.desc}
-                onClick={() => {
-                  setTool(t.value);
-                  setFiles([]);
-                  setOut("");
-                  setInfo("");
-                }}
-              />
-            ))}
+          <div className="flex flex-col gap-3 pb-2">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted mb-2">PDF Studio</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {TOOLS.slice(0, 4).map((t) => (
+                  <ToolTile
+                    key={t.value}
+                    icon={t.icon}
+                    label={t.label}
+                    desc={t.desc}
+                    onClick={() => {
+                      setTool(t.value);
+                      setFiles([]);
+                      setOut("");
+                      setInfo("");
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="border-t border-dashed border-line pt-3">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-muted mb-2">Extract &amp; OCR</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {TOOLS.slice(4).map((t) => (
+                  <ToolTile
+                    key={t.value}
+                    icon={t.icon}
+                    label={t.label}
+                    desc={t.desc}
+                    onClick={() => {
+                      setTool(t.value);
+                      setFiles([]);
+                      setOut("");
+                      setInfo("");
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </ScrollArea>
       ) : (

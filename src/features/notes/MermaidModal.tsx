@@ -20,7 +20,7 @@ export function MermaidModal({ open, onClose, onInsert }: { open: boolean; onClo
     <Modal open={open} onClose={onClose} title="Mermaid diagram" wide>
       <div className="grid gap-3 sm:grid-cols-2">
         <textarea className="input !min-h-64 font-mono text-xs" value={code} onChange={(e) => setCode(e.target.value)} aria-label="Mermaid source" />
-        <div className="min-h-64 overflow-auto rounded-[24px] bg-white p-3 text-ink"><div ref={host} />{err && <p className="text-xs text-red-600">{err}</p>}</div>
+        <div className="min-h-64 overflow-auto rounded-[24px] bg-white p-3 text-ink"><div ref={host} />{err && <p className="text-xs text-[var(--danger-text)]">{err}</p>}</div>
       </div>
       <button className="btn btn-lime mt-3" onClick={() => { onInsert("\n```mermaid\n" + code + "\n```\n"); onClose(); }}>Insert diagram</button>
     </Modal>

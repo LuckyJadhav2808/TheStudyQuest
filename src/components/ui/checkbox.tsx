@@ -49,8 +49,8 @@ export function Checkbox({
         disabled={disabled}
         onClick={toggle}
         className={cn(
-          "grid size-5 shrink-0 place-items-center rounded-md border-[1.5px] border-ink transition-colors",
-          checked ? "bg-lime text-ink shadow-[0_1px_2px_rgba(0,0,0,0.1)]" : "bg-surface hover:bg-soft"
+          "grid size-5 shrink-0 place-items-center rounded-md border-[1.5px] border-border-strong transition-colors",
+          checked ? "bg-primary text-on-primary shadow-xs" : "bg-surface text-fg hover:bg-surface-2"
         )}
       >
         {checked && <Check size={14} weight="bold" />}

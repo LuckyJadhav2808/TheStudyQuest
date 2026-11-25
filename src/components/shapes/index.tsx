@@ -34,7 +34,7 @@ export function NotchTab({ active, bg = "var(--surface)", children, className, .
           <span aria-hidden className="inv-corner" style={{ left: "100%", bottom: 0, ...fillet("r", bg) }} />
         </>
       )}
-      <span className="relative" style={active ? { color: "#0b0b0c" } : undefined}>{children}</span>
+      <span className="relative" style={active ? { color: "var(--on-primary)" } : undefined}>{children}</span>
     </button>
   );
 }

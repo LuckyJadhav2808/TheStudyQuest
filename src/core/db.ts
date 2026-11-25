@@ -1,7 +1,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import type * as T from "./types";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export class StudyQuestDB extends Dexie {
   notes!: EntityTable<T.Note, "id">;
@@ -58,6 +58,12 @@ export class StudyQuestDB extends Dexie {
       gamification: "id",
       flashcards: "id, due",
       scores: "id, game",
+    });
+    this.version(2).stores({
+      notes: "id, folderId, updatedAt, pinned, [folderId+updatedAt]",
+      tasks: "id, status, due, order, [status+order]",
+      habitLogs: "id, habitId, date, [habitId+date]",
+      flashcards: "id, due, noteId, [noteId+due]",
     });
   }
 }

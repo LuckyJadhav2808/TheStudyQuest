@@ -54,3 +54,67 @@ export async function epubText(buf: ArrayBuffer): Promise<string> {
 export function bionic(text: string): { b: string; r: string }[] {
   return text.split(/(\s+)/).map((w) => { const n = Math.ceil(w.length / 2); return /\S/.test(w) ? { b: w.slice(0, n), r: w.slice(n) } : { b: "", r: w }; });
 }
+export async function pptxText(buf: ArrayBuffer): Promise<string> {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(buf.slice(0));
+  const slideNames = Object.keys(zip.files)
+    .filter((n) => /^ppt\/slides\/slide\d+\.xml$/i.test(n))
+    .sort((a, b) => parseInt(a.replace(/\D/g, ""), 10) - parseInt(b.replace(/\D/g, ""), 10));
+  const slides: string[] = [];
+  for (const name of slideNames) {
+    const xml = await zip.files[name].async("string");
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    const runs = Array.from(doc.getElementsByTagName("a:t")).map((n) => n.textContent ?? "").filter(Boolean);
+    if (runs.length) slides.push(runs.join(" "));
+  }
+  return slides.join("\n\n");
+}
+export async function renderPptx(buf: ArrayBuffer, host: HTMLElement): Promise<() => void> {
+  const { init } = await import("pptx-preview");
+  host.innerHTML = "";
+  const w = Math.max(420, Math.min(820, (host.clientWidth || 640) - 8));
+  const previewer = init(host, { width: w, height: Math.round(w * 0.58), mode: "list" });
+  await previewer.preview(buf.slice(0));
+  return () => previewer.destroy();
+}
+export async function compressPdf(buf: ArrayBuffer, quality = 0.68, scale = 1.25): Promise<Uint8Array> {
+  const lib = await pdfjs();
+  const { PDFDocument } = await import("pdf-lib");
+  const src = await lib.getDocument({ data: buf.slice(0) }).promise;
+  const out = await PDFDocument.create();
+  for (let i = 1; i <= src.numPages; i++) {
+    const page = await src.getPage(i);
+    const baseVp = page.getViewport({ scale: 1 });
+    const vp = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(vp.width));
+    canvas.height = Math.max(1, Math.round(vp.height));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) continue;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport: vp, canvas }).promise;
+    const jpgBytes = await fetch(canvas.toDataURL("image/jpeg", quality)).then((r) => r.arrayBuffer());
+    const jpg = await out.embedJpg(jpgBytes);
+    const outPage = out.addPage([baseVp.width, baseVp.height]);
+    outPage.drawImage(jpg, { x: 0, y: 0, width: baseVp.width, height: baseVp.height });
+  }
+  return out.save();
+}
+export async function textToDocxBlob(title: string, text: string): Promise<Blob> {
+  const { Document, HeadingLevel, Packer, Paragraph, TextRun } = await import("docx");
+  const lines = text.split(/\r?\n/);
+  const children = [
+    new Paragraph({ text: title, heading: HeadingLevel.TITLE }),
+    ...lines.map((line) => {
+      const m = /^(#{1,3})\s+(.+)$/.exec(line.trim());
+      if (m) {
+        const heading = m[1].length === 1 ? HeadingLevel.HEADING_1 : m[1].length === 2 ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_3;
+        return new Paragraph({ text: m[2], heading });
+      }
+      return new Paragraph({ children: [new TextRun(line)] });
+    }),
+  ];
+  const doc = new Document({ sections: [{ children }] });
+  return Packer.toBlob(doc);
+}

@@ -5,12 +5,15 @@ export const RUNNABLE_NOTE: Record<string, string> = { cpp: "C++ needs a compile
 const CAPTURE = `<script>(function(){var send=function(l,a){try{parent.postMessage({__sq:1,level:l,text:Array.prototype.map.call(a,function(x){try{return typeof x==='object'?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(' ')},'*')}catch(e){}};['log','info','warn','error'].forEach(function(k){var o=console[k];console[k]=function(){send(k,arguments);o.apply(console,arguments)}});window.addEventListener('error',function(e){send('error',[e.message])});window.addEventListener('unhandledrejection',function(e){send('error',[String(e.reason)])});})();<\/script>`;
 
 export async function toJs(code: string, name: string): Promise<string> {
-  if (!name.endsWith(".ts")) return code;
+  const isTs = name.endsWith(".ts");
+  const hasModuleSyntax = /^\s*(export|import)\b/m.test(code);
+  if (!isTs && !hasModuleSyntax) return code;
   const { transform } = await import("sucrase");
-  return transform(code, { transforms: ["typescript"] }).code;
+  const transforms: ("typescript" | "imports")[] = isTs ? ["typescript", "imports"] : ["imports"];
+  return transform(code, { transforms }).code;
 }
 export function jsDoc(js: string): string {
-  return `<!doctype html><html><body>${CAPTURE}<script>try{${js.replace(/<\/script>/gi, "<\\/script>")}\n}catch(e){console.error(e&&e.stack||String(e))}<\/script></body></html>`;
+  return `<!doctype html><html><body>${CAPTURE}<script>try{var exports={};var module={exports:exports};${js.replace(/<\/script>/gi, "<\\/script>")}\n}catch(e){console.error(e&&e.stack||String(e))}<\/script></body></html>`;
 }
 export function webDoc(files: { name: string; content: string }[]): string {
   const html = files.find((f) => f.name.endsWith(".html"))?.content ?? "<body></body>";
@@ -21,7 +24,12 @@ export function webDoc(files: { name: string; content: string }[]): string {
 export function syntaxCheck(name: string, code: string): string | null {
   try {
     if (name.endsWith(".json")) JSON.parse(code);
-    else if (/\.(js|mjs)$/.test(name)) new Function(code);
+    else if (/\.(js|mjs)$/.test(name)) {
+      const checkable = code
+        .replace(/^\s*import\s+[^;\n]+;?/gm, "")
+        .replace(/^\s*export\s+(default\s+)?/gm, "");
+      new Function(checkable);
+    }
     else return null;
     return null;
   } catch (e) { return e instanceof Error ? e.message : "Syntax error"; }

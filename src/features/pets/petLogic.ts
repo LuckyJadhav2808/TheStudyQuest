@@ -2,9 +2,9 @@ import { clamp } from "@/lib/utils";
 import type { Gamification, Pet } from "@/core/types";
 
 export const SPECIES = [
-  { id: "noctis", name: "Noctis", kind: "Owl", color: "#7C5CFF" }, { id: "whiskers", name: "Whiskers", kind: "Cat", color: "#FF8B4A" },
-  { id: "ignis", name: "Ignis", kind: "Dragon", color: "#FF5A4A" }, { id: "kitsune", name: "Kitsune", kind: "Fox", color: "#FFB020" },
-  { id: "luna", name: "Luna", kind: "Bunny", color: "#B9A6FF" },
+  { id: "noctis", name: "Noctis", kind: "Owl", color: "var(--domain-notes-fill)" }, { id: "whiskers", name: "Whiskers", kind: "Cat", color: "var(--domain-quests-fill)" },
+  { id: "ignis", name: "Ignis", kind: "Dragon", color: "var(--danger)" }, { id: "kitsune", name: "Kitsune", kind: "Fox", color: "var(--warning)" },
+  { id: "luna", name: "Luna", kind: "Bunny", color: "var(--domain-play-fill)" },
 ] as const;
 export const STAGES = ["Egg", "Baby", "Teen", "Adult", "Legendary"];
 export interface Reqs { focusHours: number; tasks: number; streak: number; feedings: number }

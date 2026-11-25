@@ -14,7 +14,11 @@ export const metadata: Metadata = {
   title: "StudyQuest",
   description: "A gamified, offline-first study operating system. Focus, notes, code, habits and pets in one app.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+    apple: "/icon-maskable.svg",
+  },
   appleWebApp: { capable: true, title: "StudyQuest", statusBarStyle: "black-translucent" },
 };
 export const viewport: Viewport = { themeColor: "#0B0B0C", width: "device-width", initialScale: 1, viewportFit: "cover" };

@@ -7,6 +7,7 @@ import { updateSettings } from "@/core/settings";
 import type { ThemeName } from "@/core/types";
 import { ALL_PAGES } from "./nav";
 import { useUI } from "./ui-store";
+import { startDesktopTour } from "@/lib/tour";
 
 const THEMES: ThemeName[] = ["paper", "ink", "lavender", "peach"];
 export function CommandPalette() {
@@ -27,6 +28,7 @@ export function CommandPalette() {
           <Command.Item className={item} onSelect={run(() => set({ quickAdd: "habit" }))}>New habit</Command.Item>
           <Command.Item className={item} onSelect={run(() => set({ quickAdd: "exam" }))}>Add exam</Command.Item>
           <Command.Item className={item} onSelect={run(() => set({ shortcuts: true }))}>Keyboard shortcuts</Command.Item>
+          <Command.Item className={item} onSelect={run(() => startDesktopTour(true))}>Take guided tour</Command.Item>
           <Command.Item className={item} onSelect={run(() => set({ changelog: true }))}>What is new</Command.Item>
         </Command.Group>
         <Command.Group heading={<div className={head}>Pages</div>}>

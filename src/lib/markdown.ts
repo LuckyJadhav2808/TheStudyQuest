@@ -29,7 +29,11 @@ function callouts() {
   };
   return (tree: MNode) => walk(tree);
 }
-const schema = { ...defaultSchema, attributes: { ...defaultSchema.attributes, "*": [...(defaultSchema.attributes?.["*"] ?? []), "className"] } };
+const schema = {
+  ...defaultSchema,
+  attributes: { ...defaultSchema.attributes, "*": [...(defaultSchema.attributes?.["*"] ?? []), "className"] },
+  protocols: { ...defaultSchema.protocols, src: [...(defaultSchema.protocols?.src ?? []), "data"] },
+};
 
 export async function renderMarkdown(md: string): Promise<string> {
   const file = await unified()

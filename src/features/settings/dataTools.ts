@@ -1,6 +1,13 @@
 "use client";
+import { z } from "zod";
 import { SCHEMA_VERSION, TABLE_NAMES, db } from "@/core/db";
 import { downloadBlob } from "@/lib/utils";
+
+const BackupSchema = z.object({
+  app: z.literal("studyquest"),
+  schemaVersion: z.number().int(),
+  tables: z.record(z.string(), z.array(z.record(z.string(), z.unknown()))),
+});
 
 export async function exportBackup(): Promise<void> {
   const tables: Record<string, unknown[]> = {};
@@ -8,8 +15,15 @@ export async function exportBackup(): Promise<void> {
   downloadBlob(`studyquest-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ app: "studyquest", schemaVersion: SCHEMA_VERSION, exportedAt: Date.now(), tables }), "application/json");
 }
 export async function importBackup(text: string): Promise<void> {
-  const j = JSON.parse(text) as { app?: string; schemaVersion?: number; tables?: Record<string, unknown[]> };
-  if (j.app !== "studyquest" || !j.tables) throw new Error("This is not a StudyQuest backup.");
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error("Backup file is not valid JSON.");
+  }
+  const parsed = BackupSchema.safeParse(raw);
+  if (!parsed.success) throw new Error("This is not a valid StudyQuest backup.");
+  const j = parsed.data;
   if (j.schemaVersion !== SCHEMA_VERSION) throw new Error(`Backup schema ${j.schemaVersion} does not match app schema ${SCHEMA_VERSION}.`);
   const tables = j.tables;
   await db.transaction("rw", db.tables, async () => {

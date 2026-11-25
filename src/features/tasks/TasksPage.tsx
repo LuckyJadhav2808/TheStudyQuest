@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { Panels } from "@/components/shell/Panels";
 import { BentoCard } from "@/components/shell/BentoCard";
 import { EmptyState, GhostList } from "@/components/ui/design-primitives";
+import { Illustration } from "@/components/illustrations/Illustration";
 import { Badge, PageFrame, ProgressBar, Skeleton } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
 import { emit } from "@/core/events";
@@ -18,9 +19,9 @@ import { useUI } from "@/components/shell/ui-store";
 import { PRIORITY_COLOR, TaskEditor } from "./TaskEditor";
 
 const COLS: { id: TaskStatus; label: string; headerBg: string }[] = [
-  { id: "todo", label: "To do", headerBg: "bg-peach/45" },
-  { id: "doing", label: "In progress", headerBg: "bg-lavender/45" },
-  { id: "done", label: "Done", headerBg: "bg-teal/20" },
+  { id: "todo", label: "To do", headerBg: "bg-[var(--domain-quests-tint)]" },
+  { id: "doing", label: "In progress", headerBg: "bg-[var(--domain-notes-tint)]" },
+  { id: "done", label: "Done", headerBg: "bg-[var(--domain-stats-tint)]" },
 ];
 const RANK: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
@@ -38,7 +39,7 @@ function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
       <button className="text-left text-sm font-bold" onClick={onOpen}>{task.title}</button>
       <div className="flex flex-wrap items-center gap-1.5">
         <Badge color={PRIORITY_COLOR[task.priority]}>{task.priority}</Badge>
-        {task.due && <span className={`chip !min-h-6 !px-2 text-[11px] ${overdue ? "!border-red-500 text-red-600" : ""}`}><CalendarBlank size={12} />{format(parseISO(task.due), "d MMM")}</span>}
+        {task.due && <span className={`chip !min-h-6 !px-2 text-[11px] ${overdue ? "!border-[var(--danger)] text-[var(--danger-text)] bg-[var(--danger-tint)]" : ""}`}><CalendarBlank size={12} />{format(parseISO(task.due), "d MMM")}</span>}
         {task.subtasks.length > 0 && <span className="num text-[11px] font-bold text-muted">{done}/{task.subtasks.length}</span>}
         {task.tags.map((t) => <span key={t} className="text-[11px] font-semibold text-muted">#{t}</span>)}
         {next && <button aria-label={`Move to ${next}`} className="ml-auto grid size-8 place-items-center rounded-full bg-ink text-paper" onPointerDown={(e) => e.stopPropagation()} onClick={() => void moveTask(task, next, Date.now())}><CaretRight size={14} weight="bold" /></button>}
@@ -84,7 +85,8 @@ function Column({ id, label, headerBg, tasks, onOpen }: { id: TaskStatus; label:
             <EmptyState
               title="Quiet in here"
               hint="Add your first quest to start earning XP."
-              mood="happy"
+              illustration="clipboard"
+              tone="quests"
               ghostCount={2}
               ghostLabel="Quest"
               action={
@@ -95,6 +97,7 @@ function Column({ id, label, headerBg, tasks, onOpen }: { id: TaskStatus; label:
             />
           ) : (
             <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-line/40 bg-soft/30 p-4 text-center">
+              <Illustration name={id === "done" ? "trophy" : "hammer"} tone={id === "done" ? "stats" : "notes"} className="w-16 h-14 opacity-90" />
               <p className="text-xs font-bold text-muted">
                 {id === "done" ? "Completed quests land here" : "Drag an active quest here"}
               </p>

@@ -1,6 +1,6 @@
 "use client";
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Panels, type Panel } from "@/components/shell/Panels";
 import { Modal } from "@/components/ui/modal";
 import { PageFrame } from "@/components/ui/misc";
@@ -11,13 +11,16 @@ import { FlowStation, LoFiCard, NotesDeck, QuestsCard, VelocityCard } from "./Ho
 const WIDGETS = [["streak", "Streak sticker"], ["chest", "Daily chest"], ["exam", "Exam radar"], ["velocity", "Study velocity"], ["lofi", "Lo-Fi player"], ["notes", "Notes deck"]] as const;
 const SPAN: Record<number, string> = { 1: "lg:col-span-12", 2: "lg:col-span-6", 3: "lg:col-span-4" };
 
+const emptySubscribe = () => () => {};
+
 export function Home() {
   const s = useSettings();
   const [picker, setPicker] = useState(false);
-  const [dateStr, setDateStr] = useState("");
-  useEffect(() => {
-    setDateStr(`${format(new Date(), "EEEE, d MMMM")}. Make it count.`);
-  }, []);
+  const dateStr = useSyncExternalStore(
+    emptySubscribe,
+    () => `${format(new Date(), "EEEE, d MMMM")}. Make it count.`,
+    () => "Make it count."
+  );
   const hidden = s.hiddenWidgets;
   const bottom: Panel[] = [];
   const add = (id: string, label: string, node: React.ReactNode) => { if (!hidden.includes(id)) bottom.push({ id, label, node }); };

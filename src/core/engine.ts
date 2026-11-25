@@ -44,12 +44,12 @@ export async function grant(g: Grant): Promise<{ xp: number; coins: number }> {
       extended = streak > 1;
     }
     streakNow = streak;
-    const totalXp = cur.xp + xp;
+    const totalXp = Math.max(0, cur.xp + xp);
     newLevel = levelFromXp(totalXp);
     const ingredients = { ...cur.ingredients };
-    for (const [k, v] of Object.entries(g.drops ?? {})) ingredients[k] = (ingredients[k] ?? 0) + v;
+    for (const [k, v] of Object.entries(g.drops ?? {})) ingredients[k] = Math.max(0, (ingredients[k] ?? 0) + v);
     return {
-      ...cur, xp: totalXp, level: newLevel, coins: cur.coins + coins, skillPoints: cur.skillPoints + Math.max(0, newLevel - prevLevel),
+      ...cur, xp: totalXp, level: newLevel, coins: Math.max(0, cur.coins + coins), skillPoints: cur.skillPoints + Math.max(0, newLevel - prevLevel),
       streak, bestStreak: Math.max(cur.bestStreak, streak), lastActive: today, ingredients,
       focusMinutes: cur.focusMinutes + (g.focusMinutes ?? 0), tasksDone: cur.tasksDone + (g.tasks ?? 0), dsaSolved: cur.dsaSolved + (g.dsa ?? 0),
     };

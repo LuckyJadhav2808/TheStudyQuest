@@ -24,16 +24,16 @@ export function RadialTimer({
 
   return (
     <div
-      className={`relative grid place-items-center aspect-square max-h-full max-w-full mx-auto transition-all duration-500 ${className ?? ""}`}
+      className={`pointer-events-none relative grid place-items-center aspect-square max-h-full max-w-full mx-auto transition-all duration-500 ${className ?? ""}`}
       style={{
         width: "min(100cqw, 100cqh)",
         height: "min(100cqw, 100cqh)",
-        filter: running ? "drop-shadow(0 0 18px rgba(217, 255, 69, 0.55))" : undefined,
+        filter: running ? "drop-shadow(0 0 18px color-mix(in oklch, var(--primary) 55%, transparent))" : undefined,
       }}
       role="timer"
       aria-label={`${fmtClock(rem)} remaining`}
     >
-      <svg viewBox="0 0 100 100" className="size-full -rotate-90">
+      <svg viewBox="0 0 100 100" className="pointer-events-none size-full -rotate-90">
         {/* Tick marks */}
         <g className="rotate-90 origin-center" opacity={0.28}>
           {TICKS.map((deg) => (
@@ -50,13 +50,13 @@ export function RadialTimer({
             />
           ))}
         </g>
-        {/* Track: ink 10% */}
+        {/* Track: tinted warm track */}
         <circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke="color-mix(in srgb, var(--fg) 10%, transparent)"
+          stroke="color-mix(in srgb, var(--primary) 20%, var(--surface-2))"
           strokeWidth={strokeW}
         />
         {/* Progress arc: rounded-cap lime */}

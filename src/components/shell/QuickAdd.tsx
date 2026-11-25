@@ -8,6 +8,7 @@ import { emit } from "@/core/events";
 import { examsRepo, habitsRepo, notesRepo, tasksRepo } from "@/core/repos";
 import type { Priority } from "@/core/types";
 import { strobiSay } from "@/features/strobi/toast";
+import { dynamicToastLine, parseQuickTask } from "@/lib/localNlp";
 import { todayKey } from "@/lib/utils";
 import { useUI, type QuickKind } from "./ui-store";
 
@@ -21,11 +22,25 @@ export function QuickAdd() {
     e.preventDefault();
     const t = title.trim();
     if (!t || !quickAdd) return;
-    if (quickAdd === "task") await tasksRepo.add({ title: t, status: "todo", priority, tags: [], subtasks: [], order: Date.now() });
+    if (quickAdd === "task") {
+      const parsed = parseQuickTask(t);
+      await tasksRepo.add({
+        title: parsed.title,
+        status: "todo",
+        priority: parsed.priority ?? priority,
+        due: parsed.due,
+        tags: [],
+        subtasks: [],
+        order: Date.now(),
+      });
+      strobiSay(dynamicToastLine("Quest added", parsed.title), "tip");
+      close();
+      return;
+    }
     if (quickAdd === "note") { await notesRepo.add({ title: t, content: `# ${t}\n\n`, tags: [] }); emit("note.created", { title: t }); }
-    if (quickAdd === "habit") await habitsRepo.add({ name: t, icon: "Lightning", color: "#D9FF45" });
+    if (quickAdd === "habit") await habitsRepo.add({ name: t, icon: "Lightning", color: "var(--primary)" });
     if (quickAdd === "exam") await examsRepo.add({ title: t, date, checklist: [] });
-    if (quickAdd !== "note") strobiSay(`Added ${quickAdd}: ${t}`, "tip");
+    if (quickAdd !== "note") strobiSay(dynamicToastLine(`Added ${quickAdd}`, t), "tip");
     close();
   }
   return (

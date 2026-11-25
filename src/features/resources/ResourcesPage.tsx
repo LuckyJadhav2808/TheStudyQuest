@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { ArrowSquareOut, BookmarkSimple, FilePdf, GithubLogo, GoogleDriveLogo, Link as LinkIcon, NotePencil, PushPin, Plus, Trash, YoutubeLogo, type Icon } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
-import { Card, CardTitle, Empty, IconBadge, PageFrame } from "@/components/ui/misc";
+import { BentoCard } from "@/components/shell/BentoCard";
+import { EmptyState, HeroCard } from "@/components/ui/design-primitives";
+import { IconBadge, PageFrame } from "@/components/ui/misc";
 import { Modal } from "@/components/ui/modal";
 import { Field, Select } from "@/components/ui/fields";
 import { resourcesRepo } from "@/core/repos";
@@ -10,7 +12,7 @@ import type { Resource, ResourceKind } from "@/core/types";
 import { deleteWithUndo, useRows } from "@/features/shared/hooks";
 
 const KIND_ICON: Record<ResourceKind, Icon> = { link: LinkIcon, pdf: FilePdf, youtube: YoutubeLogo, drive: GoogleDriveLogo, github: GithubLogo, text: NotePencil };
-const COLORS = ["#D9FF45", "#FFE2D2", "#E8E4FF", "#1FD6C1", "#FF8B4A", "#2E8BFF"];
+const COLORS = ["var(--primary)", "var(--domain-quests-tint)", "var(--domain-notes-tint)", "var(--domain-stats-fill)", "var(--domain-quests-fill)", "var(--domain-tools-fill)"];
 const detect = (u: string): ResourceKind => (/youtu\.?be/.test(u) ? "youtube" : /drive\.google/.test(u) ? "drive" : /github\.com/.test(u) ? "github" : /\.pdf($|\?)/i.test(u) ? "pdf" : "link");
 const ytId = (u: string): string | null => /(?:v=|youtu\.be\/|embed\/)([\w-]{11})/.exec(u)?.[1] ?? null;
 
@@ -25,25 +27,24 @@ export function ResourcesPage() {
   const shown = rows.filter((r) => (folder === "All" || r.folder === folder) && (r.title + r.url + r.tags.join(" ")).toLowerCase().includes(q.toLowerCase())).sort((a, b) => Number(b.pinned) - Number(a.pinned));
   const submit = async (e: React.FormEvent) => { e.preventDefault(); const kind = f.kind === "auto" ? (f.text && !f.url ? "text" : detect(f.url)) : f.kind; if (!f.title.trim() && !f.url.trim()) return; await resourcesRepo.add({ title: f.title.trim() || f.url, url: f.url.trim(), kind, folder: f.folder.trim() || "General", color: f.color, pinned: false, tags: f.tags.split(",").map((t) => t.trim()).filter(Boolean), text: f.text }); setAdd(false); setF({ ...f, title: "", url: "", text: "", tags: "" }); };
   const side = (
-    <Card className="gap-2">
-      <CardTitle>Folders</CardTitle>
-      <div className="scroll-thin min-h-0 flex-1 space-y-1">{folders.map((x) => <button key={x} onClick={() => setFolder(x)} className={`min-h-10 w-full rounded-full px-4 text-left text-sm font-bold ${x === folder ? "bg-ink text-paper" : "hover:bg-soft"}`}>{x}</button>)}</div>
-    </Card>
+    <BentoCard title="Folders" className="h-full surface-inverse" bodyClassName="gap-2">
+      <div className="scroll-thin min-h-0 flex-1 space-y-1">{folders.map((x) => <button key={x} onClick={() => setFolder(x)} className={`min-h-10 w-full rounded-full px-4 text-left text-sm font-bold ${x === folder ? "bg-primary text-on-primary" : "hover:bg-soft"}`}>{x}</button>)}</div>
+    </BentoCard>
   );
   const grid = (
-    <Card className="gap-3">
+    <HeroCard tint="tools" hardShadow className="h-full" bodyClassName="gap-3">
       <div className="flex gap-2"><input className="input" placeholder="Search the vault" aria-label="Search resources" value={q} onChange={(e) => setQ(e.target.value)} /><button className="btn btn-lime shrink-0" onClick={() => setAdd(true)}><Plus size={18} weight="bold" />Add</button></div>
       <div className="scroll-thin grid min-h-0 flex-1 content-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {shown.length === 0 && <div className="col-span-full"><Empty title="Your vault is empty" hint="Save links, PDFs, videos and notes you keep coming back to." action={<button className="btn btn-lime" onClick={() => setAdd(true)}>Add a resource</button>} /></div>}
+        {shown.length === 0 && <div className="col-span-full h-full"><EmptyState title="Your vault is empty" hint="Save links, PDFs, videos and notes you keep coming back to." mood="happy" ghostCount={3} ghostLabel="Link" action={<button className="btn btn-lime" onClick={() => setAdd(true)}>Add a resource</button>} /></div>}
         {shown.map((r) => { const Ic = KIND_ICON[r.kind]; return (
-          <div key={r.id} className="tile flex flex-col gap-2 border border-line/20 bg-surface">
+          <div key={r.id} className="tile flex flex-col gap-2 border border-border-strong/20 bg-surface">
             <div className="flex items-start gap-3"><IconBadge color={r.color}><Ic size={22} weight="duotone" /></IconBadge><button className="min-w-0 flex-1 text-left" onClick={() => setView(r)}><p className="line-clamp-2 text-sm font-bold">{r.title}</p><p className="truncate text-xs text-muted">{r.folder}{r.tags.length ? ` · #${r.tags.join(" #")}` : ""}</p></button>
               <button aria-label={r.pinned ? "Unpin" : "Pin"} onClick={() => void resourcesRepo.update(r.id, { pinned: !r.pinned })}><PushPin size={18} weight={r.pinned ? "fill" : "regular"} /></button></div>
             <div className="flex gap-2">{r.url && <a className="btn btn-sm" href={r.url} target="_blank" rel="noreferrer"><ArrowSquareOut size={14} />Open</a>}<button className="btn btn-sm btn-icon ml-auto" aria-label="Delete resource" onClick={() => void deleteWithUndo(resourcesRepo, r.id, "resource")}><Trash size={14} /></button></div>
           </div>
         ); })}
       </div>
-    </Card>
+    </HeroCard>
   );
   const id = view ? ytId(view.url) : null;
   return (

@@ -3,8 +3,7 @@ import { animate, motion } from "motion/react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BlobBackdrop } from "@/components/shapes";
-import { StrobiFace } from "@/features/strobi/StrobiFace";
-import type { Mood } from "@/features/strobi/store";
+import { StrobiFace, type StrobiPose } from "@/features/strobi/StrobiFace";
 import { useMotionConfig } from "@/lib/motion";
 
 import { useUI } from "@/components/shell/ui-store";
@@ -23,36 +22,126 @@ export function CountUp({ value, className }: { value: number; className?: strin
   }, [value]);
   return <span ref={ref} className={cn("num", className)}>{value.toLocaleString()}</span>;
 }
-export function ProgressBar({ pct, className, color = "var(--color-teal)" }: { pct: number; className?: string; color?: string }) {
+export function ProgressBar({
+  pct,
+  className,
+  color = "var(--domain-stats-fill)",
+  variant = "solid",
+}: {
+  pct: number;
+  className?: string;
+  color?: string;
+  variant?: "solid" | "hatched";
+}) {
   return (
-    <div role="progressbar" aria-valuenow={Math.round(pct * 100)} aria-valuemin={0} aria-valuemax={100} className={cn("h-3 overflow-hidden rounded-full border border-line/60 bg-soft", className)}>
-      <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, pct * 100))}%`, background: color }} />
+    <div role="progressbar" aria-valuenow={Math.round(pct * 100)} aria-valuemin={0} aria-valuemax={100} className={cn("h-3 overflow-hidden rounded-full border border-border-strong/50 bg-surface-2", className)}>
+      <div
+        className={cn("h-full rounded-full transition-[width] duration-500", variant === "hatched" && "progress-hatched")}
+        style={{ width: `${Math.min(100, Math.max(0, pct * 100))}%`, backgroundColor: color }}
+      />
     </div>
   );
 }
-export function Segmented<T extends string>({ value, onChange, options, className }: { value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode }[]; className?: string }) {
+
+/** Segmented semi-circular tick gauge inspired by mechanical telemetry dials. */
+export function TickGauge({
+  pct,
+  ticks = 20,
+  color = "var(--domain-stats-fill)",
+  label,
+  className,
+}: {
+  pct: number;
+  ticks?: number;
+  color?: string;
+  label?: string;
+  className?: string;
+}) {
+  const clamped = Math.min(1, Math.max(0, pct));
+  const activeCount = Math.round(clamped * ticks);
+  return (
+    <div className={cn("relative inline-flex flex-col items-center justify-end", className)} role="img" aria-label={label ?? `${Math.round(clamped * 100)}%`}>
+      <svg viewBox="0 0 120 68" className="w-full h-auto overflow-visible">
+        {Array.from({ length: ticks }, (_, i) => {
+          const angle = -180 + (i / (ticks - 1)) * 180;
+          const rad = (angle * Math.PI) / 180;
+          const r1 = 44;
+          const r2 = 54;
+          const x1 = Number((60 + r1 * Math.cos(rad)).toFixed(2));
+          const y1 = Number((60 + r1 * Math.sin(rad)).toFixed(2));
+          const x2 = Number((60 + r2 * Math.cos(rad)).toFixed(2));
+          const y2 = Number((60 + r2 * Math.sin(rad)).toFixed(2));
+          const on = i < activeCount;
+          return (
+            <line
+              key={i}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke={on ? color : "color-mix(in srgb, var(--fg) 20%, transparent)"}
+              strokeWidth={on ? 3.4 : 2.6}
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute bottom-0 text-center leading-none">
+        <span className="font-display num text-lg font-extrabold text-fg">{Math.round(clamped * 100)}%</span>
+        {label && <span className="block text-[9px] font-bold uppercase tracking-wider text-muted mt-0.5">{label}</span>}
+      </div>
+    </div>
+  );
+}
+export function Segmented<T extends string>({
+  value,
+  onChange,
+  options,
+  size = "md",
+  ariaLabel,
+  className,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: ReactNode; className?: string }[];
+  size?: "md" | "xs";
+  ariaLabel?: string;
+  className?: string;
+}) {
   const id = useId();
   const { snappy } = useMotionConfig();
+  const xs = size === "xs";
   return (
-    <div role="tablist" className={cn("inline-flex rounded-full border-[1.5px] border-line bg-soft p-1", className)}>
+    <div
+      role="tablist"
+      aria-label={ariaLabel}
+      className={cn(
+        "inline-flex rounded-full",
+        xs ? "border border-line bg-surface p-0.5" : "border-[1.5px] border-border-strong bg-surface-2 p-1",
+        className
+      )}
+    >
       {options.map((o) => {
         const active = o.value === value;
         return (
           <button
             key={o.value}
+            type="button"
             role="tab"
             aria-selected={active}
             onClick={() => onChange(o.value)}
             className={cn(
-              "relative min-h-9 rounded-full px-3.5 text-[13px] font-bold transition-colors cursor-pointer",
-              active ? "text-paper" : "text-muted hover:text-fg"
+              "relative rounded-full transition-colors cursor-pointer",
+              xs ? "px-2 py-0.5 text-[10px] font-extrabold" : "min-h-9 px-3.5 text-[13px] font-bold",
+              active ? "text-on-inverse" : "text-ink-muted hover:text-fg",
+              o.className
             )}
           >
             {active && (
               <motion.span
                 layoutId={`seg-${id}`}
                 transition={snappy}
-                className="absolute inset-0 rounded-full bg-ink"
+                className="absolute inset-0 rounded-full bg-surface-inverse"
               />
             )}
             <span className="relative z-10">{o.label}</span>
@@ -63,12 +152,12 @@ export function Segmented<T extends string>({ value, onChange, options, classNam
   );
 }
 export function Badge({ children, color, className }: { children: ReactNode; color?: string; className?: string }) {
-  return <span className={cn("inline-flex items-center rounded-full border border-ink/70 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-ink", className)} style={{ background: color ?? "var(--color-lime)" }}>{children}</span>;
+  return <span className={cn("inline-flex items-center rounded-full border border-border-strong/70 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-on-primary", className)} style={{ background: color ?? "var(--primary)" }}>{children}</span>;
 }
-export function IconBadge({ children, color = "var(--color-lime)", className }: { children: ReactNode; color?: string; className?: string }) {
-  return <span className={cn("grid size-11 shrink-0 place-items-center rounded-[16px] border-[1.5px] border-ink text-ink", className)} style={{ background: color }}>{children}</span>;
+export function IconBadge({ children, color = "var(--primary)", className }: { children: ReactNode; color?: string; className?: string }) {
+  return <span className={cn("grid size-11 shrink-0 place-items-center rounded-[16px] border-[1.5px] border-border-strong text-on-primary", className)} style={{ background: color }}>{children}</span>;
 }
-export function Empty({ title, hint, action, mood = "idle" }: { title: string; hint?: string; action?: ReactNode; mood?: Mood }) {
+export function Empty({ title, hint, action, mood = "idle" }: { title: string; hint?: string; action?: ReactNode; mood?: StrobiPose }) {
   return (
     <div className="relative flex h-full min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[20px] p-3 text-center">
       <BlobBackdrop preset={1} className="size-48 opacity-40 pointer-events-none" />

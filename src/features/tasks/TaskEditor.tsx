@@ -8,7 +8,7 @@ import type { Priority, Task } from "@/core/types";
 import { deleteWithUndo } from "@/features/shared/hooks";
 import { uid } from "@/lib/utils";
 
-export const PRIORITY_COLOR: Record<Priority, string> = { low: "#1FD6C1", medium: "#2E8BFF", high: "#FF8B4A", urgent: "#FF5A4A" };
+export const PRIORITY_COLOR: Record<Priority, string> = { low: "var(--domain-stats-fill)", medium: "var(--domain-tools-fill)", high: "var(--domain-quests-fill)", urgent: "var(--danger)" };
 
 export function TaskEditor({ task, onClose }: { task: Task | null; onClose: () => void }) {
   const [sub, setSub] = useState("");
@@ -35,7 +35,7 @@ export function TaskEditor({ task, onClose }: { task: Task | null; onClose: () =
             <input className="input" placeholder="Add a subtask" value={sub} onChange={(e) => setSub(e.target.value)} /><button className="btn btn-ink" type="submit">Add</button>
           </form>
         </div>
-        <button className="btn border-red-500 text-red-600" onClick={() => { onClose(); void deleteWithUndo(tasksRepo, task.id, "quest"); }}>Delete quest</button>
+        <button className="btn border-[var(--danger)] text-[var(--danger-text)]" onClick={() => { onClose(); void deleteWithUndo(tasksRepo, task.id, "quest"); }}>Delete quest</button>
       </div>
     </Modal>
   );

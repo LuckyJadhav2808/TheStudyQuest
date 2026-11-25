@@ -121,7 +121,7 @@ export function CodeWorkspace({ project }: { project: Project }) {
         <div className="min-h-0 flex-1 overflow-hidden rounded-[20px] border border-white/10">
           {cur ? <CodeEditor value={value} onChange={edit} language={lang} theme={theme} /> : <p className="p-4 text-sm text-paper/60">Open a file from the tree.</p>}
         </div>
-        {issue && <p className="text-xs font-bold text-red-400 shrink-0" role="alert">Syntax: {issue}</p>}
+        {issue && <p className="text-xs font-bold text-[var(--danger)] shrink-0" role="alert">Syntax: {issue}</p>}
         {lang === "python" && kernel.status === "loading" && <p className="text-xs text-paper/70 shrink-0">{kernel.message}...</p>}
       </div>
     </BentoCard>
@@ -163,7 +163,7 @@ export function CodeWorkspace({ project }: { project: Project }) {
               <span className="opacity-60">Console output appears here.</span>
             ) : (
               lines.map((l, i) => (
-                <pre key={i} className={`whitespace-pre-wrap ${l.level === "error" ? "text-red-400" : l.level === "warn" ? "text-yellow-300" : ""}`}>
+                <pre key={i} className={`whitespace-pre-wrap ${l.level === "error" ? "text-[var(--danger)]" : l.level === "warn" ? "text-[var(--warning)]" : ""}`}>
                   {l.text}
                 </pre>
               ))

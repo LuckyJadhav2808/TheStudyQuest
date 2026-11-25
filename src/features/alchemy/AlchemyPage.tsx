@@ -3,7 +3,9 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useState } from "react";
 import { Flask } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
-import { Card, CardTitle, Empty, IconBadge, PageFrame } from "@/components/ui/misc";
+import { BentoCard } from "@/components/shell/BentoCard";
+import { EmptyState, HeroCard } from "@/components/ui/design-primitives";
+import { IconBadge, PageFrame } from "@/components/ui/misc";
 import { db } from "@/core/db";
 import { buffsRepo, gameRepo } from "@/core/repos";
 import { useGame } from "@/core/settings";
@@ -33,31 +35,28 @@ export function AlchemyPage() {
   };
   const live = buffs.filter((b) => b.expiresAt > now);
   const pantry = (
-    <Card className="gap-3">
-      <CardTitle sub="Earned from focus, quests, DSA and chests">Ingredients</CardTitle>
+    <BentoCard title="Ingredients" subtitle="Earned from focus, quests, DSA and chests" className="h-full">
       <div className="scroll-thin min-h-0 flex-1 space-y-2">
         {INGREDIENTS.map((i) => <div key={i.id} className="tile flex items-center gap-3"><IconBadge color={i.color}><Flask size={22} weight="duotone" /></IconBadge><div className="flex-1"><p className="font-bold">{i.name}</p><p className="text-xs text-muted">{i.hint}</p></div><span className="font-display num text-3xl">{have(i.id)}</span></div>)}
         <button className="btn btn-sm" onClick={() => void transmute()}>Transmute 3 Stardust to 1 Elixir</button>
       </div>
-    </Card>
+    </BentoCard>
   );
   const brewing = (
-    <Card className="gap-3">
-      <CardTitle sub="Buffs stack their duration">Cauldron</CardTitle>
+    <HeroCard tint="play" hardShadow title="Cauldron" subtitle="Buffs stack their duration" className="h-full">
       <div className="scroll-thin min-h-0 flex-1 space-y-2">
         {RECIPES.map((r) => { const ok = Object.entries(r.cost).every(([k, v]) => have(k) >= v); return (
-          <div key={r.id} className="tile flex flex-wrap items-center gap-3"><div className="min-w-0 flex-1"><p className="font-bold">{r.name}</p><p className="text-xs text-muted">{r.desc}</p><p className="mt-1 text-xs">{Object.entries(r.cost).map(([k, v]) => `${v} ${INGREDIENTS.find((i) => i.id === k)?.name}`).join(" + ")}</p></div><button className="btn btn-lime btn-sm" disabled={!ok} onClick={() => void brew(r)}>Brew</button></div>
+          <div key={r.id} className="tile bg-surface/90 flex flex-wrap items-center gap-3"><div className="min-w-0 flex-1"><p className="font-bold">{r.name}</p><p className="text-xs text-muted">{r.desc}</p><p className="mt-1 text-xs">{Object.entries(r.cost).map(([k, v]) => `${v} ${INGREDIENTS.find((i) => i.id === k)?.name}`).join(" + ")}</p></div><button className="btn btn-lime btn-sm" disabled={!ok} onClick={() => void brew(r)}>Brew</button></div>
         ); })}
       </div>
-    </Card>
+    </HeroCard>
   );
   const active = (
-    <Card className="gap-3">
-      <CardTitle sub="Applied automatically to rewards">Active buffs</CardTitle>
+    <BentoCard title="Active buffs" subtitle="Applied automatically to rewards" className="h-full surface-inverse">
       <div className="scroll-thin min-h-0 flex-1 space-y-2">
-        {live.length === 0 ? <Empty title="No active buffs" hint="Brew something to multiply your XP or coins." /> : live.map((b) => <div key={b.id} className="tile flex items-center justify-between border-[1.5px] border-line bg-lime text-ink"><span className="font-bold">{BUFF_NAMES[b.kind] ?? b.kind}</span><span className="num font-display text-2xl">{fmtClock(b.expiresAt - now).padStart(5, "0")}</span></div>)}
+        {live.length === 0 ? <EmptyState title="No active buffs" hint="Brew something to multiply your XP or coins." mood="idle" /> : live.map((b) => <div key={b.id} className="tile flex items-center justify-between border-[1.5px] border-border-strong bg-primary text-on-primary"><span className="font-bold">{BUFF_NAMES[b.kind] ?? b.kind}</span><span className="num font-display text-2xl">{fmtClock(b.expiresAt - now).padStart(5, "0")}</span></div>)}
       </div>
-    </Card>
+    </BentoCard>
   );
   return (
     <PageFrame title="Alchemy" subtitle="Brew buffs from the things you earn.">

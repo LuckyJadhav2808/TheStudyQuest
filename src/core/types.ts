@@ -33,13 +33,12 @@ export interface InventoryItem extends Base { itemId: string; qty: number; equip
 export interface Buff extends Base { kind: string; expiresAt: number }
 export interface SkillRow { id: string; unlockedAt: number; createdAt: number; updatedAt: number }
 export interface TimetableBlock extends Base { day: number; start: string; end: string; title: string; room: string; professor: string; color: string }
-export interface Flashcard extends Base { front: string; back: string; noteId?: ID | null; due: number }
+export interface Flashcard extends Base { front: string; back: string; noteId?: ID | null; due: number; fsrs?: Record<string, unknown> }
 export interface ScoreRow extends Base { game: string; score: number }
 export type ThemeName = "paper" | "ink" | "lavender" | "peach";
 export interface Settings {
   id: "main"; theme: ThemeName; name: string; avatarSeed: string; title: string; goal: string;
   masterVolume: number; sfxVolume: number; musicVolume: number; muted: boolean;
-  aiProvider: "openrouter" | "openai" | "google"; aiKey: string; aiModel: string;
   flags: Record<string, boolean>; hiddenWidgets: string[]; onboarded: boolean; profileCreated: boolean;
   notifications: boolean; lastChest: number; leetcodeUser: string; focusGoalMin: number; ownedBorders: string[];
   updatedAt: number;
