@@ -3,6 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import dynamic from "next/dynamic";
 import { useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "motion/react";
 import { FolderSimple, PencilSimple, PushPin, Trash, UploadSimple, Plus } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
 import { BentoCard } from "@/components/shell/BentoCard";
@@ -195,11 +196,18 @@ export function NotesPage() {
                     className="pb-1.5"
                   >
                     <div
-                      className={`tile flex h-full items-center gap-2 border-[1.5px] p-2.5 transition hover:bg-lavender/35 ${
-                        n.id === id ? "border-ink bg-lime text-ink shadow-xs" : "border-transparent"
+                      className={`relative tile flex h-full items-center gap-2 border-[1.5px] p-2.5 transition ${
+                        n.id === id ? "border-ink text-ink shadow-xs" : "border-transparent hover:bg-lavender/35"
                       }`}
                     >
-                      <button className="min-w-0 flex-1 text-left" onClick={() => void setId(n.id)}>
+                      {n.id === id && (
+                        <motion.span
+                          layoutId="active-note-pill"
+                          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                          className="absolute inset-0 rounded-[24px] bg-lime -z-0"
+                        />
+                      )}
+                      <button className="relative z-10 min-w-0 flex-1 text-left" onClick={() => void setId(n.id)}>
                         <p className="truncate text-xs sm:text-sm font-bold">{n.title || "Untitled"}</p>
                         <p className="truncate text-[11px] opacity-75">
                           {n.content.replace(/[#*>`-]/g, "").trim().slice(0, 48) || "Empty note"}
@@ -218,14 +226,14 @@ export function NotesPage() {
                       <button
                         aria-label={n.pinned ? "Unpin" : "Pin"}
                         onClick={() => void notesRepo.update(n.id, { pinned: !n.pinned })}
-                        className="p-1 hover:text-ink"
+                        className="relative z-10 p-1 hover:text-ink"
                       >
                         <PushPin size={14} weight={n.pinned ? "fill" : "regular"} />
                       </button>
                       <button
                         aria-label="Rename note"
                         title="Rename note"
-                        className="p-1 hover:text-ink"
+                        className="relative z-10 p-1 hover:text-ink"
                         onClick={() => setRename(n.id)}
                       >
                         <PencilSimple size={14} />
@@ -236,7 +244,7 @@ export function NotesPage() {
                           if (id === n.id) void setId(null);
                           void deleteWithUndo(notesRepo, n.id, "note");
                         }}
-                        className="p-1 hover:text-ink"
+                        className="relative z-10 p-1 hover:text-ink"
                       >
                         <Trash size={14} />
                       </button>

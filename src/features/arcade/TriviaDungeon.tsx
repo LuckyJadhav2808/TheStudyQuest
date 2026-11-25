@@ -82,7 +82,11 @@ export function TriviaDungeon() {
     >
       <div className="flex h-full min-h-0 flex-col justify-between gap-4">
         {/* Monster card */}
-        <div className="relative flex items-center gap-4 rounded-[24px] border-[1.5px] border-line/40 bg-surface/90 p-3.5 shadow-xs shrink-0">
+        <div
+          className={`relative flex items-center gap-4 rounded-[24px] border-[1.5px] border-line/40 bg-surface/90 p-3.5 shadow-xs shrink-0 transition-transform duration-150 ${
+            dmgPop?.startsWith("-") && dmgPop.includes("HP") ? "scale-x-105 scale-y-90" : ""
+          }`}
+        >
           <div className="grid size-14 shrink-0 place-items-center rounded-2xl border border-ink/30 bg-orange/20 text-ink">
             <Skull size={34} weight="duotone" />
           </div>
@@ -122,9 +126,9 @@ export function TriviaDungeon() {
                   picked === null
                     ? "border-line/40 bg-surface hover:border-ink hover:-translate-y-0.5"
                     : k === q.answer
-                    ? "border-ink bg-lime text-ink"
+                    ? "border-ink bg-lime text-ink scale-[1.03]"
                     : picked === k
-                    ? "border-ink bg-red-300 text-ink"
+                    ? "border-ink bg-red-300 text-ink -translate-x-1"
                     : "border-line/20 bg-surface/60 opacity-60";
                 return (
                   <button

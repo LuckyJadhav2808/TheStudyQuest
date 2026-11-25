@@ -218,8 +218,17 @@ export function SettingsPage() {
                         key={t.id}
                         role="radio"
                         aria-checked={s.theme === t.id}
-                        onClick={() => void updateSettings({ theme: t.id })}
-                        className={`flex min-h-11 items-center gap-2.5 rounded-full border-[1.5px] px-3.5 text-xs font-bold transition ${
+                        onClick={() => {
+                          if (typeof document !== "undefined" && "startViewTransition" in document && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                            (document as Document & { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
+                              document.documentElement.dataset.theme = t.id;
+                              void updateSettings({ theme: t.id });
+                            });
+                          } else {
+                            void updateSettings({ theme: t.id });
+                          }
+                        }}
+                        className={`flex min-h-11 items-center gap-2.5 rounded-full border-[1.5px] px-3.5 text-xs font-bold transition cursor-pointer ${
                           s.theme === t.id ? "border-ink bg-lime text-ink shadow-xs" : "border-line/60 bg-surface hover:border-ink"
                         }`}
                       >
