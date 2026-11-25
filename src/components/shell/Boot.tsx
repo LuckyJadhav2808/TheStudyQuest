@@ -27,14 +27,17 @@ export function Boot() {
           void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
         } else {
           // Actively unregister any stale service workers and purge caches in development
-          navigator.serviceWorker.getRegistrations().then((regs) => {
-            for (const r of regs) void r.unregister();
+          const hadController = Boolean(navigator.serviceWorker.controller);
+          void navigator.serviceWorker.getRegistrations().then(async (regs) => {
+            if (regs.length > 0) {
+              await Promise.all(regs.map((r) => r.unregister()));
+              if ("caches" in window) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map((k) => caches.delete(k)));
+              }
+              if (hadController) window.location.reload();
+            }
           });
-          if ("caches" in window) {
-            caches.keys().then((keys) => {
-              for (const k of keys) void caches.delete(k);
-            });
-          }
         }
       }
     } catch { /* optional */ }
