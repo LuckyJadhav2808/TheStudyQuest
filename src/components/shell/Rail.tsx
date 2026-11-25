@@ -36,7 +36,7 @@ export function Rail() {
 
     const cls = cn(
       "group relative grid place-items-center rounded-full shrink-0 cursor-pointer",
-      on ? "text-ink" : isOpen ? "bg-white/15 text-paper" : "text-paper/75 hover:text-paper"
+      on ? "text-fg" : isOpen ? "bg-white/15 text-on-inverse" : "text-on-inverse/75 hover:text-on-inverse"
     );
     const sizeStyle = { width: "clamp(36px, 5.5vh, 48px)", height: "clamp(36px, 5.5vh, 48px)" };
 
@@ -130,7 +130,7 @@ export function Rail() {
 
   return (
     <nav aria-label="Primary" className="relative z-[70] hidden w-[84px] shrink-0 p-3 pr-0 sm:block sm:py-4 sm:pl-4">
-      <div className="flex h-full w-[68px] flex-col items-center justify-between rounded-full bg-ink px-2 py-3 shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)] [data-theme=ink]:border [data-theme=ink]:border-white/10">
+      <div className="flex h-full w-[68px] flex-col items-center justify-between rounded-full bg-surface-inverse px-2 py-3 shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)] border border-line">
         {/* Top: Strobi docked at top of rail */}
         <div className="shrink-0">
           <StrobiRailButton />
