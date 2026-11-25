@@ -50,15 +50,81 @@ async function getSummarizer(onProgress?: (pct: number, status?: string) => void
   return summarizerPromise;
 }
 
+const CHUNK_CHARS = 1600;
+const MAX_CHUNKS = 8;
+
+function chunkText(input: string, maxChars = CHUNK_CHARS): string[] {
+  const clean = input.replace(/\s+/g, " ").trim();
+  if (!clean) return [];
+  if (clean.length <= maxChars) return [clean];
+
+  const sentences = clean.split(/(?<=[.!?])\s+/);
+  const chunks: string[] = [];
+  let buf = "";
+
+  for (const s of sentences) {
+    if (s.length > maxChars) {
+      if (buf) {
+        chunks.push(buf);
+        buf = "";
+      }
+      for (let i = 0; i < s.length && chunks.length < MAX_CHUNKS; i += maxChars) {
+        chunks.push(s.slice(i, i + maxChars));
+      }
+      continue;
+    }
+    if ((buf ? buf.length + 1 : 0) + s.length > maxChars) {
+      chunks.push(buf);
+      buf = s;
+    } else {
+      buf = buf ? `${buf} ${s}` : s;
+    }
+    if (chunks.length >= MAX_CHUNKS) break;
+  }
+  if (buf && chunks.length < MAX_CHUNKS) chunks.push(buf);
+  return chunks;
+}
+
 self.onmessage = async (event: MessageEvent<{ id: string; text: string }>) => {
   const { id, text } = event.data;
   try {
     const run = await getSummarizer((pct, status) => {
       self.postMessage({ id, type: "progress", progress: pct, status });
     });
-    self.postMessage({ id, type: "progress", progress: 99, status: "Verifying model…" });
-    const out = await run(text.slice(0, 3500), { max_new_tokens: 130, min_length: 25 });
-    self.postMessage({ id, type: "done", summary: out[0]?.summary_text ?? "" });
+    const chunks = chunkText(text);
+    if (chunks.length === 0) {
+      self.postMessage({ id, type: "done", summary: "" });
+      return;
+    }
+    if (chunks.length === 1) {
+      self.postMessage({ id, type: "progress", progress: 99, status: "Summarizing…" });
+      const out = await run(chunks[0], { max_new_tokens: 130, min_length: 25 });
+      self.postMessage({ id, type: "done", summary: out[0]?.summary_text ?? "" });
+      return;
+    }
+
+    const partials: string[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      self.postMessage({
+        id,
+        type: "progress",
+        progress: Math.min(98, 90 + Math.round(((i + 1) / (chunks.length + 1)) * 9)),
+        status: `Summarizing section ${i + 1}/${chunks.length}…`,
+      });
+      const res = await run(chunks[i], { max_new_tokens: 90, min_length: 15 });
+      const part = res[0]?.summary_text?.trim();
+      if (part) partials.push(part);
+    }
+
+    const combined = partials.join(" ");
+    if (partials.length <= 1 || combined.length <= 420) {
+      self.postMessage({ id, type: "done", summary: combined });
+      return;
+    }
+
+    self.postMessage({ id, type: "progress", progress: 99, status: "Combining sections…" });
+    const merged = await run(combined.slice(0, CHUNK_CHARS), { max_new_tokens: 140, min_length: 25 });
+    self.postMessage({ id, type: "done", summary: merged[0]?.summary_text ?? combined });
   } catch (err) {
     self.postMessage({
       id,
