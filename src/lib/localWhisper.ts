@@ -14,6 +14,17 @@ function ensureWorker(): Worker {
       if (ev.data.ok) p.resolve(ev.data.text ?? "");
       else p.reject(new Error(ev.data.error ?? "Whisper transcription failed"));
     };
+    const failAll = (ev: Event) => {
+      const msg = ev instanceof ErrorEvent && ev.message ? ev.message : "Whisper worker failed";
+      for (const [id, p] of pending) {
+        pending.delete(id);
+        p.reject(new Error(msg));
+      }
+      worker?.terminate();
+      worker = null;
+    };
+    worker.onerror = failAll;
+    worker.onmessageerror = failAll;
   }
   return worker;
 }

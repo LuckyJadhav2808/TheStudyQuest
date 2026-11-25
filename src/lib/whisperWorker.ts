@@ -1,4 +1,7 @@
-import { pipeline } from "@huggingface/transformers";
+import { env, pipeline } from "@huggingface/transformers";
+
+env.allowLocalModels = false;
+env.useBrowserCache = true;
 
 type AsrPipeline = (audio: Float32Array) => Promise<{ text: string } | Array<{ text: string }>>;
 
@@ -6,7 +9,12 @@ let asrPromise: Promise<AsrPipeline> | null = null;
 
 async function getAsr(): Promise<AsrPipeline> {
   if (!asrPromise) {
-    asrPromise = pipeline("automatic-speech-recognition", "Xenova/whisper-tiny.en") as unknown as Promise<AsrPipeline>;
+    asrPromise = (
+      pipeline("automatic-speech-recognition", "Xenova/whisper-tiny.en") as unknown as Promise<AsrPipeline>
+    ).catch((err) => {
+      asrPromise = null;
+      throw err;
+    });
   }
   return asrPromise;
 }
