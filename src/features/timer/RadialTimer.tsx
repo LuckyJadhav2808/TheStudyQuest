@@ -54,13 +54,13 @@ export function RadialTimer({
             );
           })}
         </g>
-        {/* Track: tinted warm track */}
+        {/* Track: clean neutral ring */}
         <circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke="color-mix(in srgb, var(--primary) 24%, var(--surface-2))"
+          stroke="color-mix(in srgb, var(--ink) 12%, transparent)"
           strokeWidth={strokeW}
         />
         {/* Progress arc: rounded-cap lime */}

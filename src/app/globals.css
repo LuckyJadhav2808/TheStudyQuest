@@ -278,22 +278,22 @@
   --accent-5: #f45b93;
   --accent-6: #4da6ff;
 
-  --domain-focus-tint: #18231e;
+  --domain-focus-tint: #132922;
   --domain-focus-fill: #c5f847;
   --domain-focus-text: #d8ff75;
-  --domain-notes-tint: #201c2c;
+  --domain-notes-tint: #231d36;
   --domain-notes-fill: #9d7bff;
   --domain-notes-text: #cbb8ff;
-  --domain-quests-tint: #261d18;
+  --domain-quests-tint: #2a1e1a;
   --domain-quests-fill: #ff783d;
   --domain-quests-text: #ffb894;
-  --domain-stats-tint: #162323;
+  --domain-stats-tint: #152828;
   --domain-stats-fill: #2ce5b5;
   --domain-stats-text: #8ff7dc;
-  --domain-play-tint: #271a23;
+  --domain-play-tint: #2c1b27;
   --domain-play-fill: #f45b93;
   --domain-play-text: #ffa8c8;
-  --domain-tools-tint: #18202b;
+  --domain-tools-tint: #182434;
   --domain-tools-fill: #4da6ff;
   --domain-tools-text: #a3d1ff;
 
@@ -397,6 +397,12 @@
   [data-theme="ink"] ::selection {
     background: var(--primary);
     color: var(--on-primary);
+  }
+  [data-theme="ink"] .card,
+  [data-theme="ink"] .tile,
+  [data-theme="ink"] .pill,
+  [data-theme="ink"] .chip {
+    border-color: rgba(255, 255, 255, 0.11);
   }
   ::-webkit-scrollbar {
     width: 6px;
