@@ -79,7 +79,7 @@ export function Header() {
         <SeededAvatar seed={s.avatarSeed || "strobi"} size={32} className="hidden shrink-0 sm:inline-grid" />
         <div className="min-w-0 flex-1 flex items-baseline gap-3">
           <h1
-            title={title}
+            title={typeof title === "string" ? title : undefined}
             className="font-display truncate text-lg sm:text-2xl font-extrabold text-fg leading-tight"
             suppressHydrationWarning
           >
