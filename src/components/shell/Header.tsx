@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import NumberFlow from "@number-flow/react";
-import Balancer from "react-wrap-balancer";
 import { ArrowsIn, ArrowsOut, Coins, Command, Fire, Lightning, Moon, PawPrint, Plus, Sun, WifiSlash, Question } from "@phosphor-icons/react";
 import { useGame, useSettings } from "@/core/settings";
 import { levelProgress } from "@/core/gamification";
@@ -79,8 +78,8 @@ export function Header() {
       <div className="min-w-0 flex items-center gap-2.5">
         <SeededAvatar seed={s.avatarSeed || "strobi"} size={32} className="hidden sm:inline-grid" />
         <div className="min-w-0 flex items-baseline gap-3">
-          <h1 className="font-display text-lg sm:text-3xl font-extrabold text-fg leading-tight line-clamp-1 sm:line-clamp-none" suppressHydrationWarning>
-            <Balancer>{title}</Balancer>
+          <h1 className="font-display text-balance text-lg sm:text-3xl font-extrabold text-fg leading-tight line-clamp-1 sm:line-clamp-none" suppressHydrationWarning>
+            {title}
           </h1>
           {subtitle && (
             <span className="hidden md:[@media(min-height:800px)]:inline-block truncate text-xs text-muted font-medium" suppressHydrationWarning>

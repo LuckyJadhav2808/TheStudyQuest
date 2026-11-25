@@ -1,4 +1,5 @@
 "use client";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Toaster } from "sonner";
@@ -22,7 +23,15 @@ export function Boot() {
   const s = useSettings();
   const g = useGame();
   const mobile = useIsMobile();
+  const router = useRouter();
+  const pathname = usePathname();
   const set = useUI((x) => x.set);
+
+  useEffect(() => {
+    if (s.updatedAt > 0 && !s.profileCreated && pathname !== "/login" && pathname !== "/privacy") {
+      router.replace("/login");
+    }
+  }, [s.updatedAt, s.profileCreated, pathname, router]);
 
   useHotkeys(
     "mod+k",
@@ -92,7 +101,7 @@ export function Boot() {
       }
     }, 15000);
     const tourTimer = window.setTimeout(() => {
-      if (window.innerWidth >= 1024) startDesktopTour(false);
+      if (window.innerWidth >= 1024 && window.location.pathname !== "/login") startDesktopTour(false);
     }, 1400);
     return () => {
       window.removeEventListener("offline", off);

@@ -42,7 +42,7 @@ export function Onboarding() {
   const s = useSettings();
   const [i, setI] = useState(0);
   const [ready] = useState(true);
-  if (s.onboarded || !ready || s.updatedAt === 0) return null;
+  if (s.onboarded || !s.profileCreated || !ready || s.updatedAt === 0) return null;
   const done = () => void updateSettings({ onboarded: true });
   return (
     <div role="dialog" aria-label="Welcome tour" className="pop-in fixed bottom-[104px] left-1/2 z-[70] w-[min(92vw,380px)] -translate-x-1/2 rounded-[28px] border-[1.5px] border-ink bg-white p-4 text-ink shadow-2xl sm:bottom-6 sm:left-[84px] sm:right-auto sm:translate-x-0">

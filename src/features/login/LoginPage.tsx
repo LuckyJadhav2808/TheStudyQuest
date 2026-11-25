@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Balancer from "react-wrap-balancer";
 import { ArrowLeft, Sparkle } from "@phosphor-icons/react";
 import { PageFrame } from "@/components/ui/misc";
 import { Field, Select } from "@/components/ui/fields";
@@ -120,8 +119,8 @@ export function LoginPage() {
           <div className="pointer-events-none absolute -right-8 top-12 size-24 rounded-full bg-[var(--color-violet-300)]" aria-hidden />
 
           <div className="relative z-10 mt-20 sm:mt-24 flex flex-col gap-3">
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-fg leading-[1.08]">
-              <Balancer>Let&apos;s turn study into a quest!</Balancer>
+            <h2 className="font-display text-balance text-3xl sm:text-4xl font-extrabold tracking-tight text-fg leading-[1.08]">
+              Let&apos;s turn study into a quest!
             </h2>
             <p className="text-sm text-muted max-w-xs">
               Say goodbye to procrastination. Notes, spaced repetition, and focus sprints — offline-first.
@@ -202,8 +201,8 @@ export function LoginPage() {
             <div className="-mt-2 mb-2 transition-transform duration-200">
               <StrobiFace mood={strobiMood} size={86} />
             </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-on-primary">
-              <Balancer>{rightPane === "auth" && hasCloud ? "Ready for focus?" : "Create your scholar"}</Balancer>
+            <h2 className="font-display text-balance text-2xl sm:text-3xl font-extrabold tracking-tight text-on-primary">
+              {rightPane === "auth" && hasCloud ? "Ready for focus?" : "Create your scholar"}
             </h2>
             {hasCloud && (
               <div className="hidden lg:flex items-center gap-1.5 mt-2">

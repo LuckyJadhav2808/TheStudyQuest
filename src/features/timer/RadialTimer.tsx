@@ -35,20 +35,24 @@ export function RadialTimer({
     >
       <svg viewBox="0 0 100 100" className="pointer-events-none size-full -rotate-90">
         {/* Tick marks */}
-        <g className="rotate-90 origin-center" opacity={0.28}>
-          {TICKS.map((deg) => (
-            <line
-              key={deg}
-              x1="50"
-              y1="3.5"
-              x2="50"
-              y2={deg % 90 === 0 ? "7" : "5.5"}
-              stroke="currentColor"
-              strokeWidth={deg % 90 === 0 ? "1.4" : "0.9"}
-              strokeLinecap="round"
-              transform={`rotate(${deg} 50 50)`}
-            />
-          ))}
+        <g className="rotate-90 origin-center">
+          {TICKS.map((deg) => {
+            const cardinal = deg % 90 === 0;
+            return (
+              <line
+                key={deg}
+                x1="50"
+                y1="3.5"
+                x2="50"
+                y2={cardinal ? "7.5" : "5.5"}
+                stroke={cardinal ? "var(--primary)" : "currentColor"}
+                strokeOpacity={cardinal ? 0.85 : 0.35}
+                strokeWidth={cardinal ? "1.6" : "0.9"}
+                strokeLinecap="round"
+                transform={`rotate(${deg} 50 50)`}
+              />
+            );
+          })}
         </g>
         {/* Track: tinted warm track */}
         <circle
@@ -56,7 +60,7 @@ export function RadialTimer({
           cy="50"
           r={r}
           fill="none"
-          stroke="color-mix(in srgb, var(--primary) 20%, var(--surface-2))"
+          stroke="color-mix(in srgb, var(--primary) 24%, var(--surface-2))"
           strokeWidth={strokeW}
         />
         {/* Progress arc: rounded-cap lime */}
@@ -65,7 +69,7 @@ export function RadialTimer({
           cy="50"
           r={r}
           fill="none"
-          stroke="var(--color-lime)"
+          stroke="var(--primary)"
           strokeWidth={strokeW}
           strokeLinecap="round"
           strokeDasharray={c}
