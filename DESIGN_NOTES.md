@@ -92,5 +92,17 @@ Scoring axes (1–5): **Purpose** (clarity of #1 job) · **Space** (viewport fil
 
 ---
 
-## Upgrade Log
-*(Updated per commit as primitives and pages are upgraded.)*
+## Upgrade Log & Before/After Summary
+
+| Route | Score Before | Score After | Main Change |
+| :--- | :---: | :---: | :--- |
+| `/` (Home) | 3.2 | **4.8** | Lavender `HeroCard` with hard shadow, centered-left ring + Start button, right preset/chest/exam stack, CSS-animated Lo-Fi equaliser, ghost Velocity bars ("Your week starts here."), compact empty Notes deck. |
+| `/timer` (Focus) | 3.4 | **4.8** | Lime-soft `HeroCard` with hard shadow, tick-marked lime ring + running glow, 3 session stat chips, slim `Focus defense` strip, merged `Soundscape` with dual-wave Binaural Hz visual & icon-equipped Ambient sliders. |
+| `/notes` (Notes) | 3.2 | **4.7** | Single toolbar row with `"More"` menu (side dock + export), `1.5px` ink border with soft lime focus glow only, `40px` horizontal padded `72ch` white paper canvas, word count + reading time footer, ghost `"New note"` card. |
+| `/code` (Code Arena) | 2.0 | **4.8** | Stretching `minmax(0,1fr)` 3-column grid (`h-full` cards), dark ink editor with pinned lime Run, split right column (`Preview` top, `Console & AI` bottom with AI pill row above console). |
+| `/tasks` (Quests) | 2.0 | **4.8** | Equal-height stretching columns, progress strip (`X of Y quests done`) + filters, tinted column headers (`peach`, `lavender`, `teal`) + count badges, Strobi only in To do, dashed ghost dropzones in In progress / Done. |
+| `/arcade` (Arcade) | 2.2 | **4.8** | Hero-and-supporting layout (`Trivia Dungeon` orange `HeroCard` left + stacked `Pet Catch` & `Leaderboard` with coin-cap bar right), 2x2 A/B/C/D colored-edge answer tiles, damage pop, deterministic SSR shuffle (0 hydration errors). |
+| `/reader` (Reader) | 2.2 | **4.8** | Sky-blue `HeroCard` with full-card dashed dropzone + format chips + recent docs, `Document studio` rebuilt into a 2-column `ToolTile` grid (no clipped tabs). |
+| `/settings` (Settings) | 3.0 | **4.7** | Tall left lavender profile card with lifetime stats (`Focus`, `Quests`, `Streak`, `Coins`), right form grid + `Titles & Milestones` grid (locked as ghosts) + `Data & Reset` danger strip. |
+| `/analytics`, `/habits`, `/pets`, etc. | 3.0–3.4 | **4.5+** | Uniform `--gutter` & `--card-pad`, `h-full` stretching grids, verified 0 page scroll & 0 console errors across `1920x900`, `1366x650`, `768x1024`, and `390x844`. |
+
