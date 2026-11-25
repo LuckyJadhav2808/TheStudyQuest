@@ -13,7 +13,18 @@ export function Panels({ panels, className }: { panels: Panel[]; className?: str
   const [idx, setIdx] = useState(0);
   const wrap = "min-h-0 min-w-0 flex flex-col h-full";
   if (!mobile) {
-    return <div className={cn("grid min-h-0 flex-1 gap-4", className)}>{panels.map((p) => <div key={p.id} className={cn(wrap, p.className)}>{p.node}</div>)}</div>;
+    return (
+      <div
+        style={{ gap: "var(--gutter, 16px)" }}
+        className={cn("grid min-h-0 flex-1", className)}
+      >
+        {panels.map((p) => (
+          <div key={p.id} className={cn(wrap, p.className)}>
+            {p.node}
+          </div>
+        ))}
+      </div>
+    );
   }
   const cur = panels[Math.min(idx, panels.length - 1)];
   return (

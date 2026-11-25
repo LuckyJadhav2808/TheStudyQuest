@@ -1,6 +1,6 @@
 "use client";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Panels, type Panel } from "@/components/shell/Panels";
 import { Modal } from "@/components/ui/modal";
 import { PageFrame } from "@/components/ui/misc";
@@ -14,20 +14,24 @@ const SPAN: Record<number, string> = { 1: "lg:col-span-12", 2: "lg:col-span-6", 
 export function Home() {
   const s = useSettings();
   const [picker, setPicker] = useState(false);
+  const [dateStr, setDateStr] = useState("");
+  useEffect(() => {
+    setDateStr(`${format(new Date(), "EEEE, d MMMM")}. Make it count.`);
+  }, []);
   const hidden = s.hiddenWidgets;
   const bottom: Panel[] = [];
   const add = (id: string, label: string, node: React.ReactNode) => { if (!hidden.includes(id)) bottom.push({ id, label, node }); };
   add("velocity", "Stats", <VelocityCard />);
   add("lofi", "Music", <LoFiCard />);
-  add("notes", "Notes", <NotesDeck />);
+  add("notes", "Notes", <NotesDeck onPicker={() => setPicker(true)} />);
   const span = SPAN[Math.max(1, bottom.length)];
   const panels: Panel[] = [
     { id: "flow", label: "Flow", className: "sm:col-span-2 lg:col-span-8 lg:row-span-4", node: <FlowStation hidden={hidden} onPicker={() => setPicker(true)} /> },
-    { id: "quests", label: "Quests", className: "lg:col-span-4 lg:row-span-4", node: <QuestsCard hidden={hidden} /> },
+    { id: "quests", label: "Quests", className: "lg:col-span-4 lg:row-span-4", node: <QuestsCard /> },
     ...bottom.map((b) => ({ ...b, className: `${span} lg:row-span-2` })),
   ];
   return (
-    <PageFrame title="Today" subtitle={`${format(new Date(), "EEEE, d MMMM")}. Make it count.`}>
+    <PageFrame title="Today" subtitle={dateStr || "Make it count."}>
       <Panels className="sm:grid-cols-2 sm:grid-rows-3 lg:grid-cols-12 lg:grid-rows-6" panels={panels} />
       <Modal open={picker} onClose={() => setPicker(false)} title="Dashboard widgets">
         <div className="flex flex-col gap-2">

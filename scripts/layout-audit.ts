@@ -53,6 +53,12 @@ export interface CardViolation {
   overflowSides: string[];
 }
 
+export interface TextEdgeViolation {
+  cardSelector: string;
+  text: string;
+  gapLeft: number;
+}
+
 export interface AuditResult {
   route: string;
   viewport: string;
@@ -63,6 +69,7 @@ export interface AuditResult {
   pageOverflowV: boolean;
   pageOverflowH: boolean;
   cardViolations: CardViolation[];
+  textEdgeViolations: TextEdgeViolation[];
 }
 
 /** In-browser evaluation function to check page and card bounds */
@@ -74,6 +81,7 @@ export function checkLayout(): {
   pageOverflowV: boolean;
   pageOverflowH: boolean;
   cardViolations: CardViolation[];
+  textEdgeViolations: TextEdgeViolation[];
 } {
   const doc = document.documentElement;
   const scrollHeight = doc.scrollHeight;
@@ -84,11 +92,35 @@ export function checkLayout(): {
   const pageOverflowH = scrollWidth > innerWidth + 1;
 
   const cardViolations: CardViolation[] = [];
+  const textEdgeViolations: TextEdgeViolation[] = [];
   const cards = Array.from(document.querySelectorAll<HTMLElement>(".bento-card, .card, [data-bento-card]"));
 
   for (const card of cards) {
     const cardRect = card.getBoundingClientRect();
     if (cardRect.width === 0 || cardRect.height === 0) continue;
+
+    // Check text nodes within 12px of card left edge
+    const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT);
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      const txt = node.textContent?.trim();
+      if (!txt) continue;
+      const parent = node.parentElement;
+      if (!parent) continue;
+      if (parent.closest('[role="tooltip"], [role="dialog"], [role="menu"], svg, .sr-only')) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const tRect = range.getBoundingClientRect();
+      if (tRect.width === 0 || tRect.height === 0) continue;
+      const gapLeft = tRect.left - cardRect.left;
+      if (gapLeft < 12) {
+        textEdgeViolations.push({
+          cardSelector: String(card.className).slice(0, 40),
+          text: txt.slice(0, 30),
+          gapLeft: Math.round(gapLeft),
+        });
+      }
+    }
 
     // Direct and deep children that should not spill out unless inside intentional scroll container
     const children = Array.from(card.querySelectorAll<HTMLElement>("*"));
@@ -131,5 +163,6 @@ export function checkLayout(): {
     pageOverflowV,
     pageOverflowH,
     cardViolations,
+    textEdgeViolations,
   };
 }

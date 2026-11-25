@@ -1,45 +1,71 @@
 "use client";
 import { fmtClock } from "@/lib/utils";
 
+const TICKS = Array.from({ length: 24 }, (_, i) => i * 15);
+
 export function RadialTimer({
   pct,
   rem,
   label,
+  running = false,
   className,
 }: {
   pct: number;
   rem: number;
   label?: string;
+  running?: boolean;
   size?: number;
   stroke?: number;
   className?: string;
 }) {
   const r = 40;
   const c = 2 * Math.PI * r;
-  const strokeW = 8.5;
+  const strokeW = 8;
 
   return (
     <div
-      className={`relative grid place-items-center aspect-square max-h-full max-w-full mx-auto ${className ?? ""}`}
-      style={{ width: "min(100cqw, 100cqh)", height: "min(100cqw, 100cqh)" }}
+      className={`relative grid place-items-center aspect-square max-h-full max-w-full mx-auto transition-all duration-500 ${className ?? ""}`}
+      style={{
+        width: "min(100cqw, 100cqh)",
+        height: "min(100cqw, 100cqh)",
+        filter: running ? "drop-shadow(0 0 18px rgba(217, 255, 69, 0.55))" : undefined,
+      }}
       role="timer"
       aria-label={`${fmtClock(rem)} remaining`}
     >
       <svg viewBox="0 0 100 100" className="size-full -rotate-90">
+        {/* Tick marks */}
+        <g className="rotate-90 origin-center" opacity={0.28}>
+          {TICKS.map((deg) => (
+            <line
+              key={deg}
+              x1="50"
+              y1="3.5"
+              x2="50"
+              y2={deg % 90 === 0 ? "7" : "5.5"}
+              stroke="currentColor"
+              strokeWidth={deg % 90 === 0 ? "1.4" : "0.9"}
+              strokeLinecap="round"
+              transform={`rotate(${deg} 50 50)`}
+            />
+          ))}
+        </g>
+        {/* Track: ink 10% */}
         <circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke="rgba(11, 11, 12, 0.12)"
+          stroke="color-mix(in srgb, var(--fg) 10%, transparent)"
           strokeWidth={strokeW}
         />
+        {/* Progress arc: rounded-cap lime */}
         <circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke="var(--color-teal)"
+          stroke="var(--color-lime)"
           strokeWidth={strokeW}
           strokeLinecap="round"
           strokeDasharray={c}
@@ -49,7 +75,7 @@ export function RadialTimer({
       </svg>
       <div className="absolute text-center select-none pointer-events-none">
         <div
-          className="font-display num font-extrabold leading-none text-ink"
+          className="font-display num font-extrabold leading-none text-fg"
           style={{ fontSize: "clamp(22px, 20cqmin, 46px)" }}
         >
           {fmtClock(rem)}

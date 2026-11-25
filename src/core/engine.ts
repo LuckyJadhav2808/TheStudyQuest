@@ -73,6 +73,20 @@ async function codeRunAllowed(): Promise<boolean> {
   return ok;
 }
 
+function noteXpAllowed(): boolean {
+  try {
+    const today = todayKey();
+    const raw = localStorage.getItem("sq-note-xp-daily");
+    const data = raw ? (JSON.parse(raw) as { date: string; n: number }) : { date: today, n: 0 };
+    const n = data.date === today ? data.n : 0;
+    if (n >= 5) return false; // Daily cap: max 5 notes (50 XP) per day
+    localStorage.setItem("sq-note-xp-daily", JSON.stringify({ date: today, n: n + 1 }));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 let started = false;
 /** Subscribes the gamification engine to the event bus. Idempotent. */
 export function startEngine(): void {
@@ -82,7 +96,7 @@ export function startEngine(): void {
   on("task.completed", async (p) => { const r = await grant({ xp: taskXp(p.priority), coins: p.priority === "urgent" ? 10 : 5, kind: "other", tasks: 1, drops: Math.random() < 0.2 ? { elixir: 1 } : undefined }); say("task.completed", { xp: r.xp }); fireConfetti(); });
   on("habit.checked", async (p) => { const r = await grant({ xp: XP.habit, coins: 3, kind: "other" }); say("habit.checked", { xp: r.xp, n: p.streak }); });
   on("pomodoro.done", async (p) => { const r = await grant({ xp: pomodoroXp(p.minutes), coins: Math.round((p.minutes / 25) * 8), kind: "focus", focusMinutes: p.minutes, drops: Math.random() < 0.4 ? { stardust: 1 } : undefined }); say("pomodoro.done", { xp: r.xp, n: p.minutes }, true); });
-  on("note.created", async () => { const r = await grant({ xp: XP.note, coins: 2, kind: "other" }); say("note.created", { xp: r.xp }); });
+  on("note.created", async () => { if (noteXpAllowed()) { const r = await grant({ xp: XP.note, coins: 2, kind: "other" }); say("note.created", { xp: r.xp }); } });
   on("code.ran", async () => { if (await codeRunAllowed()) { const r = await grant({ xp: XP.codeRun, coins: 0, kind: "other" }); say("code.ran", { xp: r.xp }); } });
   on("dsa.solved", async (p) => { const r = await grant({ xp: XP.dsa[p.difficulty], coins: { easy: 10, medium: 20, hard: 30 }[p.difficulty], kind: "dsa", dsa: 1, drops: p.difficulty === "hard" ? { crystal: 1 } : undefined }); say("dsa.solved", { xp: r.xp }, true); });
   on("quiz.passed", async (p) => { const r = await grant({ xp: p.xp, coins: 5, kind: "other" }); say("quiz.passed", { xp: r.xp, label: p.label }); });

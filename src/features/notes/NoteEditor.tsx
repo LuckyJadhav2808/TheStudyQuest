@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { Code, DownloadSimple, ListBullets, ListChecks, MagicWand, Quotes, Table as TableIcon, TextB, TextItalic, TextHTwo, Graph, CaretDown } from "@phosphor-icons/react";
 import { Segmented } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
+import { emit } from "@/core/events";
 import { notesRepo } from "@/core/repos";
 import type { Note } from "@/core/types";
 import { MarkdownView } from "@/lib/MarkdownView";
@@ -40,8 +41,22 @@ export function NoteEditor({
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const latest = useRef(content);
 
+  const rewardedRef = useRef(false);
   const save = (md: string) => {
     latest.current = md;
+    if (!rewardedRef.current && md.trim().length >= 20) {
+      rewardedRef.current = true;
+      try {
+        const raw = localStorage.getItem("sq-rewarded-notes");
+        const ids = raw ? (JSON.parse(raw) as string[]) : [];
+        if (!ids.includes(note.id)) {
+          localStorage.setItem("sq-rewarded-notes", JSON.stringify([...ids.slice(-100), note.id]));
+          emit("note.created", { title: note.title });
+        }
+      } catch {
+        emit("note.created", { title: note.title });
+      }
+    }
     clearTimeout(timer.current);
     timer.current = setTimeout(() => void notesRepo.update(note.id, { content: md }), 500);
   };
@@ -232,22 +247,24 @@ export function NoteEditor({
         </div>
       )}
 
-      <div className="scroll-thin min-h-0 flex-1 rounded-[24px] border border-line/40 bg-surface p-4 shadow-2xs">
-        {mode === "rich" && <EditorContent editor={editor} className="h-full" />}
-        {mode === "source" && (
-          <textarea
-            ref={src}
-            aria-label="Markdown source"
-            spellCheck={false}
-            className="h-full w-full resize-none bg-transparent font-mono text-sm outline-none"
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              save(e.target.value);
-            }}
-          />
-        )}
-        {mode === "preview" && <MarkdownView source={content} />}
+      <div className="scroll-thin min-h-0 flex-1 rounded-[24px] border border-line/40 bg-white text-ink p-5 sm:p-6 shadow-2xs transition focus-within:border-ink focus-within:ring-2 focus-within:ring-lime">
+        <div className="mx-auto h-full max-w-[72ch]">
+          {mode === "rich" && <EditorContent editor={editor} className="h-full" />}
+          {mode === "source" && (
+            <textarea
+              ref={src}
+              aria-label="Markdown source"
+              spellCheck={false}
+              className="h-full w-full resize-none bg-transparent font-mono text-sm outline-none"
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                save(e.target.value);
+              }}
+            />
+          )}
+          {mode === "preview" && <MarkdownView source={content} />}
+        </div>
       </div>
 
       <div className="flex items-center justify-between text-[11px] text-muted px-1 shrink-0">

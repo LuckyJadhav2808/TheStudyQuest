@@ -37,7 +37,7 @@ export function Slider({
           min={min}
           max={max}
           value={value}
-          className="peer h-2 w-full cursor-pointer appearance-none rounded-full border border-line bg-soft accent-lime outline-none transition focus-visible:ring-2 focus-visible:ring-lime"
+          className="sq-slider peer h-2 w-full cursor-pointer appearance-none rounded-full border border-line bg-soft outline-none transition focus-visible:ring-2 focus-visible:ring-lime"
           style={{
             background: `linear-gradient(to right, #D9FF45 0%, #D9FF45 ${pct}%, rgba(11,11,12,0.12) ${pct}%, rgba(11,11,12,0.12) 100%)`
           }}

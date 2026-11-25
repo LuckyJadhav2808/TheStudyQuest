@@ -1,10 +1,10 @@
 "use client";
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
-import { ArrowUpRight, Check, Fire, Gift, Headphones, Pause, Play } from "@phosphor-icons/react";
+import { ArrowUpRight, Check, Fire, Gift, Headphones, Pause, Play, Plus } from "@phosphor-icons/react";
 import { differenceInCalendarDays, parseISO, subDays, format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
-import { Bar, BarChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BlobBackdrop, CurvedCorner, StickerCard } from "@/components/shapes";
 import { BentoCard } from "@/components/shell/BentoCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -95,46 +95,60 @@ export function FlowStation({ hidden, onPicker }: { hidden: string[]; onPicker: 
       title="Flow Station"
       subtitle="Pick a block, press start. XP lands when it ends."
       action={
-        <CurvedCorner>
-          <Link href="/timer" aria-label="Open focus page" className="grid size-8 place-items-center rounded-full bg-ink text-paper transition hover:scale-105">
-            <ArrowUpRight size={16} weight="bold" />
-          </Link>
-        </CurvedCorner>
+        <div className="flex items-center gap-2 pr-12">
+          {!hidden.includes("streak") && (
+            <StickerCard className="hidden sm:flex items-center gap-1.5 py-1 px-2.5 text-xs rotate-2">
+              <Fire size={16} weight="fill" className="text-orange" />
+              <span className="font-bold num">{g.streak}d streak</span>
+            </StickerCard>
+          )}
+          <CurvedCorner>
+            <Link href="/timer" aria-label="Open focus page" className="grid size-8 place-items-center rounded-full bg-ink text-paper transition hover:scale-105">
+              <ArrowUpRight size={16} weight="bold" />
+            </Link>
+          </CurvedCorner>
+        </div>
       }
       decorations={<BlobBackdrop preset={0} color="var(--color-lavender)" className="-bottom-20 -left-12 size-80 pointer-events-none opacity-40" />}
       className="h-full gap-2"
     >
-      <div className="flex h-full w-full flex-col items-center justify-around gap-2 sm:flex-row sm:justify-evenly py-1">
-        <div className="flex h-full max-h-[220px] w-full sm:w-auto items-center justify-center">
+      <div className="flex h-full w-full flex-col items-center justify-around gap-3 sm:flex-row sm:justify-evenly py-1">
+        <div className="flex h-full max-h-[230px] w-full sm:w-auto items-center justify-center">
           <RadialTimer
             pct={t.pct}
             rem={t.rem}
+            running={t.running}
             label={t.kind === "focus" ? "Focus" : t.kind === "short" ? "Break" : "Long break"}
           />
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-2.5 shrink-0">
-          <button
-            className="btn btn-lime px-6 py-2 text-sm sm:text-base font-bold shadow-sm transition hover:scale-105 active:scale-95"
-            onClick={t.running ? t.pause : t.start}
-          >
-            {t.running ? <><Pause size={18} weight="fill" /> Pause</> : <><Play size={18} weight="fill" /> Start</>}
-          </button>
-
-          <div className="flex items-center gap-1.5">
-            <button className="chip text-xs" onClick={() => preset(25, "focus")}>25m</button>
-            <button className="chip text-xs" onClick={() => preset(50, "focus")}>50m</button>
-            <button className="chip text-xs" onClick={() => preset(15, "long")}>15m break</button>
+        <div className="flex flex-col items-center justify-center gap-3 shrink-0">
+          {/* Row 1: Start button + segmented preset control */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              className="btn btn-lime px-6 py-2 text-sm sm:text-base font-bold shadow-sm transition hover:scale-105 active:scale-95"
+              onClick={t.running ? t.pause : t.start}
+            >
+              {t.running ? <><Pause size={18} weight="fill" /> Pause</> : <><Play size={18} weight="fill" /> Start</>}
+            </button>
+            <div className="inline-flex rounded-full border-[1.5px] border-line bg-soft p-1">
+              <button className={`rounded-full px-3 py-1 text-xs font-bold transition ${t.kind === "focus" && t.mins.focus === 25 ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(25, "focus")}>25m</button>
+              <button className={`rounded-full px-3 py-1 text-xs font-bold transition ${t.kind === "focus" && t.mins.focus === 50 ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(50, "focus")}>50m</button>
+              <button className={`rounded-full px-3 py-1 text-xs font-bold transition ${t.kind === "long" ? "bg-ink text-paper" : "text-muted hover:text-fg"}`} onClick={() => preset(15, "long")}>15m</button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-1 flex-wrap justify-center">
-            {!hidden.includes("streak") && (
-              <StickerCard className="flex items-center gap-1.5 py-1 px-2.5 text-xs">
-                <Fire size={18} weight="fill" className="text-orange" />
-                <span className="font-bold">{g.streak}d streak</span>
-              </StickerCard>
-            )}
+          {/* Row 2: Chest tile + Exam radar tile */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {!hidden.includes("chest") && <ChestTile />}
+            {!hidden.includes("exam") && <ExamTile />}
+            <button
+              onClick={onPicker}
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-line/60 px-3 py-1.5 text-xs font-bold text-muted hover:border-ink hover:text-fg transition"
+              aria-label="Customize widgets"
+            >
+              <Plus size={13} weight="bold" /> Widgets
+            </button>
           </div>
         </div>
       </div>
@@ -142,7 +156,7 @@ export function FlowStation({ hidden, onPicker }: { hidden: string[]; onPicker: 
   );
 }
 
-export function QuestsCard({ hidden = [] }: { hidden?: string[] }) {
+export function QuestsCard() {
   const tasks = useRows(tasksRepo) ?? [];
   const habits = useRows(habitsRepo) ?? [];
   const logs = useLiveQuery(() => db.habitLogs.toArray(), [], []);
@@ -154,10 +168,9 @@ export function QuestsCard({ hidden = [] }: { hidden?: string[] }) {
     <BentoCard
       title="Quests"
       action={<Segmented value={tab} onChange={setTab} options={[{ value: "active", label: "Active" }, { value: "daily", label: "Daily" }]} />}
-      className="h-full gap-2"
+      className="h-full gap-2 bg-peach/15"
     >
       <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
-        {!hidden.includes("exam") && <ExamTile />}
 
         <ScrollArea className="flex-1 min-h-0 pr-1">
           <div className="flex flex-col gap-1.5 pb-1">
@@ -230,24 +243,27 @@ export function VelocityCard() {
       return {
         day: format(d, "EEE"),
         min,
-        displayMin: min > 0 ? min : 4,
+        displayMin: min > 0 ? min : Math.max(4, Math.round(s.focusGoalMin * 0.04)),
         isEmpty: min === 0,
+        isToday: i === 6,
       };
     });
-  }, [logs]);
+  }, [logs, s.focusGoalMin]);
 
   const total = data.reduce((a, d) => a + d.min, 0);
+  const maxDomain = Math.max(s.focusGoalMin, ...data.map((d) => d.min));
 
   return (
     <BentoCard
       title="Study velocity"
       subtitle={`Goal ${s.focusGoalMin}m / day`}
-      action={<span className="font-display num text-base sm:text-lg font-bold">{(total / 60).toFixed(1)}h</span>}
+      action={<span className="font-display num text-base sm:text-lg font-bold text-teal">{(total / 60).toFixed(1)}h</span>}
       className="h-full gap-0.5"
     >
       <div className="h-full min-h-0 w-full flex-1 pt-0.5">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+            <YAxis hide domain={[0, maxDomain]} />
             <XAxis
               dataKey="day"
               tickLine={false}
@@ -268,14 +284,17 @@ export function VelocityCard() {
                 padding: "4px 8px"
               }}
             />
-            <ReferenceLine y={s.focusGoalMin} stroke="#FF8B4A" strokeDasharray="3 3" />
-            <Bar
-              dataKey="displayMin"
-              fill="#D9FF45"
-              stroke="#0b0b0c"
-              strokeWidth={1.2}
-              radius={[6, 6, 6, 6]}
-            />
+            <ReferenceLine y={s.focusGoalMin} stroke="#1FD6C1" strokeDasharray="3 3" />
+            <Bar dataKey="displayMin" radius={[6, 6, 6, 6]}>
+              {data.map((entry, idx) => (
+                <Cell
+                  key={idx}
+                  fill={entry.isToday ? "#D9FF45" : "color-mix(in srgb, var(--fg) 15%, transparent)"}
+                  stroke={entry.isToday ? "#0b0b0c" : "transparent"}
+                  strokeWidth={entry.isToday ? 1.2 : 0}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -319,14 +338,27 @@ export function LoFiCard() {
   );
 }
 
-export function NotesDeck() {
+export function NotesDeck({ onPicker }: { onPicker?: () => void }) {
   const notes = (useRows(notesRepo) ?? []).sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3);
 
   return (
     <BentoCard
       title="Notes deck"
-      action={<Link href="/notes" className="btn btn-sm text-xs">All notes</Link>}
-      className="h-full gap-1 overflow-hidden"
+      action={
+        <div className="flex items-center gap-1.5">
+          {onPicker && (
+            <button
+              onClick={onPicker}
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-line/60 px-2.5 py-1 text-[11px] font-bold text-muted hover:border-ink hover:text-fg transition"
+              aria-label="Add widget"
+            >
+              <Plus size={12} weight="bold" /> Add widget
+            </button>
+          )}
+          <Link href="/notes" className="btn btn-sm text-xs">All notes</Link>
+        </div>
+      }
+      className="h-full gap-1 overflow-hidden bg-lavender/25"
     >
       {notes.length === 0 ? (
         <Empty

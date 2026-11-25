@@ -37,9 +37,10 @@ export function StrobiRailButton() {
       aria-label={`Strobi the study guide, feeling ${mood}. Open quick menu`}
       aria-expanded={menuOpen}
       onClick={() => { poke(); setMenu(!menuOpen); }}
-      className="group relative grid size-12 place-items-center rounded-full bg-soft/15 text-paper transition hover:scale-105 hover:bg-soft/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime shrink-0"
+      style={{ width: "clamp(38px, 5.5vh, 48px)", height: "clamp(38px, 5.5vh, 48px)" }}
+      className={`group relative grid place-items-center rounded-full bg-soft/15 text-paper transition hover:scale-105 hover:bg-soft/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime shrink-0 ${mood === "cheer" || mood === "celebrate" ? "animate-bounce" : ""}`}
     >
-      <div className="size-10 overflow-hidden rounded-full pointer-events-none">
+      <div className="size-9 overflow-hidden rounded-full pointer-events-none">
         {gl === null ? null : gl ? (
           <ErrorBoundary fallback={<Fallback />}><Scene /></ErrorBoundary>
         ) : (
@@ -66,7 +67,7 @@ export function StrobiDock() {
   return (
     <>
       {menuOpen && (
-        <div role="menu" aria-label="Strobi quick menu" className="pop-in fixed bottom-[104px] left-1/2 z-[80] flex w-56 -translate-x-1/2 flex-col gap-1 rounded-[28px] border-[1.5px] border-ink bg-white p-2 text-ink shadow-2xl sm:bottom-6 sm:left-[84px] sm:translate-x-0">
+        <div role="menu" aria-label="Strobi quick menu" className="pop-in fixed bottom-[104px] left-1/2 z-[80] flex w-56 -translate-x-1/2 flex-col gap-1 rounded-[28px] border-[1.5px] border-ink bg-white p-2 text-ink shadow-2xl sm:top-4 sm:bottom-auto sm:left-[84px] sm:translate-x-0">
           {[
             { l: "Ask AI", i: <Brain size={20} weight="duotone" />, f: () => router.push("/chat") },
             { l: "Start Focus", i: <Timer size={20} weight="duotone" />, f: () => router.push("/timer") },

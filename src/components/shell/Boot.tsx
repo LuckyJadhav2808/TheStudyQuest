@@ -21,7 +21,23 @@ export function Boot() {
   useEffect(() => {
     void ensureProfile();
     startEngine();
-    try { if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(() => undefined); } catch { /* optional */ }
+    try {
+      if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+        if (process.env.NODE_ENV === "production") {
+          void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+        } else {
+          // Actively unregister any stale service workers and purge caches in development
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            for (const r of regs) void r.unregister();
+          });
+          if ("caches" in window) {
+            caches.keys().then((keys) => {
+              for (const k of keys) void caches.delete(k);
+            });
+          }
+        }
+      }
+    } catch { /* optional */ }
     set({ online: navigator.onLine });
     const off = () => { set({ online: false }); emit("offline.entered", {}); };
     const on = () => { set({ online: true }); emit("online.restored", {}); };

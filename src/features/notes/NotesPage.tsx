@@ -2,14 +2,13 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import dynamic from "next/dynamic";
 import { useQueryState } from "nuqs";
-import { useMemo, useRef, useState } from "react";
-import { FolderSimple, PushPin, Trash, UploadSimple, Plus } from "@phosphor-icons/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FolderSimple, PencilSimple, PushPin, Trash, UploadSimple, Plus } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
 import { BentoCard } from "@/components/shell/BentoCard";
 import { Empty, PageFrame, Skeleton } from "@/components/ui/misc";
 import { Select } from "@/components/ui/fields";
 import { Modal } from "@/components/ui/modal";
-import { emit } from "@/core/events";
 import { foldersRepo, notesRepo } from "@/core/repos";
 import { deleteWithUndo, useRows } from "@/features/shared/hooks";
 import { MarkdownView } from "@/lib/MarkdownView";
@@ -52,9 +51,23 @@ export function NotesPage() {
   const virt = useVirtualizer({
     count: filtered.length,
     getScrollElement: () => list.current,
-    estimateSize: () => 64,
+    estimateSize: () => 74,
     overscan: 6,
   });
+
+  // Delete empty untitled notes when leaving /notes
+  const notesRef = useRef(notes);
+  notesRef.current = notes;
+  useEffect(() => {
+    return () => {
+      const empties = (notesRef.current ?? []).filter(
+        (n) => (n.title === "Untitled note" || !n.title.trim()) && !n.content.trim()
+      );
+      for (const n of empties) {
+        void notesRepo.remove(n.id);
+      }
+    };
+  }, []);
 
   if (!notes) {
     return (
@@ -66,13 +79,19 @@ export function NotesPage() {
 
   const current = notes.find((n) => n.id === id);
   const create = async () => {
+    const existingEmpty = notes.find(
+      (n) => (n.title === "Untitled note" || !n.title.trim()) && !n.content.trim()
+    );
+    if (existingEmpty) {
+      void setId(existingEmpty.id);
+      return;
+    }
     const n = await notesRepo.add({
       title: "Untitled note",
       content: "",
       tags: [],
       folderId: folder === "all" ? null : folder,
     });
-    emit("note.created", { title: n.title });
     void setId(n.id);
   };
 
@@ -175,16 +194,25 @@ export function NotesPage() {
                   className="pb-1.5"
                 >
                   <div
-                    className={`tile flex h-full items-center gap-2 border-[1.5px] p-2 transition hover:bg-soft ${
+                    className={`tile flex h-full items-center gap-2 border-[1.5px] p-2.5 transition hover:bg-lavender/35 ${
                       n.id === id ? "border-ink bg-lime text-ink shadow-xs" : "border-transparent"
                     }`}
                   >
                     <button className="min-w-0 flex-1 text-left" onClick={() => void setId(n.id)}>
                       <p className="truncate text-xs sm:text-sm font-bold">{n.title || "Untitled"}</p>
-                      <p className="num truncate text-[11px] opacity-70">
-                        {format(n.updatedAt, "d MMM, HH:mm")}
-                        {n.tags.length ? ` · #${n.tags[0]}` : ""}
+                      <p className="truncate text-[11px] opacity-75">
+                        {n.content.replace(/[#*>`-]/g, "").trim().slice(0, 48) || "Empty note"}
                       </p>
+                      <div className="mt-0.5 flex items-center gap-1.5 text-[10px] opacity-70 num">
+                        <span>{n.content.trim() ? n.content.trim().split(/\s+/).length : 0}w</span>
+                        <span>·</span>
+                        <span>{format(n.updatedAt, "d MMM")}</span>
+                        {n.tags[0] && (
+                          <span className="rounded-full bg-lavender/70 px-1.5 py-px font-bold text-ink">
+                            #{n.tags[0]}
+                          </span>
+                        )}
+                      </div>
                     </button>
                     <button
                       aria-label={n.pinned ? "Unpin" : "Pin"}
@@ -194,11 +222,12 @@ export function NotesPage() {
                       <PushPin size={14} weight={n.pinned ? "fill" : "regular"} />
                     </button>
                     <button
-                      aria-label="Rename"
-                      className="text-xs font-bold p-1 hover:text-ink"
+                      aria-label="Rename note"
+                      title="Rename note"
+                      className="p-1 hover:text-ink"
                       onClick={() => setRename(n.id)}
                     >
-                      Aa
+                      <PencilSimple size={14} />
                     </button>
                     <button
                       aria-label="Delete note"
@@ -221,7 +250,10 @@ export function NotesPage() {
   );
 
   const editor = (
-    <BentoCard className="h-full">
+    <BentoCard
+      className="h-full"
+      blob={{ preset: 1, color: "var(--color-lavender)", className: "-bottom-24 -right-20 size-96 opacity-45" }}
+    >
       {current ? (
         <NoteEditor
           key={current.id}

@@ -92,7 +92,7 @@ export function PageFrame({
   }, [title, subtitle, actions, set]);
 
   return (
-    <section className={cn("flex h-full min-h-0 flex-col p-2 sm:p-3", className)}>
+    <section style={{ padding: "var(--gutter, 16px)" }} className={cn("flex h-full min-h-0 flex-col", className)}>
       <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </section>
   );

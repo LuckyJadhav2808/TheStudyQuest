@@ -18,6 +18,7 @@ export interface BentoCardProps extends Omit<React.HTMLAttributes<HTMLDivElement
   footerClassName?: string;
   lift?: boolean;
   scrollable?: boolean;
+  autoHeight?: boolean;
   style?: CSSProperties;
 }
 
@@ -34,8 +35,9 @@ export function BentoCard({
   headerClassName,
   bodyClassName,
   footerClassName,
-  lift = false,
+  lift = true,
   scrollable = false,
+  autoHeight = false,
   style,
   ...rest
 }: BentoCardProps) {
@@ -71,15 +73,20 @@ export function BentoCard({
       {/* Header: fixed height / compact, line-clamp-1 on subtitle */}
       {hasHeader && (
         <div
+          style={{
+            paddingLeft: "var(--card-pad, 24px)",
+            paddingRight: curvedCorner ? "calc(var(--card-pad, 24px) + 36px)" : "var(--card-pad, 24px)",
+            paddingTop: "calc(var(--card-pad, 24px) * 0.85)",
+            paddingBottom: "8px",
+          }}
           className={cn(
-            "relative z-10 flex shrink-0 items-start justify-between gap-2 px-4.5 pt-4 pb-1.5 min-h-[44px]",
-            curvedCorner && "pr-14",
+            "relative z-10 flex shrink-0 items-start justify-between gap-2 min-h-[44px]",
             headerClassName
           )}
         >
           <div className="min-w-0 flex-1">
             {typeof title === "string" ? (
-              <h2 className="card-title truncate text-base sm:text-lg font-display font-extrabold text-ink leading-tight">
+              <h2 className="card-title truncate text-base sm:text-lg font-display font-extrabold text-fg leading-tight">
                 {title}
               </h2>
             ) : (
@@ -95,12 +102,17 @@ export function BentoCard({
         </div>
       )}
 
-      {/* Body: container-type: size, flex-1 min-h-0, relative z-10 */}
+      {/* Body: container-type: size unless autoHeight, flex-1 min-h-0, relative z-10 */}
       <div
-        style={{ containerType: "size" }}
+        style={{
+          ...(autoHeight ? {} : { containerType: "size" }),
+          paddingLeft: "var(--card-pad, 24px)",
+          paddingRight: "var(--card-pad, 24px)",
+          paddingTop: hasHeader ? "4px" : "var(--card-pad, 24px)",
+          paddingBottom: footer ? "12px" : "var(--card-pad, 24px)",
+        }}
         className={cn(
-          "relative z-10 flex-1 min-h-0 min-w-0 px-4.5 pb-4",
-          !hasHeader && "pt-4",
+          "relative z-10 flex-1 min-h-0 min-w-0",
           scrollable ? "overflow-y-auto scroll-thin" : "overflow-hidden flex flex-col",
           bodyClassName
         )}
@@ -111,8 +123,14 @@ export function BentoCard({
       {/* Optional Footer: fixed height, relative z-10 */}
       {footer && (
         <div
+          style={{
+            paddingLeft: "var(--card-pad, 24px)",
+            paddingRight: "var(--card-pad, 24px)",
+            paddingTop: "10px",
+            paddingBottom: "10px",
+          }}
           className={cn(
-            "relative z-10 flex shrink-0 items-center justify-between border-t border-line/10 px-4.5 py-2 text-xs text-muted bg-soft/40",
+            "relative z-10 flex shrink-0 items-center justify-between border-t border-line/10 text-xs text-muted bg-soft/40",
             footerClassName
           )}
         >

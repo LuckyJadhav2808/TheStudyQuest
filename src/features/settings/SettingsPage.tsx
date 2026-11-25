@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useUI } from "@/components/shell/ui-store";
 import { DEFAULT_FLAGS, useFlags, type FlagName } from "@/core/flags";
-import { updateSettings, useSettings } from "@/core/settings";
+import { updateSettings, useGame, useSettings } from "@/core/settings";
+import { levelProgress } from "@/core/gamification";
 import type { ThemeName } from "@/core/types";
 import { strobiSay } from "@/features/strobi/toast";
 import { playSfx } from "@/lib/audio";
@@ -30,6 +31,8 @@ type TabKey = "profile" | "look" | "ai" | "data" | "features";
 export function SettingsPage() {
   const router = useRouter();
   const s = useSettings();
+  const g = useGame();
+  const lp = levelProgress(g.xp);
   const flags = useFlags();
   const setUI = useUI((x) => x.set);
   const [tab, setTab] = useState<TabKey>("profile");
@@ -53,7 +56,6 @@ export function SettingsPage() {
     <PageFrame title="Settings" subtitle="Profile, look, sound, AI and data controls.">
       <div className="h-full min-h-0 w-full">
         <BentoCard
-          title="Preferences"
           action={
             <Segmented<TabKey>
               value={tab}
@@ -71,67 +73,80 @@ export function SettingsPage() {
         >
           <ScrollArea className="flex-1 min-h-0 pr-2">
             {tab === "profile" && (
-              <div className="flex max-w-xl flex-col gap-4 py-2">
-                <div className="flex items-center gap-3 pt-1">
+              <div className="grid gap-6 py-2 lg:grid-cols-12 items-start">
+                {/* Left Column: Profile Preview Card */}
+                <div className="tile lg:col-span-4 flex flex-col items-center text-center gap-3 p-5 border border-line/40 bg-soft/60">
                   <span
-                    className="font-display grid size-14 place-items-center rounded-full border-[2px] border-ink text-xl text-ink shadow-xs shrink-0"
+                    className="font-display grid size-20 place-items-center rounded-full border-[2px] border-ink text-3xl text-ink shadow-sm shrink-0"
                     style={{ background: `hsl(${hue(s.avatarSeed)} 80% 75%)` }}
                     aria-hidden
                   >
                     {s.name.slice(0, 1).toUpperCase()}
                   </span>
                   <div>
-                    <p className="font-display text-lg font-bold">{s.name}</p>
-                    <p className="text-xs text-muted">{s.title}</p>
+                    <p className="font-display text-xl font-extrabold">{s.name}</p>
+                    <span className="inline-block mt-1 rounded-full border border-ink/40 bg-lime px-3 py-0.5 text-[11px] font-bold text-ink">
+                      {s.title}
+                    </span>
+                  </div>
+                  <div className="w-full pt-2 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span>Lv {lp.level}</span>
+                      <span className="num text-muted">{lp.into} / {lp.need} XP</span>
+                    </div>
+                    <ProgressBar pct={lp.need > 0 ? lp.into / lp.need : 0} color="var(--color-violet)" />
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Display name">
-                    <input
-                      className="input"
-                      defaultValue={s.name}
-                      onBlur={(e) => void updateSettings({ name: e.target.value.trim() || "Scholar" })}
-                    />
-                  </Field>
-                  <Field label="Avatar seed">
-                    <input
-                      className="input"
-                      defaultValue={s.avatarSeed}
-                      onBlur={(e) => void updateSettings({ avatarSeed: e.target.value })}
-                    />
-                  </Field>
-                </div>
+                {/* Right Column: Form Grid */}
+                <div className="lg:col-span-8 flex flex-col gap-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Display name">
+                      <input
+                        className="input"
+                        defaultValue={s.name}
+                        onBlur={(e) => void updateSettings({ name: e.target.value.trim() || "Scholar" })}
+                      />
+                    </Field>
+                    <Field label="Avatar seed">
+                      <input
+                        className="input"
+                        defaultValue={s.avatarSeed}
+                        onBlur={(e) => void updateSettings({ avatarSeed: e.target.value })}
+                      />
+                    </Field>
+                  </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Main goal">
-                    <input
-                      className="input"
-                      defaultValue={s.goal}
-                      onBlur={(e) => void updateSettings({ goal: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Daily focus goal (minutes)">
-                    <input
-                      className="input"
-                      type="number"
-                      min={10}
-                      defaultValue={s.focusGoalMin}
-                      onBlur={(e) => void updateSettings({ focusGoalMin: Math.max(10, Number(e.target.value) || 120) })}
-                    />
-                  </Field>
-                </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Main goal">
+                      <input
+                        className="input"
+                        defaultValue={s.goal}
+                        onBlur={(e) => void updateSettings({ goal: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="Daily focus goal (minutes)">
+                      <input
+                        className="input"
+                        type="number"
+                        min={10}
+                        defaultValue={s.focusGoalMin}
+                        onBlur={(e) => void updateSettings({ focusGoalMin: Math.max(10, Number(e.target.value) || 120) })}
+                      />
+                    </Field>
+                  </div>
 
-                <label className="flex items-center justify-between rounded-2xl border border-line bg-soft/40 p-3 text-xs sm:text-sm font-bold cursor-pointer">
-                  <span>Notify me when a break ends or a streak is at risk</span>
-                  <Switch checked={s.notifications} onCheckedChange={(v) => void notify(v)} />
-                </label>
+                  <label className="flex items-center justify-between gap-4 rounded-2xl border border-line bg-soft/40 p-3.5 text-xs sm:text-sm font-bold cursor-pointer">
+                    <span>Notify me when a break ends or a streak is at risk</span>
+                    <Switch checked={s.notifications} onCheckedChange={(v) => void notify(v)} />
+                  </label>
 
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Link className="btn btn-sm text-xs" href="/login">Character creation</Link>
-                  <Link className="btn btn-sm text-xs" href="/privacy">Privacy</Link>
-                  <button className="btn btn-sm text-xs" onClick={() => setUI({ changelog: true })}>Version 1.0.0</button>
-                  <button className="btn btn-sm text-xs" onClick={() => setUI({ shortcuts: true })}>Shortcuts</button>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Link className="btn btn-sm text-xs" href="/login">Character creation</Link>
+                    <Link className="btn btn-sm text-xs" href="/privacy">Privacy</Link>
+                    <button className="btn btn-sm text-xs" onClick={() => setUI({ changelog: true })}>Version 1.0.0</button>
+                    <button className="btn btn-sm text-xs" onClick={() => setUI({ shortcuts: true })}>Shortcuts</button>
+                  </div>
                 </div>
               </div>
             )}

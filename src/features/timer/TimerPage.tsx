@@ -15,10 +15,13 @@ import type { TimerKind } from "./store";
 
 const PRESETS: Record<TimerKind, number[]> = { focus: [25, 50], short: [5, 10], long: [15, 30] };
 
-function Binaural() {
+function SoundscapeCard() {
+  const [mode, setMode] = useState<"binaural" | "ambient">("binaural");
   const [key, setKey] = useState<BinauralKey>("alpha");
   const [vol, setVol] = useState(0.5);
   const [on, setOn] = useState(binauralActive());
+  const { vols, set, stopAll } = useAmbient();
+
   const toggle = () => {
     if (on) {
       stopBinaural();
@@ -31,32 +34,43 @@ function Binaural() {
 
   return (
     <BentoCard
-      title="Binaural beats"
-      subtitle="Sine tones, one per ear."
-      action={<Headphones size={20} weight="duotone" className="text-muted" />}
-      className="h-full gap-2"
-      headerClassName="!pb-1 !pt-3 !px-4"
-      bodyClassName="!px-4 !pb-3"
-    >
-      <div className="flex h-full min-h-0 flex-col justify-between gap-1.5">
-        <div className="flex items-center gap-1.5 rounded-xl bg-soft/70 px-2 py-1 text-[11px] text-muted shrink-0">
-          <Headphones size={13} className="shrink-0 text-ink" />
-          <span className="truncate">Headphones required · Low volume</span>
-        </div>
-
-        <Select
-          ariaLabel="Binaural frequency mode"
-          value={key}
-          onChange={(v) => {
-            setKey(v as BinauralKey);
-            if (on) startBinaural(v as BinauralKey, vol);
-          }}
-          options={Object.entries(BINAURAL).map(([k, v]) => ({ value: k, label: `${v.label} · ${v.hint}` }))}
+      title="Soundscape"
+      subtitle={mode === "binaural" ? "Sine tones, one per ear." : "Synthesised loops, offline."}
+      action={
+        <Segmented
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "binaural", label: "Binaural" },
+            { value: "ambient", label: "Ambient" },
+          ]}
         />
+      }
+      className="h-full"
+    >
+      {mode === "binaural" ? (
+        <div className="flex flex-col gap-4 pt-1">
+          <div className="flex items-center gap-2 rounded-2xl bg-soft px-3 py-2 text-xs text-muted">
+            <Headphones size={15} className="shrink-0 text-fg" />
+            <span className="truncate">Headphones required · Keep volume low</span>
+          </div>
 
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] font-bold text-muted">Volume</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-bold text-muted">Frequency preset</span>
+            <Select
+              ariaLabel="Binaural frequency mode"
+              value={key}
+              onChange={(v) => {
+                setKey(v as BinauralKey);
+                if (on) startBinaural(v as BinauralKey, vol);
+              }}
+              options={Object.entries(BINAURAL).map(([k, v]) => ({ value: k, label: `${v.label} · ${v.hint}` }))}
+            />
+          </div>
+
           <Slider
+            label="Tone volume"
+            showValue
             min={0}
             max={1}
             step={0.05}
@@ -67,50 +81,38 @@ function Binaural() {
               setBinauralVolume(v);
             }}
           />
+
+          <button
+            className={`btn ${on ? "btn-ink" : "btn-lime"} w-full font-bold`}
+            onClick={toggle}
+          >
+            {on ? "Fade out" : "Start tones"}
+          </button>
         </div>
-
-        <button
-          className={`btn ${on ? "btn-ink" : "btn-lime"} w-full py-2 text-xs font-bold shrink-0`}
-          onClick={toggle}
-        >
-          {on ? "Fade out" : "Start tones"}
-        </button>
-      </div>
-    </BentoCard>
-  );
-}
-
-function Mixer() {
-  const { vols, set, stopAll } = useAmbient();
-
-  return (
-    <BentoCard
-      title="Ambient mixer"
-      subtitle="Synthesised loops, offline."
-      action={
-        <button className="btn btn-sm text-xs py-1 px-2.5" onClick={stopAll}>
-          Silence
-        </button>
-      }
-      className="h-full gap-2"
-    >
-      <ScrollArea className="flex-1 min-h-0 pr-1">
-        <div className="flex flex-col gap-2.5 pb-2">
-          {CHANNELS.map((c) => (
-            <div key={c.id} className="flex items-center gap-3">
-              <span className="w-20 shrink-0 text-xs font-bold truncate">{c.label}</span>
-              <Slider
-                aria-label={`${c.label} volume`}
-                min={0}
-                max={1}
-                step={0.05}
-                value={vols[c.id]}
-                onChange={(e) => set(c.id, +e.target.value)}
-              />
+      ) : (
+        <div className="flex h-full min-h-0 flex-col gap-3">
+          <ScrollArea className="flex-1 min-h-0 pr-1">
+            <div className="flex flex-col gap-3 pb-2">
+              {CHANNELS.map((c) => (
+                <div key={c.id} className="flex items-center gap-3">
+                  <span className="w-20 shrink-0 text-xs font-bold truncate">{c.label}</span>
+                  <Slider
+                    aria-label={`${c.label} volume`}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={vols[c.id]}
+                    onChange={(e) => set(c.id, +e.target.value)}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+          </ScrollArea>
+          <button className="btn btn-sm w-full shrink-0" onClick={stopAll}>
+            Silence all
+          </button>
         </div>
-      </ScrollArea>
+      )}
     </BentoCard>
   );
 }
@@ -161,7 +163,7 @@ export function TimerPage() {
     >
       <div className="flex h-full min-h-0 w-full flex-col items-center justify-between gap-2 py-1">
         <div className="flex h-full min-h-0 flex-1 w-full items-center justify-center">
-          <RadialTimer pct={t.pct} rem={t.rem} label={label} />
+          <RadialTimer pct={t.pct} rem={t.rem} label={label} running={t.running} />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -199,7 +201,7 @@ export function TimerPage() {
             }}
           >
             <input
-              className="input !min-h-7.5 w-20 !px-2.5 text-xs rounded-full border border-line bg-surface"
+              className="input !min-h-8 w-20 !px-3 text-xs rounded-full border border-line bg-surface"
               inputMode="numeric"
               placeholder="Custom"
               aria-label="Custom minutes"
@@ -212,23 +214,29 @@ export function TimerPage() {
     </BentoCard>
   );
 
-  const defense = (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      <BentoCard
-        title="Focus defense"
-        subtitle="Leave tab and shield cracks."
-        action={<ShieldCheck size={22} weight="duotone" className="text-teal" />}
-        className="h-[125px] shrink-0"
-        headerClassName="!pb-1 !pt-3 !px-4"
-        bodyClassName="!px-4 !pb-2.5"
-      >
-        <div className="flex flex-col gap-1 justify-center">
-          <p className="font-display num text-2xl font-black leading-none">{Math.round(t.shield)}%</p>
-          <ProgressBar pct={t.shield / 100} color={t.shield > 50 ? "var(--color-teal)" : "var(--color-orange)"} />
+  const rightCol = (
+    <div style={{ gap: "var(--gutter, 16px)" }} className="flex h-full min-h-0 flex-col">
+      {/* Slim Focus Defense Status Strip */}
+      <BentoCard autoHeight className="shrink-0">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <ShieldCheck size={20} weight="duotone" className="text-teal shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold leading-tight truncate">Focus defense</p>
+              <p className="text-[11px] text-muted truncate">Leave tab and shield cracks</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-24 hidden sm:block">
+              <ProgressBar pct={t.shield / 100} color={t.shield > 50 ? "var(--color-teal)" : "var(--color-orange)"} />
+            </div>
+            <span className="font-display num text-lg font-black">{Math.round(t.shield)}%</span>
+          </div>
         </div>
       </BentoCard>
+
       <div className="flex-1 min-h-0">
-        <Binaural />
+        <SoundscapeCard />
       </div>
     </div>
   );
@@ -238,9 +246,8 @@ export function TimerPage() {
       <Panels
         className="lg:grid-cols-12 lg:grid-rows-1 sm:grid-cols-2"
         panels={[
-          { id: "timer", label: "Timer", className: "lg:col-span-5 sm:col-span-2", node: main },
-          { id: "defense", label: "Defense", className: "lg:col-span-4", node: defense },
-          { id: "mixer", label: "Ambient", className: "lg:col-span-3", node: <Mixer /> },
+          { id: "timer", label: "Timer", className: "lg:col-span-7 sm:col-span-1", node: main },
+          { id: "sound", label: "Soundscape", className: "lg:col-span-5 sm:col-span-1", node: rightCol },
         ]}
       />
       {zen && (
