@@ -36,7 +36,7 @@ export function Rail() {
 
     const cls = cn(
       "group relative grid place-items-center rounded-full shrink-0 cursor-pointer",
-      on ? "text-fg" : isOpen ? "bg-white/15 text-on-inverse" : "text-on-inverse/75 hover:text-on-inverse"
+      on ? "text-[var(--rail-notch-ink,var(--fg))]" : isOpen ? "bg-white/15 text-on-inverse" : "text-on-inverse/75 hover:text-on-inverse"
     );
     const sizeStyle = { width: "clamp(36px, 5.5vh, 48px)", height: "clamp(36px, 5.5vh, 48px)" };
 
@@ -58,15 +58,15 @@ export function Rail() {
         transition={snappy}
         aria-hidden
         className="pointer-events-none absolute inset-y-0 left-0 -right-3 rounded-l-full"
-        style={{ background: "var(--canvas)" }}
+        style={{ background: "var(--rail-notch, var(--canvas))" }}
       >
         <span
           className="pointer-events-none absolute -top-3 right-0 size-3"
-          style={{ background: "radial-gradient(circle at 0 0, transparent 11.5px, var(--canvas) 12px)" }}
+          style={{ background: "radial-gradient(circle at 0 0, transparent 11.5px, var(--rail-notch, var(--canvas)) 12px)" }}
         />
         <span
           className="pointer-events-none absolute -bottom-3 right-0 size-3"
-          style={{ background: "radial-gradient(circle at 0 100%, transparent 11.5px, var(--canvas) 12px)" }}
+          style={{ background: "radial-gradient(circle at 0 100%, transparent 11.5px, var(--rail-notch, var(--canvas)) 12px)" }}
         />
       </motion.span>
     ) : null;

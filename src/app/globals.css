@@ -242,6 +242,8 @@
 
   /* Legacy vars */
   --canvas: var(--bg);
+  --rail-notch: var(--bg);
+  --rail-notch-ink: var(--ink);
   --soft: var(--surface-2);
   --fg: var(--ink);
   --muted: var(--ink-muted);
@@ -320,6 +322,8 @@
   --viz-8: #9fa4ae;
 
   --canvas: var(--bg);
+  --rail-notch: var(--primary);
+  --rail-notch-ink: var(--on-primary);
   --soft: var(--surface-2);
   --fg: var(--ink);
   --muted: var(--ink-muted);
