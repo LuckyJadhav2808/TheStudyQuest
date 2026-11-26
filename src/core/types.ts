@@ -3,7 +3,7 @@ export interface Base { id: ID; createdAt: number; updatedAt: number; deletedAt?
 export type Priority = "low" | "medium" | "high" | "urgent";
 export type TaskStatus = "todo" | "doing" | "done";
 export interface Subtask { id: ID; title: string; done: boolean }
-export interface Note extends Base { title: string; content: string; folderId?: ID | null; tags: string[]; pinned?: boolean }
+export interface Note extends Base { title: string; content: string; folderId?: ID | null; tags: string[]; pinned?: boolean; locked?: boolean }
 export interface Folder extends Base { name: string; color: string }
 export interface Task extends Base { title: string; description?: string; status: TaskStatus; priority: Priority; due?: string; tags: string[]; subtasks: Subtask[]; order: number; completedAt?: number }
 export interface Habit extends Base { name: string; icon: string; color: string }

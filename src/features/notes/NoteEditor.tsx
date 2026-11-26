@@ -18,7 +18,7 @@ import imageCompression from "browser-image-compression";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { format } from "date-fns";
-import { ArrowLeft, ArrowsClockwise, CaretRight, Code, Columns, Function as FunctionIcon, Highlighter, Image as ImageIcon, Link as LinkIcon, ListBullets, ListChecks, MagicWand, Microphone, MicrophoneSlash, Quotes, Table as TableIcon, TextB, TextItalic, TextHTwo, Graph, CaretDown, Sparkle, Plus, Clock, Tag, Trash, UploadSimple, ArrowUUpLeft, ArrowUUpRight, X } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowsClockwise, CaretRight, Code, Columns, Function as FunctionIcon, Highlighter, Image as ImageIcon, Link as LinkIcon, ListBullets, ListChecks, LockSimple, LockSimpleOpen, MagicWand, Microphone, MicrophoneSlash, Quotes, Table as TableIcon, TextB, TextItalic, TextHTwo, Graph, CaretDown, Sparkle, Plus, Clock, Tag, Trash, UploadSimple, ArrowUUpLeft, ArrowUUpRight, X } from "@phosphor-icons/react";
 
 const lowlight = createLowlight(common);
 import { Segmented } from "@/components/ui/misc";
@@ -58,6 +58,8 @@ export function NoteEditor({
   setDock?: (v: string) => void;
 }) {
   const [mode, setMode] = useState<Mode>("rich");
+  const locked = Boolean(note.locked);
+  const effectiveMode: Mode = locked ? "preview" : mode;
   const [content, setContent] = useState(note.content);
   const [busy, setBusy] = useState(false);
   const [aiPct, setAiPct] = useState<number | null>(null);
@@ -535,24 +537,45 @@ export function NoteEditor({
         )}
       </div>
 
-      {/* Editorial Title + Mode Switcher */}
+      {/* Editorial Title + Mode Switcher + Read-Only Lock */}
       <div className="flex items-center justify-between gap-3 shrink-0">
         <input
+          readOnly={locked}
           className="min-w-0 flex-1 bg-transparent font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-fg outline-none placeholder:text-muted"
           aria-label="Note title"
           placeholder="Untitled note"
           defaultValue={note.title}
-          onChange={(e) => void notesRepo.update(note.id, { title: e.target.value })}
+          onChange={(e) => {
+            if (!locked) void notesRepo.update(note.id, { title: e.target.value });
+          }}
         />
-        <Segmented<Mode>
-          value={mode}
-          onChange={changeMode}
-          options={[
-            { value: "rich", label: "Rich" },
-            { value: "source", label: "Source" },
-            { value: "preview", label: "Preview" },
-          ]}
-        />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => void notesRepo.update(note.id, { locked: !locked })}
+            aria-label={locked ? "Unlock note for editing" : "Lock note (read-only)"}
+            title={locked ? "Unlock note for editing" : "Lock note (read-only)"}
+            className={`chip !min-h-8 !px-2.5 text-xs font-bold transition ${
+              locked
+                ? "bg-[var(--warning-tint)] text-[var(--warning-text)] border-[var(--warning)]"
+                : "bg-surface text-muted hover:text-fg"
+            }`}
+          >
+            {locked ? <LockSimple size={14} weight="fill" /> : <LockSimpleOpen size={14} />}
+            {locked && <span>Read-only</span>}
+          </button>
+          {!locked && (
+            <Segmented<Mode>
+              value={mode}
+              onChange={changeMode}
+              options={[
+                { value: "rich", label: "Rich" },
+                { value: "source", label: "Source" },
+                { value: "preview", label: "Preview" },
+              ]}
+            />
+          )}
+        </div>
       </div>
 
       {/* Compact Metadata Strip: Edited date + Inline Tags */}
@@ -563,18 +586,27 @@ export function NoteEditor({
         </span>
         <div className="flex flex-wrap items-center gap-1.5">
           <Tag size={13} />
-          {note.tags.map((t) => (
-            <button
-              key={t}
-              type="button"
-              title="Click to remove tag"
-              onClick={() => void notesRepo.update(note.id, { tags: note.tags.filter((x) => x !== t) })}
-              className="rounded-full bg-[var(--domain-notes-tint)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--domain-notes-text)] hover:opacity-75 transition"
-            >
-              #{t} ×
-            </button>
-          ))}
-          {addingTag ? (
+          {note.tags.map((t) =>
+            locked ? (
+              <span
+                key={t}
+                className="rounded-full bg-[var(--domain-notes-tint)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--domain-notes-text)]"
+              >
+                #{t}
+              </span>
+            ) : (
+              <button
+                key={t}
+                type="button"
+                title="Click to remove tag"
+                onClick={() => void notesRepo.update(note.id, { tags: note.tags.filter((x) => x !== t) })}
+                className="rounded-full bg-[var(--domain-notes-tint)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--domain-notes-text)] hover:opacity-75 transition"
+              >
+                #{t} ×
+              </button>
+            )
+          )}
+          {!locked && addingTag ? (
             <input
               autoFocus
               className="w-24 rounded-full border border-border-strong bg-surface px-2.5 py-0.5 text-[11px] font-bold text-fg outline-none"
@@ -587,7 +619,7 @@ export function NoteEditor({
                 if (e.key === "Escape") { setTagDraft(""); setAddingTag(false); }
               }}
             />
-          ) : (
+          ) : !locked ? (
             <button
               type="button"
               onClick={() => setAddingTag(true)}
@@ -595,8 +627,8 @@ export function NoteEditor({
             >
               <Plus size={10} weight="bold" /> Add tag
             </button>
-          )}
-          {suggestedTags.map((st) => (
+          ) : null}
+          {!locked && suggestedTags.map((st) => (
             <button
               key={st}
               type="button"
@@ -611,8 +643,9 @@ export function NoteEditor({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-1 border-b border-line/40 pb-1.5 shrink-0">
-        <div className="flex items-center gap-0.5 flex-wrap">
-          {mode === "rich" && editor && (
+        {!locked && (
+          <div className="flex items-center gap-0.5 flex-wrap">
+            {mode === "rich" && editor && (
             <>
               {tb("Undo", <ArrowUUpLeft size={16} />, () => c?.undo().run())}
               {tb("Redo", <ArrowUUpRight size={16} />, () => c?.redo().run())}
@@ -687,43 +720,46 @@ export function NoteEditor({
             <MagicWand size={13} className="pointer-events-none absolute right-2 text-violet" aria-hidden />
           </div>
         </div>
+        )}
 
         <div className="flex items-center gap-1.5 ml-auto">
-          <label
-            aria-label="Import HTML or Markdown into note"
-            title="Import .html or .md into this note"
-            className="chip !min-h-7 cursor-pointer !px-2.5 text-xs font-bold bg-surface hover:border-ink inline-flex items-center gap-1"
-          >
-            <UploadSimple size={13} weight="bold" />
-            <span className="hidden xl:inline">Import HTML</span>
-            <input
-              type="file"
-              hidden
-              accept=".html,.htm,.md,.markdown,.txt"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (!file) return;
-                if (file.size > 5 * 1024 * 1024) {
-                  strobiSay("File is too large (5 MB max).", "error");
-                  return;
-                }
-                const raw = await file.text();
-                const isHtml = /\.(html?|xhtml)$/i.test(file.name);
-                const imported = isHtml ? htmlToStudyMarkdown(raw, note.title).markdown : raw;
-                if (!imported.trim()) {
-                  strobiSay("That file has no readable text content.", "warning");
-                  return;
-                }
-                if (mode === "rich" && editor) {
-                  editor.chain().focus().insertContent(imported, { contentType: "markdown" }).run();
-                } else {
-                  insertSource(`\n${imported}\n`);
-                }
-                strobiSay(`Imported ${file.name}`, "tip");
-              }}
-            />
-          </label>
+          {!locked && (
+            <label
+              aria-label="Import HTML or Markdown into note"
+              title="Import .html or .md into this note"
+              className="chip !min-h-7 cursor-pointer !px-2.5 text-xs font-bold bg-surface hover:border-ink inline-flex items-center gap-1"
+            >
+              <UploadSimple size={13} weight="bold" />
+              <span className="hidden xl:inline">Import HTML</span>
+              <input
+                type="file"
+                hidden
+                accept=".html,.htm,.md,.markdown,.txt"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) {
+                    strobiSay("File is too large (5 MB max).", "error");
+                    return;
+                  }
+                  const raw = await file.text();
+                  const isHtml = /\.(html?|xhtml)$/i.test(file.name);
+                  const imported = isHtml ? htmlToStudyMarkdown(raw, note.title).markdown : raw;
+                  if (!imported.trim()) {
+                    strobiSay("That file has no readable text content.", "warning");
+                    return;
+                  }
+                  if (mode === "rich" && editor) {
+                    editor.chain().focus().insertContent(imported, { contentType: "markdown" }).run();
+                  } else {
+                    insertSource(`\n${imported}\n`);
+                  }
+                  strobiSay(`Imported ${file.name}`, "tip");
+                }}
+              />
+            </label>
+          )}
           <div className="relative inline-flex items-center">
             <select
               aria-label="More options"
@@ -805,7 +841,7 @@ export function NoteEditor({
         </div>
       )}
 
-      {(showMath || mode === "source") && mode !== "preview" && (
+      {!locked && (showMath || mode === "source") && mode !== "preview" && (
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 shrink-0" aria-label="Math symbols">
           <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted mr-1 shrink-0">Math</span>
           {MATH_PALETTE.map((m) => (
@@ -937,8 +973,8 @@ export function NoteEditor({
 
         <div className="mx-auto flex min-h-full max-w-[72ch] flex-col justify-between gap-6">
           <div className="flex-1">
-            {mode === "rich" && <EditorContent editor={editor} className="min-h-[180px]" />}
-            {mode === "source" && (
+            {effectiveMode === "rich" && <EditorContent editor={editor} className="min-h-[180px]" />}
+            {effectiveMode === "source" && (
               <textarea
                 ref={src}
                 aria-label="Markdown source"
@@ -951,7 +987,7 @@ export function NoteEditor({
                 }}
               />
             )}
-            {mode === "preview" && <MarkdownView source={content} />}
+            {effectiveMode === "preview" && <MarkdownView source={content} />}
           </div>
 
           {showQuizCard && (
@@ -961,13 +997,15 @@ export function NoteEditor({
                   <Sparkle size={12} weight="fill" /> Test yourself on this note
                 </span>
                 <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={insertQuestionIntoNote}
-                    className="rounded-full border border-line/50 bg-surface px-2.5 py-0.5 text-[11px] font-bold text-fg hover:border-border-strong transition"
-                  >
-                    Insert into note
-                  </button>
+                  {!locked && (
+                    <button
+                      type="button"
+                      onClick={insertQuestionIntoNote}
+                      className="rounded-full border border-line/50 bg-surface px-2.5 py-0.5 text-[11px] font-bold text-fg hover:border-border-strong transition"
+                    >
+                      Insert into note
+                    </button>
+                  )}
                   <button
                     type="button"
                     disabled={quizBusy}
