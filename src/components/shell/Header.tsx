@@ -184,23 +184,14 @@ export function Header() {
 
         {/* Icon Action Buttons with proper tooltips & aria-labels */}
         {(() => {
-          const isDark = s.theme === "obsidian" || s.theme === "cobalt" || (s.theme as string) === "ink";
+          const isDark = s.theme === "obsidian" || (s.theme as string) === "ink";
           return (
             <button
               type="button"
               className="btn btn-icon btn-ghost border-0 inline-flex hover:bg-soft"
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               title={isDark ? "Light mode" : "Dark mode"}
-              onClick={(e) => {
-                if (isDark) {
-                  try { localStorage.setItem("sq-last-dark", s.theme === "cobalt" ? "cobalt" : "obsidian"); } catch { /* ignore */ }
-                  switchThemeWithRipple("pastel", e);
-                } else {
-                  let lastDark: "obsidian" | "cobalt" = "obsidian";
-                  try { if (localStorage.getItem("sq-last-dark") === "cobalt") lastDark = "cobalt"; } catch { /* ignore */ }
-                  switchThemeWithRipple(lastDark, e);
-                }
-              }}
+              onClick={(e) => switchThemeWithRipple(isDark ? "pastel" : "obsidian", e)}
             >
               {isDark ? <Sun size={19} weight="duotone" /> : <Moon size={19} weight="duotone" />}
             </button>

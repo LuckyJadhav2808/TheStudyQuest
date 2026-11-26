@@ -334,87 +334,6 @@
   color-scheme: dark;
 }
 
-/* Dark Mode 2: Dark Cobalt (#03195b, #0b2cb1, #1951fc, #3781fc, #6fb1fe, #cbe9fd) */
-[data-theme="cobalt"] {
-  --bg: #03195b;
-  --surface: #072270;
-  --surface-2: #0c2c88;
-  --surface-inverse: #021245;
-  --on-inverse: #eef6ff;
-  --ink: #eef6ff;
-  --ink-muted: #cbe9fd;
-  --ink-soft: #7eaee8;
-  --line: rgba(203, 233, 253, 0.16);
-  --border-strong: rgba(203, 233, 253, 0.42);
-  --line-w: 1px;
-  --shadow: 0 12px 32px -12px rgba(1, 8, 34, 0.85);
-  --shadow-hard: inset 0 1px 0 rgba(203, 233, 253, 0.1), 0 0 0 1px rgba(203, 233, 253, 0.14), 0 18px 40px -16px rgba(1, 8, 34, 0.9);
-
-  --primary: #1951fc;
-  --on-primary: #ffffff;
-  --primary-hover: #3781fc;
-  --primary-pressed: #0b2cb1;
-  --primary-tint: rgba(55, 129, 252, 0.22);
-  --primary-text: #cbe9fd;
-  --focus: #cbe9fd;
-
-  --accent-1: #3781fc;
-  --accent-2: #6fb1fe;
-  --accent-3: #2ce5b5;
-  --accent-4: #a695ff;
-  --accent-5: #ffb41f;
-  --accent-6: #cbe9fd;
-
-  --domain-focus-tint: #092678;
-  --domain-focus-fill: #3781fc;
-  --domain-focus-text: #cbe9fd;
-  --domain-notes-tint: #10246e;
-  --domain-notes-fill: #8f95ea;
-  --domain-notes-text: #d5dcff;
-  --domain-quests-tint: #0f2966;
-  --domain-quests-fill: #6fb1fe;
-  --domain-quests-text: #cbe9fd;
-  --domain-stats-tint: #072d6b;
-  --domain-stats-fill: #2ce5b5;
-  --domain-stats-text: #9ef8e2;
-  --domain-play-tint: #14226b;
-  --domain-play-fill: #c8a8e9;
-  --domain-play-text: #ead9ff;
-  --domain-tools-tint: #092872;
-  --domain-tools-fill: #3781fc;
-  --domain-tools-text: #cbe9fd;
-
-  --success: #34d97b;
-  --success-tint: rgba(52, 217, 123, 0.18);
-  --success-text: #9ef5c4;
-  --warning: #ffb41f;
-  --warning-tint: rgba(255, 180, 31, 0.18);
-  --warning-text: #ffe08a;
-  --danger: #ff5c6a;
-  --danger-tint: rgba(255, 92, 106, 0.2);
-  --danger-text: #ffb3ba;
-  --info: #3781fc;
-  --info-tint: rgba(55, 129, 252, 0.22);
-  --info-text: #cbe9fd;
-
-  --viz-1: #3781fc;
-  --viz-2: #cbe9fd;
-  --viz-3: #2ce5b5;
-  --viz-4: #8f95ea;
-  --viz-5: #6fb1fe;
-  --viz-6: #ffb41f;
-  --viz-7: #c8a8e9;
-  --viz-8: #7eaee8;
-
-  --canvas: var(--bg);
-  --rail-notch: var(--primary);
-  --rail-notch-ink: var(--on-primary);
-  --soft: var(--surface-2);
-  --fg: var(--ink);
-  --muted: var(--ink-muted);
-  color-scheme: dark;
-}
-
 /* ---------- Density, Padding, Gutter & Global Scrollbar defaults ---------- */
 :root {
   --density-gap: 16px;
@@ -484,13 +403,6 @@
   }
   body {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-  [data-theme="cobalt"] body {
-    background:
-      radial-gradient(circle at 18% 12%, rgba(55, 129, 252, 0.34) 0%, transparent 44%),
-      radial-gradient(circle at 86% 78%, rgba(203, 233, 253, 0.16) 0%, transparent 42%),
-      radial-gradient(circle at 50% 50%, rgba(25, 81, 252, 0.18) 0%, transparent 65%),
-      var(--bg);
   }
 }
 .num,
@@ -613,52 +525,9 @@
     border-color: var(--border-strong);
   }
   [data-theme="ink"] .btn-ink,
-  [data-theme="obsidian"] .btn-ink,
-  [data-theme="cobalt"] .btn-ink {
+  [data-theme="obsidian"] .btn-ink {
     background: var(--on-inverse);
     color: var(--on-primary);
-  }
-  /* Glassy & glossy specular surface finish for Dark Cobalt */
-  [data-theme="cobalt"] .bento-card {
-    background: linear-gradient(
-      155deg,
-      rgba(55, 129, 252, 0.2) 0%,
-      rgba(11, 44, 177, 0.48) 42%,
-      rgba(3, 25, 91, 0.72) 100%
-    );
-    backdrop-filter: blur(18px) saturate(145%);
-    -webkit-backdrop-filter: blur(18px) saturate(145%);
-    border-color: rgba(203, 233, 253, 0.26);
-    box-shadow:
-      inset 0 1.5px 0 rgba(203, 233, 253, 0.38),
-      inset 0 -1px 0 rgba(3, 25, 91, 0.65),
-      0 18px 40px -14px rgba(1, 8, 34, 0.88);
-  }
-  [data-theme="cobalt"] .tile,
-  [data-theme="cobalt"] .chip {
-    background: linear-gradient(
-      180deg,
-      rgba(55, 129, 252, 0.22) 0%,
-      rgba(12, 44, 136, 0.54) 100%
-    );
-    backdrop-filter: blur(12px) saturate(135%);
-    -webkit-backdrop-filter: blur(12px) saturate(135%);
-    border-color: rgba(203, 233, 253, 0.24);
-    box-shadow: inset 0 1px 0 rgba(203, 233, 253, 0.28);
-  }
-  [data-theme="cobalt"] .btn-lime,
-  [data-theme="cobalt"] .btn-primary {
-    background: linear-gradient(180deg, #569bff 0%, #1951fc 50%, #0b2cb1 100%);
-    color: #ffffff;
-    border-color: rgba(203, 233, 253, 0.45);
-    box-shadow:
-      inset 0 1.5px 0 rgba(255, 255, 255, 0.58),
-      inset 0 -2px 4px rgba(3, 25, 91, 0.45),
-      0 8px 22px -6px rgba(25, 81, 252, 0.68);
-  }
-  [data-theme="cobalt"] .btn-lime:hover:not(:disabled),
-  [data-theme="cobalt"] .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(180deg, #75b0ff 0%, #3781fc 50%, #1951fc 100%);
   }
   .btn-ghost {
     background: transparent;
