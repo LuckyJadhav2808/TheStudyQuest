@@ -29,6 +29,7 @@ import { exportBackup, importBackup, resetAll } from "./dataTools";
 const THEMES: { id: ThemeName; label: string; bg: string }[] = [
   { id: "pastel", label: "Light · Pastel", bg: "#F4E7FB" },
   { id: "obsidian", label: "Dark · Obsidian", bg: "#E85002" },
+  { id: "cobalt", label: "Dark · Cobalt", bg: "#1951FC" },
 ];
 const hue = (s: string) => [...s].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360;
 
@@ -311,7 +312,7 @@ export function SettingsPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-muted mb-2 uppercase tracking-wide">Theme palette</p>
-                  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Theme">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Theme">
                     {THEMES.map((t) => (
                       <button
                         key={t.id}

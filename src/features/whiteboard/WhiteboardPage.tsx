@@ -24,7 +24,7 @@ export function WhiteboardPage() {
       </div>
     </Card>
   );
-  const canvas = <Card className="!p-3">{cur && <Board key={cur.id} initial={cur.data || null} dark={s.theme === "obsidian" || (s.theme as string) === "ink"} onSave={(json) => void whiteboardsRepo.update(cur.id, { data: json })} />}</Card>;
+  const canvas = <Card className="!p-3">{cur && <Board key={cur.id} initial={cur.data || null} dark={s.theme === "obsidian" || s.theme === "cobalt" || (s.theme as string) === "ink"} onSave={(json) => void whiteboardsRepo.update(cur.id, { data: json })} />}</Card>;
   return (
     <PageFrame title="Whiteboard" subtitle="Sketch, diagram, think. Boards autosave on this device.">
       <Panels className="lg:grid-cols-12" panels={[{ id: "list", label: "Boards", className: "lg:col-span-2", node: list }, { id: "board", label: "Canvas", className: "lg:col-span-10", node: canvas }]} />
