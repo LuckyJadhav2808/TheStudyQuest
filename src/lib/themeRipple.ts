@@ -1,24 +1,13 @@
 "use client";
 import { flushSync } from "react-dom";
 import { updateSettings } from "@/core/settings";
-import type { ThemeName } from "@/core/types";
+import type { SurfaceStyle, ThemeName } from "@/core/types";
 
-export function switchThemeWithRipple(
-  theme: ThemeName,
+function runWithRipple(
+  apply: () => void,
   event?: { clientX?: number; clientY?: number; currentTarget?: EventTarget | null }
 ) {
   if (typeof document === "undefined") return;
-
-  const apply = () => {
-    document.documentElement.dataset.theme = theme;
-    try {
-      localStorage.setItem("sq-theme", theme);
-    } catch {
-      /* ignore */
-    }
-    void updateSettings({ theme });
-  };
-
   const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   const startVT = (document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } })
     .startViewTransition;
@@ -40,7 +29,6 @@ export function switchThemeWithRipple(
   }
 
   const maxR = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
-
   const transition = startVT.call(document, () => {
     flushSync(apply);
   });
@@ -57,4 +45,34 @@ export function switchThemeWithRipple(
       }
     );
   });
+}
+
+export function switchThemeWithRipple(
+  theme: ThemeName,
+  event?: { clientX?: number; clientY?: number; currentTarget?: EventTarget | null }
+) {
+  runWithRipple(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem("sq-theme", theme);
+    } catch {
+      /* ignore */
+    }
+    void updateSettings({ theme });
+  }, event);
+}
+
+export function switchSurfaceWithRipple(
+  surfaceStyle: SurfaceStyle,
+  event?: { clientX?: number; clientY?: number; currentTarget?: EventTarget | null }
+) {
+  runWithRipple(() => {
+    document.documentElement.dataset.surface = surfaceStyle;
+    try {
+      localStorage.setItem("sq-surface", surfaceStyle);
+    } catch {
+      /* ignore */
+    }
+    void updateSettings({ surfaceStyle });
+  }, event);
 }

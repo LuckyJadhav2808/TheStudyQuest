@@ -15,10 +15,10 @@ import { useUI } from "@/components/shell/ui-store";
 import { DEFAULT_FLAGS, useFlags, type FlagName } from "@/core/flags";
 import { updateSettings, useGame, useSettings } from "@/core/settings";
 import { levelProgress } from "@/core/gamification";
-import type { ThemeName } from "@/core/types";
+import type { SurfaceStyle, ThemeName } from "@/core/types";
 import { strobiSay } from "@/features/strobi/toast";
 import { playSfx } from "@/lib/audio";
-import { switchThemeWithRipple } from "@/lib/themeRipple";
+import { switchSurfaceWithRipple, switchThemeWithRipple } from "@/lib/themeRipple";
 import { fetchCloudSession, syncWithCloud, type CloudUser } from "@/lib/cloudSync";
 import { isLocalAiCached, preloadLocalAi } from "@/lib/localAi";
 import { startDesktopTour } from "@/lib/tour";
@@ -329,6 +329,26 @@ export function SettingsPage() {
                   </div>
                   </div>
                   <Illustration name="palette" tone="notes" className="hidden sm:block w-16 h-14 opacity-90" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-muted mb-2 uppercase tracking-wide">Surface style</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Segmented<SurfaceStyle>
+                      ariaLabel="Surface style"
+                      value={s.surfaceStyle ?? "classic"}
+                      onChange={(next) => switchSurfaceWithRipple(next)}
+                      options={[
+                        { value: "classic", label: "Classic" },
+                        { value: "neumorphic", label: "Neumorphic" },
+                      ]}
+                    />
+                    <span className="text-xs text-muted">
+                      {(s.surfaceStyle ?? "classic") === "neumorphic"
+                        ? "Soft extruded 3D cards & recessed inputs."
+                        : "Crisp borders & tactile contrast."}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-3 rounded-2xl border border-line bg-soft/30 p-4">

@@ -123,12 +123,15 @@ export function Boot() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = s.theme;
+    const surf = s.surfaceStyle ?? "classic";
+    document.documentElement.dataset.surface = surf;
     try {
       localStorage.setItem("sq-theme", s.theme);
+      localStorage.setItem("sq-surface", surf);
     } catch {
       /* ignore */
     }
-  }, [s.theme]);
+  }, [s.theme, s.surfaceStyle]);
 
   useEffect(() => {
     audioPrefs.master = s.masterVolume;

@@ -36,8 +36,9 @@ export interface TimetableBlock extends Base { day: number; start: string; end: 
 export interface Flashcard extends Base { front: string; back: string; noteId?: ID | null; due: number; fsrs?: Record<string, unknown> }
 export interface ScoreRow extends Base { game: string; score: number }
 export type ThemeName = "pastel" | "obsidian";
+export type SurfaceStyle = "classic" | "neumorphic";
 export interface Settings {
-  id: "main"; theme: ThemeName; name: string; avatarSeed: string; title: string; goal: string;
+  id: "main"; theme: ThemeName; surfaceStyle?: SurfaceStyle; name: string; avatarSeed: string; title: string; goal: string;
   masterVolume: number; sfxVolume: number; musicVolume: number; muted: boolean;
   flags: Record<string, boolean>; hiddenWidgets: string[]; onboarded: boolean; profileCreated: boolean;
   notifications: boolean; lastChest: number; leetcodeUser: string; focusGoalMin: number; ownedBorders: string[];

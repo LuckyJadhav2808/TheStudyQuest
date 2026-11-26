@@ -334,6 +334,36 @@
   color-scheme: dark;
 }
 
+/* ---------- Toggleable Neumorphic Surface Style (works on Light & Dark) ---------- */
+[data-surface="neumorphic"] {
+  --bg: #efe3f7;
+  --surface: #f2e7f9;
+  --surface-2: #eadbf4;
+  --neu-light: rgba(255, 255, 255, 0.88);
+  --neu-dark: rgba(164, 134, 189, 0.38);
+  --neu-border: rgba(255, 255, 255, 0.65);
+  --shadow-neu-out: 8px 8px 18px var(--neu-dark), -8px -8px 18px var(--neu-light);
+  --shadow-neu-sm: 4px 4px 10px var(--neu-dark), -4px -4px 10px var(--neu-light);
+  --shadow-neu-in: inset 4px 4px 9px var(--neu-dark), inset -4px -4px 9px var(--neu-light);
+  --shadow: var(--shadow-neu-out);
+  --shadow-hard: var(--shadow-neu-out);
+}
+
+[data-theme="obsidian"][data-surface="neumorphic"],
+[data-theme="ink"][data-surface="neumorphic"] {
+  --bg: #151518;
+  --surface: #19191d;
+  --surface-2: #121215;
+  --neu-light: rgba(255, 255, 255, 0.055);
+  --neu-dark: rgba(0, 0, 0, 0.8);
+  --neu-border: rgba(255, 255, 255, 0.07);
+  --shadow-neu-out: 8px 8px 18px var(--neu-dark), -6px -6px 16px var(--neu-light);
+  --shadow-neu-sm: 4px 4px 10px var(--neu-dark), -4px -4px 10px var(--neu-light);
+  --shadow-neu-in: inset 4px 4px 10px var(--neu-dark), inset -4px -4px 10px var(--neu-light);
+  --shadow: var(--shadow-neu-out);
+  --shadow-hard: var(--shadow-neu-out);
+}
+
 /* ---------- Density, Padding, Gutter & Global Scrollbar defaults ---------- */
 :root {
   --density-gap: 16px;
@@ -528,6 +558,40 @@
   [data-theme="obsidian"] .btn-ink {
     background: var(--on-inverse);
     color: var(--on-primary);
+  }
+  /* Neumorphic primitive overrides (scoped to cards, buttons, chips, tiles, inputs, tablist) */
+  [data-surface="neumorphic"] .bento-card {
+    background: var(--surface);
+    border-width: 1px;
+    border-color: var(--neu-border);
+    box-shadow: var(--shadow-neu-out);
+  }
+  [data-surface="neumorphic"] .bento-card.lift:hover {
+    box-shadow: var(--shadow-neu-out);
+  }
+  [data-surface="neumorphic"] .btn,
+  [data-surface="neumorphic"] .chip {
+    border-width: 1px;
+    border-color: var(--neu-border);
+    box-shadow: var(--shadow-neu-sm);
+  }
+  [data-surface="neumorphic"] .btn:active:not(:disabled) {
+    transform: scale(0.98);
+    box-shadow: var(--shadow-neu-in);
+  }
+  [data-surface="neumorphic"] .tile,
+  [data-surface="neumorphic"] .input,
+  [data-surface="neumorphic"] textarea.input {
+    background: var(--surface-2);
+    border-width: 1px;
+    border-color: var(--neu-border);
+    box-shadow: var(--shadow-neu-in);
+  }
+  [data-surface="neumorphic"] [role="tablist"] {
+    background: var(--surface-2);
+    border-width: 1px;
+    border-color: var(--neu-border);
+    box-shadow: var(--shadow-neu-in);
   }
   .btn-ghost {
     background: transparent;

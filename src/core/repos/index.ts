@@ -76,7 +76,7 @@ export const skillsRepo = {
 };
 
 export const DEFAULT_SETTINGS: Settings = {
-  id: "main", theme: "pastel", name: "Scholar", avatarSeed: "strobi", title: "Rookie Scholar", goal: "Ace my exams",
+  id: "main", theme: "pastel", surfaceStyle: "classic", name: "Scholar", avatarSeed: "strobi", title: "Rookie Scholar", goal: "Ace my exams",
   masterVolume: 0.7, sfxVolume: 0.6, musicVolume: 0.5, muted: false,
   flags: {}, hiddenWidgets: [], onboarded: false, profileCreated: false, notifications: false,
   lastChest: 0, leetcodeUser: "", focusGoalMin: 120, ownedBorders: [], updatedAt: 0,
