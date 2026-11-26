@@ -22,6 +22,7 @@ import { ArrowLeft, ArrowsClockwise, CaretRight, Code, Columns, Function as Func
 
 const lowlight = createLowlight(common);
 import { Segmented } from "@/components/ui/misc";
+import { Modal } from "@/components/ui/modal";
 import { emit } from "@/core/events";
 import { notesRepo } from "@/core/repos";
 import type { Note } from "@/core/types";
@@ -32,7 +33,7 @@ import { generateLocalStudyQuestion, suggestTags } from "@/lib/localNlp";
 import { useDictation } from "@/lib/useDictation";
 import { strobiSay, strobiToast } from "@/features/strobi/toast";
 import { MATH_PALETTE } from "./autocompleteDataset";
-import { AI_ACTIONS, exportNote, htmlToStudyMarkdown, runAiAction, type AiAction } from "./noteActions";
+import { AI_ACTIONS, EXPORT_THEMES, exportNote, htmlToStudyMarkdown, runAiAction, type AiAction, type ExportTheme } from "./noteActions";
 import { MermaidModal } from "./MermaidModal";
 import { createSlashCommandExtension } from "./SlashCommand";
 import { SmartAutocorrect } from "./SmartAutocorrect";
@@ -64,6 +65,11 @@ export function NoteEditor({
   const [busy, setBusy] = useState(false);
   const [aiPct, setAiPct] = useState<number | null>(null);
   const [mermaid, setMermaid] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportFmt, setExportFmt] = useState<"html" | "print" | "md" | "txt">("html");
+  const [exportTheme, setExportTheme] = useState<ExportTheme>(() =>
+    typeof document !== "undefined" && document.documentElement.dataset.theme === "obsidian" ? "obsidian" : "white"
+  );
   const [showMath, setShowMath] = useState(false);
   const [inTable, setInTable] = useState(false);
   const [toc, setToc] = useState<TableOfContentData>([]);
@@ -366,14 +372,15 @@ export function NoteEditor({
     setBusy(false);
   }
 
-  const handleExport = async (kind: string) => {
-    if (!kind) return;
+  const handleExport = async (kind: "html" | "print" | "md" | "txt", theme: ExportTheme) => {
     if (kind === "print") {
       clearTimeout(timer.current);
       await notesRepo.update(note.id, { content });
-      onPrint("modern");
+      setExportOpen(false);
+      onPrint(theme);
     } else {
-      await exportNote({ ...note, content }, kind as "md" | "html" | "txt");
+      await exportNote({ ...note, content }, kind, theme);
+      setExportOpen(false);
     }
   };
 
@@ -760,25 +767,13 @@ export function NoteEditor({
               />
             </label>
           )}
-          <div className="relative inline-flex items-center">
-            <select
-              aria-label="More options"
-              value=""
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v.startsWith("dock:")) setDock?.(v.slice(5));
-                else if (v.startsWith("exp:")) handleExport(v.slice(4));
-              }}
-              className="appearance-none rounded-full border border-line bg-surface py-1 pl-3 pr-7 text-xs font-bold text-fg hover:border-ink cursor-pointer outline-none"
-            >
-              <option value="">Export</option>
-              <option value="exp:md">Export Markdown (.md)</option>
-              <option value="exp:html">Export HTML (.html)</option>
-              <option value="exp:txt">Export Text (.txt)</option>
-              <option value="exp:print">Print / PDF</option>
-            </select>
-            <CaretDown size={12} className="pointer-events-none absolute right-2.5 text-muted" />
-          </div>
+          <button
+            type="button"
+            onClick={() => setExportOpen(true)}
+            className="chip !min-h-7 !px-3 text-xs font-bold bg-surface hover:border-border-strong inline-flex items-center gap-1"
+          >
+            Export
+          </button>
         </div>
       </div>
 
@@ -1063,6 +1058,75 @@ export function NoteEditor({
           }
         }}
       />
+
+      <Modal open={exportOpen} onClose={() => setExportOpen(false)} title="Export note">
+        <div className="flex flex-col gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Format</p>
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  { id: "html", label: "HTML (.html)" },
+                  { id: "print", label: "Print / PDF" },
+                  { id: "md", label: "Markdown (.md)" },
+                  { id: "txt", label: "Plain Text (.txt)" },
+                ] as const
+              ).map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setExportFmt(f.id)}
+                  className={`min-h-10 rounded-full border-[1.5px] px-3 text-xs font-bold transition cursor-pointer ${
+                    exportFmt === f.id
+                      ? "border-border-strong bg-primary text-on-primary shadow-xs"
+                      : "border-line bg-surface text-fg hover:border-border-strong"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {(exportFmt === "html" || exportFmt === "print") && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Export theme</p>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Export theme">
+                {EXPORT_THEMES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={exportTheme === t.id}
+                    onClick={() => setExportTheme(t.id)}
+                    className={`flex min-h-11 items-center gap-2.5 rounded-full border-[1.5px] px-3 text-xs font-bold transition cursor-pointer ${
+                      exportTheme === t.id
+                        ? "border-border-strong bg-primary text-on-primary shadow-xs"
+                        : "border-line bg-surface text-fg hover:border-border-strong"
+                    }`}
+                  >
+                    <span
+                      className="grid size-5 shrink-0 place-items-center rounded-full border border-border-strong/50 text-[9px] font-black"
+                      style={{ background: t.bg, color: t.fg }}
+                    >
+                      A
+                    </span>
+                    <span className="truncate">{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="btn btn-lime w-full"
+            onClick={() => void handleExport(exportFmt, exportTheme)}
+          >
+            {exportFmt === "print" ? "Print / Save PDF" : `Download .${exportFmt}`}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

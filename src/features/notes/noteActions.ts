@@ -175,7 +175,87 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] ?? c));
 }
 
-function readThemeTokens() {
+export type ExportTheme = "white" | "black" | "pastel" | "obsidian";
+
+export const EXPORT_THEMES: { id: ExportTheme; label: string; bg: string; fg: string; accent: string }[] = [
+  { id: "white", label: "White", bg: "#ffffff", fg: "#111111", accent: "#e4e4e7" },
+  { id: "black", label: "Black", bg: "#000000", fg: "#fafafa", accent: "#27272a" },
+  { id: "pastel", label: "Light · Pastel", bg: "#f4e7fb", fg: "#1e192b", accent: "#c8a8e9" },
+  { id: "obsidian", label: "Dark · Obsidian", bg: "#141414", fg: "#f9f9f9", accent: "#cf4300" },
+];
+
+const EXPORT_PALETTES: Record<
+  ExportTheme,
+  {
+    bg: string;
+    surface: string;
+    surface2: string;
+    fg: string;
+    muted: string;
+    border: string;
+    primary: string;
+    onPrimary: string;
+    tint: string;
+    tintText: string;
+    shadow: string;
+  }
+> = {
+  white: {
+    bg: "#ffffff",
+    surface: "#ffffff",
+    surface2: "#f4f4f5",
+    fg: "#111111",
+    muted: "#52525b",
+    border: "#18181b",
+    primary: "#18181b",
+    onPrimary: "#ffffff",
+    tint: "#f4f4f5",
+    tintText: "#18181b",
+    shadow: "0 8px 24px -10px rgba(0,0,0,0.1)",
+  },
+  black: {
+    bg: "#000000",
+    surface: "#0a0a0a",
+    surface2: "#18181b",
+    fg: "#fafafa",
+    muted: "#a1a1aa",
+    border: "#3f3f46",
+    primary: "#ffffff",
+    onPrimary: "#000000",
+    tint: "#18181b",
+    tintText: "#fafafa",
+    shadow: "0 12px 32px -12px rgba(0,0,0,0.8)",
+  },
+  pastel: {
+    bg: "#f4e7fb",
+    surface: "#fcf8ff",
+    surface2: "#f2dddc",
+    fg: "#1e192b",
+    muted: "#5b516e",
+    border: "#231b30",
+    primary: "#c8a8e9",
+    onPrimary: "#1e192b",
+    tint: "#f4e7fb",
+    tintText: "#5a3982",
+    shadow: "6px 6px 0 #231b30",
+  },
+  obsidian: {
+    bg: "#000000",
+    surface: "#141414",
+    surface2: "#242424",
+    fg: "#f9f9f9",
+    muted: "#a7a7a7",
+    border: "#404040",
+    primary: "#cf4300",
+    onPrimary: "#ffffff",
+    tint: "#26140a",
+    tintText: "#ff9c66",
+    shadow: "0 12px 32px -12px rgba(0,0,0,0.9)",
+  },
+};
+
+function readThemeTokens(theme?: ExportTheme) {
+  if (theme) return EXPORT_PALETTES[theme];
   const cs = typeof document !== "undefined" ? getComputedStyle(document.documentElement) : null;
   const v = (name: string, fallback: string) => cs?.getPropertyValue(name).trim() || fallback;
   return {
@@ -193,7 +273,7 @@ function readThemeTokens() {
   };
 }
 
-export async function exportNote(note: Note, kind: "md" | "html" | "txt"): Promise<void> {
+export async function exportNote(note: Note, kind: "md" | "html" | "txt", theme?: ExportTheme): Promise<void> {
   const base = (note.title || "").trim().replace(/[^\w-]+/g, "_").replace(/^_+|_+$/g, "") || "note";
   if (kind === "md") {
     downloadBlob(`${base}.md`, note.content ?? "", "text/markdown;charset=utf-8");
@@ -204,7 +284,7 @@ export async function exportNote(note: Note, kind: "md" | "html" | "txt"): Promi
     return;
   }
   const body = await renderMarkdown(note.content ?? "");
-  const t = readThemeTokens();
+  const t = readThemeTokens(theme);
   const tagsHtml = note.tags.map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`).join("");
   const html = `<!doctype html>
 <html lang="en">
