@@ -55,7 +55,33 @@ export function mdToText(md: string): string {
 }
 export async function renderMermaid(svgHost: HTMLElement, code: string, id: string): Promise<void> {
   const mermaid = (await import("mermaid")).default;
-  mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "neutral" });
+  const dark = typeof document !== "undefined" && document.documentElement.dataset.theme === "obsidian";
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "strict",
+    theme: dark ? "dark" : "base",
+    themeVariables: dark
+      ? {
+          darkMode: true,
+          background: "#141414",
+          primaryColor: "#242424",
+          primaryTextColor: "#f9f9f9",
+          primaryBorderColor: "#d94800",
+          lineColor: "#a7a7a7",
+          secondaryColor: "#1a1a1a",
+          tertiaryColor: "#26140a",
+        }
+      : {
+          darkMode: false,
+          background: "#fcf8ff",
+          primaryColor: "#f4e7fb",
+          primaryTextColor: "#1e192b",
+          primaryBorderColor: "#c8a8e9",
+          lineColor: "#5b516e",
+          secondaryColor: "#f2dddc",
+          tertiaryColor: "#c3c7f4",
+        },
+  });
   const { svg } = await mermaid.render(id, code);
   svgHost.innerHTML = svg;
 }

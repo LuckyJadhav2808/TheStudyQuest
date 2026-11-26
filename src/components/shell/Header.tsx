@@ -6,7 +6,7 @@ import { ArrowsIn, ArrowsOut, CloudArrowUp, Coins, Command, DotsNine, Fire, Ligh
 import { useGame, useSettings } from "@/core/settings";
 import { levelProgress } from "@/core/gamification";
 import { syncWithCloud, useSyncQueue } from "@/lib/cloudSync";
-import { switchThemeWithRipple } from "@/lib/themeRipple";
+import { resolveTheme, switchThemeWithRipple } from "@/lib/themeRipple";
 import { useUI } from "./ui-store";
 import { ALL_PAGES } from "./nav";
 import { SeededAvatar } from "@/components/illustrations/SeededAvatar";
@@ -184,7 +184,7 @@ export function Header() {
 
         {/* Icon Action Buttons with proper tooltips & aria-labels */}
         {(() => {
-          const isDark = s.theme === "obsidian" || (s.theme as string) === "ink";
+          const isDark = resolveTheme(s.theme) === "obsidian";
           return (
             <button
               type="button"

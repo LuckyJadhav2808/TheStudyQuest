@@ -3,6 +3,44 @@ import { flushSync } from "react-dom";
 import { updateSettings } from "@/core/settings";
 import type { SurfaceStyle, ThemeName } from "@/core/types";
 
+export function resolveTheme(theme: ThemeName | string | undefined): "pastel" | "obsidian" {
+  if (theme === "obsidian" || theme === "ink") return "obsidian";
+  if (theme === "system") {
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+      return "obsidian";
+    }
+    return "pastel";
+  }
+  return "pastel";
+}
+
+export function applyThemeAndSurface(
+  theme: ThemeName | string | undefined,
+  surfaceStyle: SurfaceStyle | string | undefined
+) {
+  if (typeof document === "undefined") return;
+  const effective = resolveTheme(theme);
+  const surf: SurfaceStyle = surfaceStyle === "neumorphic" ? "neumorphic" : "classic";
+  document.documentElement.dataset.theme = effective;
+  document.documentElement.dataset.surface = surf;
+
+  const metaColor =
+    effective === "obsidian"
+      ? surf === "neumorphic"
+        ? "#151518"
+        : "#000000"
+      : surf === "neumorphic"
+      ? "#efe3f7"
+      : "#f4e7fb";
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", "theme-color");
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", metaColor);
+}
+
 function runWithRipple(
   apply: () => void,
   event?: { clientX?: number; clientY?: number; currentTarget?: EventTarget | null }
@@ -52,7 +90,8 @@ export function switchThemeWithRipple(
   event?: { clientX?: number; clientY?: number; currentTarget?: EventTarget | null }
 ) {
   runWithRipple(() => {
-    document.documentElement.dataset.theme = theme;
+    const surf = document.documentElement.dataset.surface;
+    applyThemeAndSurface(theme, surf);
     try {
       localStorage.setItem("sq-theme", theme);
     } catch {
@@ -67,7 +106,13 @@ export function switchSurfaceWithRipple(
   event?: { clientX?: number; clientY?: number; currentTarget?: EventTarget | null }
 ) {
   runWithRipple(() => {
-    document.documentElement.dataset.surface = surfaceStyle;
+    let storedTheme: string | null = null;
+    try {
+      storedTheme = localStorage.getItem("sq-theme");
+    } catch {
+      /* ignore */
+    }
+    applyThemeAndSurface(storedTheme ?? document.documentElement.dataset.theme, surfaceStyle);
     try {
       localStorage.setItem("sq-surface", surfaceStyle);
     } catch {

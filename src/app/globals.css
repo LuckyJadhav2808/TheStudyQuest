@@ -269,8 +269,8 @@
   --shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.9);
   --shadow-hard: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 0 1px rgba(255, 255, 255, 0.1), 0 18px 40px -16px rgba(0, 0, 0, 0.92);
 
-  --primary: #e85002;
-  --on-primary: #f9f9f9;
+  --primary: #cf4300;
+  --on-primary: #ffffff;
   --primary-hover: #f16001;
   --primary-pressed: #c10801;
   --primary-tint: rgba(232, 80, 2, 0.18);
@@ -445,6 +445,10 @@
 }
 
 /* ---------- Focus ring: primary ring + ink offset ---------- */
+::selection {
+  background: var(--primary);
+  color: var(--on-primary);
+}
 :focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--ink), 0 0 0 5px var(--focus);
@@ -592,6 +596,13 @@
     border-width: 1px;
     border-color: var(--neu-border);
     box-shadow: var(--shadow-neu-in);
+  }
+  [data-surface="neumorphic"] input[type="range"].sq-slider {
+    border-color: var(--neu-border);
+    box-shadow: var(--shadow-neu-in);
+  }
+  [data-surface="neumorphic"] input[type="range"].sq-slider::-webkit-slider-thumb {
+    box-shadow: var(--shadow-neu-sm);
   }
   .btn-ghost {
     background: transparent;

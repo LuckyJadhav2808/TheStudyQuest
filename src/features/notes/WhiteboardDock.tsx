@@ -65,7 +65,7 @@ export function WhiteboardDock() {
               key={cur.id}
               compact
               initial={cur.data || null}
-              dark={s.theme === "obsidian" || (s.theme as string) === "ink"}
+              dark={s.theme === "obsidian" || (s.theme as string) === "ink" || (s.theme === "system" && typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches)}
               onSave={(json) => void whiteboardsRepo.update(cur.id, { data: json })}
             />
           </DeferredMount>

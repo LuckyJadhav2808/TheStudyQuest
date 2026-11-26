@@ -7,6 +7,7 @@ import { startEngine } from "@/core/engine";
 import { emit } from "@/core/events";
 import { ensureProfile, useGame, useSettings } from "@/core/settings";
 import { audioPrefs } from "@/lib/audio";
+import { applyThemeAndSurface } from "@/lib/themeRipple";
 import { useStrobi } from "@/features/strobi/store";
 import { useIsMobile } from "@/components/ui/useMedia";
 import { todayKey } from "@/lib/utils";
@@ -122,15 +123,20 @@ export function Boot() {
   }, [set]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = s.theme;
     const surf = s.surfaceStyle ?? "classic";
-    document.documentElement.dataset.surface = surf;
+    applyThemeAndSurface(s.theme, surf);
     try {
       localStorage.setItem("sq-theme", s.theme);
       localStorage.setItem("sq-surface", surf);
     } catch {
       /* ignore */
     }
+    if (s.theme !== "system") return;
+    const mql = window.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!mql) return;
+    const onChange = () => applyThemeAndSurface("system", surf);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
   }, [s.theme, s.surfaceStyle]);
 
   useEffect(() => {

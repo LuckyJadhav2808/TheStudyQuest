@@ -9,7 +9,7 @@ import { ALL_PAGES } from "./nav";
 import { useUI } from "./ui-store";
 import { startDesktopTour } from "@/lib/tour";
 
-const THEMES: ThemeName[] = ["pastel", "obsidian"];
+const THEMES: ThemeName[] = ["pastel", "obsidian", "system"];
 export function CommandPalette() {
   const { palette, set } = useUI();
   const router = useRouter();
