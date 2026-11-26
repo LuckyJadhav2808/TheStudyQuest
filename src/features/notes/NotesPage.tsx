@@ -273,11 +273,11 @@ export function NotesPage() {
             <h2 className="font-display text-base font-extrabold tracking-tight">
               My Notes <span className="text-xs font-bold text-muted num ml-1">({filtered.length})</span>
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setReviewOpen(true)}
-                className="btn btn-sm gap-1.5"
+                className="btn btn-sm gap-1.5 whitespace-nowrap"
               >
                 <Cards size={14} weight="duotone" /> Flashcards (FSRS)
               </button>

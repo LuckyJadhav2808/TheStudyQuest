@@ -538,10 +538,10 @@ export function NoteEditor({
       </div>
 
       {/* Editorial Title + Mode Switcher + Read-Only Lock */}
-      <div className="flex items-center justify-between gap-3 shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 shrink-0">
         <input
           readOnly={locked}
-          className="min-w-0 flex-1 bg-transparent font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-fg outline-none placeholder:text-muted"
+          className="w-full sm:w-auto min-w-0 sm:flex-1 bg-transparent font-display text-xl sm:text-3xl font-extrabold tracking-tight text-fg outline-none placeholder:text-muted"
           aria-label="Note title"
           placeholder="Untitled note"
           defaultValue={note.title}
@@ -642,9 +642,9 @@ export function NoteEditor({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-1 border-b border-line/40 pb-1.5 shrink-0">
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible items-center justify-between gap-1.5 border-b border-line/40 pb-1.5 shrink-0">
         {!locked && (
-          <div className="flex items-center gap-0.5 flex-wrap">
+          <div className="flex items-center gap-0.5 flex-nowrap sm:flex-wrap shrink-0 sm:shrink">
             {mode === "rich" && editor && (
             <>
               {tb("Undo", <ArrowUUpLeft size={16} />, () => c?.undo().run())}
@@ -722,7 +722,7 @@ export function NoteEditor({
         </div>
         )}
 
-        <div className="flex items-center gap-1.5 ml-auto">
+        <div className="flex shrink-0 items-center gap-1.5 ml-auto">
           {!locked && (
             <label
               aria-label="Import HTML or Markdown into note"
@@ -808,7 +808,7 @@ export function NoteEditor({
       )}
 
       {(mode === "rich" ? toc.length > 0 : headings.length > 0) && (
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 shrink-0" aria-label="Heading outline">
+        <div className="hidden sm:flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 shrink-0" aria-label="Heading outline">
           <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted mr-1 shrink-0">Outline</span>
           {mode === "rich"
             ? toc.map((item) => (
@@ -873,7 +873,7 @@ export function NoteEditor({
             setBubble(null);
           }
         }}
-        className="relative scroll-thin min-h-0 flex-1 overflow-y-auto rounded-[24px] border-[1.5px] border-line bg-surface text-fg px-6 sm:px-10 py-5 shadow-2xs transition focus-within:border-border-strong"
+        className="relative scroll-thin min-h-48 sm:min-h-0 flex-1 overflow-y-auto rounded-[24px] border-[1.5px] border-line bg-surface text-fg px-4 sm:px-10 py-3.5 sm:py-5 shadow-2xs transition focus-within:border-border-strong"
       >
         {mode === "rich" && editor && bubble && (
           <div
@@ -1034,8 +1034,8 @@ export function NoteEditor({
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted px-1 shrink-0">
         <span className="num">{words} words · ~{Math.max(1, Math.ceil(words / 200))} min read · autosaved locally</span>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--domain-notes-text)]">
+        <div className="flex max-w-full items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-[var(--domain-notes-text)]">
             <Sparkle size={12} weight="fill" /> AI:
           </span>
           {AI_ACTIONS.slice(0, 3).map((a) => (
@@ -1044,7 +1044,7 @@ export function NoteEditor({
               type="button"
               disabled={busy}
               onClick={() => void ai(a.id)}
-              className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-[11px] font-bold text-fg hover:border-border-strong hover:bg-[var(--domain-notes-tint)] transition disabled:opacity-40"
+              className="shrink-0 whitespace-nowrap rounded-full border border-line bg-surface px-2.5 py-0.5 text-[11px] font-bold text-fg hover:border-border-strong hover:bg-[var(--domain-notes-tint)] transition disabled:opacity-40"
             >
               {a.label}
             </button>
