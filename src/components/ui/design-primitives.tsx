@@ -213,8 +213,8 @@ export function ToolTile({
       className={cn(
         "flex flex-col items-start gap-1.5 rounded-[20px] border-[1.5px] p-3 text-left transition hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer",
         active
-          ? "border-ink bg-lime text-ink shadow-[2px_2px_0_var(--line)]"
-          : "border-line/40 bg-surface hover:border-ink hover:bg-soft/60"
+          ? "border-border-strong bg-primary text-on-primary shadow-[2px_2px_0_var(--line)]"
+          : "border-line/40 bg-surface hover:border-border-strong hover:bg-soft/60"
       )}
     >
       <span

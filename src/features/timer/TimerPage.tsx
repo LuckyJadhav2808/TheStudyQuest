@@ -203,14 +203,14 @@ function SoundscapeCard() {
             )}
             <div className="flex items-center gap-2">
               {results ? (
-                <button type="button" onClick={() => { setResults(null); setQuery(""); }} className="text-[10px] font-bold text-lime hover:underline">
+                <button type="button" onClick={() => { setResults(null); setQuery(""); }} className="text-[10px] font-bold text-primary-text hover:underline">
                   Show recent
                 </button>
               ) : yt.tracks.length > 0 && ytView === "recent" ? (
                 <button
                   type="button"
                   onClick={() => setSavingPl((v) => !v)}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold text-lime hover:underline"
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-text hover:underline"
                   title="Save current queue as a playlist"
                 >
                   <BookmarkSimple size={12} weight="bold" />

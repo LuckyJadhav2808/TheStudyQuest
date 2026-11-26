@@ -89,7 +89,7 @@ function Mock({ onClose }: { onClose: () => void }) {
                   aria-checked={ans[i] === k}
                   onClick={() => setAns({ ...ans, [i]: k })}
                   className={`tile min-h-12 border-[1.5px] p-3 text-left font-semibold transition ${
-                    ans[i] === k ? "border-ink bg-lime text-ink shadow-xs" : "border-transparent hover:bg-soft"
+                    ans[i] === k ? "border-border-strong bg-primary text-on-primary shadow-xs" : "border-transparent hover:bg-soft"
                   }`}
                 >
                   {o}

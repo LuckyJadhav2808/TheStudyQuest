@@ -27,10 +27,8 @@ import { Illustration } from "@/components/illustrations/Illustration";
 import { exportBackup, importBackup, resetAll } from "./dataTools";
 
 const THEMES: { id: ThemeName; label: string; bg: string }[] = [
-  { id: "paper", label: "Paper", bg: "#F6F4EE" },
-  { id: "ink", label: "Ink", bg: "#0F0E0C" },
-  { id: "lavender", label: "Lavender", bg: "#ECE8FF" },
-  { id: "peach", label: "Peach", bg: "#FFEBDD" },
+  { id: "pastel", label: "Light · Pastel", bg: "#F4E7FB" },
+  { id: "obsidian", label: "Dark · Obsidian", bg: "#E85002" },
 ];
 const hue = (s: string) => [...s].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360;
 
@@ -313,7 +311,7 @@ export function SettingsPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-muted mb-2 uppercase tracking-wide">Theme palette</p>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Theme">
+                  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Theme">
                     {THEMES.map((t) => (
                       <button
                         key={t.id}

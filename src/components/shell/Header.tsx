@@ -111,7 +111,7 @@ export function Header() {
         )}
 
         {!ui.online && (
-          <span className="chip bg-orange text-ink font-bold text-xs" role="status">
+          <span className="chip bg-orange text-[#12110f] font-bold text-xs" role="status">
             <WifiSlash size={15} weight="bold" />
             <span className="hidden sm:inline">Offline</span>
           </span>
@@ -147,7 +147,7 @@ export function Header() {
         {/* Level / XP with thin progress arc */}
         <span
           data-tour="xp-chip"
-          className={`chip transition-transform duration-300 ${xpPulse ? "scale-110 bg-lime text-ink" : ""}`}
+          className={`chip transition-transform duration-300 ${xpPulse ? "scale-110 bg-primary text-on-primary" : ""}`}
           title={`${lp.into}/${lp.need} XP to level ${lp.level + 1} (${g.xp.toLocaleString()} total XP)`}
           aria-label={`Level ${lp.level}, ${g.xp} XP`}
         >
@@ -183,15 +183,20 @@ export function Header() {
         </span>
 
         {/* Icon Action Buttons with proper tooltips & aria-labels */}
-        <button
-          type="button"
-          className="btn btn-icon btn-ghost border-0 inline-flex hover:bg-soft"
-          aria-label={s.theme === "ink" ? "Switch to light mode" : "Switch to dark mode"}
-          title={s.theme === "ink" ? "Light mode" : "Dark mode"}
-          onClick={(e) => switchThemeWithRipple(s.theme === "ink" ? "paper" : "ink", e)}
-        >
-          {s.theme === "ink" ? <Sun size={19} weight="duotone" /> : <Moon size={19} weight="duotone" />}
-        </button>
+        {(() => {
+          const isDark = s.theme === "obsidian" || (s.theme as string) === "ink";
+          return (
+            <button
+              type="button"
+              className="btn btn-icon btn-ghost border-0 inline-flex hover:bg-soft"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              title={isDark ? "Light mode" : "Dark mode"}
+              onClick={(e) => switchThemeWithRipple(isDark ? "pastel" : "obsidian", e)}
+            >
+              {isDark ? <Sun size={19} weight="duotone" /> : <Moon size={19} weight="duotone" />}
+            </button>
+          );
+        })()}
 
         <button
           className="btn btn-icon btn-ghost hidden border-0 sm:inline-flex hover:bg-soft"

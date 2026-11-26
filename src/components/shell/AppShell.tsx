@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isLogin = path === "/login";
   return (
     <div className="flex h-dvh min-h-0">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-lime focus:px-4 focus:py-2 focus:text-ink">Skip to content</a>
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-on-primary">Skip to content</a>
       {!isLogin && <Rail />}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {!isLogin && <Header />}

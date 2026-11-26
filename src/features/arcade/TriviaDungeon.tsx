@@ -12,7 +12,7 @@ function pickQuestions() {
 }
 
 const BADGES = [
-  { letter: "A", bg: "bg-lime text-ink", edge: "border-l-lime" },
+  { letter: "A", bg: "bg-primary text-on-primary", edge: "border-l-lime" },
   { letter: "B", bg: "bg-lavender text-ink", edge: "border-l-violet" },
   { letter: "C", bg: "bg-peach text-ink", edge: "border-l-orange" },
   { letter: "D", bg: "bg-teal/40 text-ink", edge: "border-l-teal" },
@@ -126,7 +126,7 @@ export function TriviaDungeon() {
                   picked === null
                     ? "border-line/40 bg-surface hover:border-ink hover:-translate-y-0.5"
                     : k === q.answer
-                    ? "border-ink bg-lime text-ink scale-[1.03]"
+                    ? "border-border-strong bg-primary text-on-primary scale-[1.03]"
                     : picked === k
                     ? "border-border-strong bg-[var(--danger-tint)] text-[var(--danger-text)] -translate-x-1"
                     : "border-line/20 bg-surface/60 opacity-60";

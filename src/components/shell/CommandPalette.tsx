@@ -9,13 +9,13 @@ import { ALL_PAGES } from "./nav";
 import { useUI } from "./ui-store";
 import { startDesktopTour } from "@/lib/tour";
 
-const THEMES: ThemeName[] = ["paper", "ink", "lavender", "peach"];
+const THEMES: ThemeName[] = ["pastel", "obsidian"];
 export function CommandPalette() {
   const { palette, set } = useUI();
   const router = useRouter();
   const notes = useLiveQuery(() => db.notes.toArray(), [], []);
   const run = (fn: () => void) => () => { set({ palette: false }); fn(); };
-  const item = "flex min-h-11 cursor-pointer items-center gap-3 rounded-full px-4 text-sm font-semibold data-[selected=true]:bg-lime data-[selected=true]:text-ink";
+  const item = "flex min-h-11 cursor-pointer items-center gap-3 rounded-full px-4 text-sm font-semibold data-[selected=true]:bg-primary data-[selected=true]:text-on-primary";
   const head = "px-4 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted";
   return (
     <Command.Dialog open={palette} onOpenChange={(o) => set({ palette: o })} label="Command palette" overlayClassName="fixed inset-0 z-[80] bg-black/50" contentClassName="fixed left-1/2 top-[12dvh] z-[81] w-[min(94vw,560px)] -translate-x-1/2 overflow-hidden rounded-[32px] border-[1.5px] border-line bg-surface p-3 text-fg shadow-2xl">

@@ -84,10 +84,10 @@ export function StrobiDock() {
   const go = (fn: () => void) => () => { setMenu(false); fn(); };
 
   const fanItems = [
-    { l: "Ask AI", i: <Brain size={20} weight="duotone" />, f: () => router.push("/chat"), x: 64, y: -12, bg: "bg-lavender text-ink" },
-    { l: "Start Focus", i: <Timer size={20} weight="duotone" />, f: () => router.push("/timer"), x: 56, y: 38, bg: "bg-lime text-ink" },
-    { l: "Add Quest", i: <ListChecks size={20} weight="duotone" />, f: () => ui.set({ quickAdd: "task" }), x: 30, y: 80, bg: "bg-peach text-ink" },
-    { l: "Palette", i: <Command size={20} weight="duotone" />, f: () => ui.set({ palette: true }), x: -14, y: 102, bg: "bg-white text-ink" },
+    { l: "Ask AI", i: <Brain size={20} weight="duotone" />, f: () => router.push("/chat"), x: 64, y: -12, bg: "bg-lavender text-[#12110f]" },
+    { l: "Start Focus", i: <Timer size={20} weight="duotone" />, f: () => router.push("/timer"), x: 56, y: 38, bg: "bg-lime text-[#12110f]" },
+    { l: "Add Quest", i: <ListChecks size={20} weight="duotone" />, f: () => ui.set({ quickAdd: "task" }), x: 30, y: 80, bg: "bg-peach text-[#12110f]" },
+    { l: "Palette", i: <Command size={20} weight="duotone" />, f: () => ui.set({ palette: true }), x: -14, y: 102, bg: "bg-white text-[#12110f]" },
   ];
 
   return (
