@@ -116,7 +116,7 @@ export function Segmented<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex rounded-full",
+        "no-scrollbar inline-flex max-w-full overflow-x-auto rounded-full",
         xs ? "border border-line bg-surface p-0.5" : "border-[1.5px] border-border-strong bg-surface-2 p-1",
         className
       )}
@@ -131,7 +131,7 @@ export function Segmented<T extends string>({
             aria-selected={active}
             onClick={() => onChange(o.value)}
             className={cn(
-              "relative rounded-full transition-colors cursor-pointer",
+              "relative shrink-0 whitespace-nowrap rounded-full transition-colors cursor-pointer",
               xs ? "px-2 py-0.5 text-[10px] font-extrabold" : "min-h-9 px-3.5 text-[13px] font-bold",
               active ? "text-on-inverse" : "text-ink-muted hover:text-fg",
               o.className
@@ -204,6 +204,11 @@ export function PageFrame({
 
   return (
     <section style={{ padding: "var(--gutter, 16px)" }} className={cn("flex h-full min-h-0 flex-col", className)}>
+      {actions && (
+        <div className="mb-2 flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:hidden">
+          {actions}
+        </div>
+      )}
       <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </section>
   );

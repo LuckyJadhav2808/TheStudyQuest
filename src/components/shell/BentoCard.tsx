@@ -80,7 +80,7 @@ export function BentoCard({
             paddingBottom: "8px",
           }}
           className={cn(
-            "relative z-10 flex shrink-0 items-start justify-between gap-2 min-h-[44px]",
+            "relative z-10 flex shrink-0 flex-wrap items-center justify-between gap-2 min-h-[44px]",
             headerClassName
           )}
         >
@@ -98,7 +98,7 @@ export function BentoCard({
               </p>
             )}
           </div>
-          {action && <div className="flex shrink-0 items-center gap-1.5">{action}</div>}
+          {action && <div className="flex max-w-full flex-wrap items-center gap-1.5">{action}</div>}
         </div>
       )}
 
@@ -113,7 +113,7 @@ export function BentoCard({
         }}
         className={cn(
           "relative z-10 flex-1 min-h-0 min-w-0",
-          scrollable ? "overflow-y-auto scroll-thin" : "overflow-hidden flex flex-col",
+          scrollable ? "overflow-y-auto scroll-thin" : "overflow-hidden max-sm:overflow-y-auto scroll-thin flex flex-col",
           bodyClassName
         )}
       >

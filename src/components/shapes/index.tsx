@@ -24,7 +24,7 @@ export function NotchTab({ active, bg = "var(--surface)", children, className, .
     <button
       type="button"
       aria-pressed={active}
-      className={cn("relative min-h-11 rounded-t-[20px] px-4 text-[13px] font-bold transition-colors", active ? "text-ink" : "text-paper/80 hover:text-paper", className)}
+      className={cn("relative shrink-0 whitespace-nowrap min-h-11 rounded-t-[20px] px-4 text-[13px] font-bold transition-colors", active ? "text-fg" : "text-paper/80 hover:text-paper", className)}
       style={active ? { background: bg } : undefined}
       {...rest}
     >
@@ -34,7 +34,7 @@ export function NotchTab({ active, bg = "var(--surface)", children, className, .
           <span aria-hidden className="inv-corner" style={{ left: "100%", bottom: 0, ...fillet("r", bg) }} />
         </>
       )}
-      <span className="relative" style={active ? { color: "var(--on-primary)" } : undefined}>{children}</span>
+      <span className="relative" style={active ? { color: "var(--fg)" } : undefined}>{children}</span>
     </button>
   );
 }

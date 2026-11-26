@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import NumberFlow from "@number-flow/react";
-import { ArrowsIn, ArrowsOut, CloudArrowUp, Coins, Command, Fire, Lightning, Moon, PawPrint, Plus, Sun, WifiSlash, Question } from "@phosphor-icons/react";
+import { ArrowsIn, ArrowsOut, CloudArrowUp, Coins, Command, DotsNine, Fire, Lightning, Moon, PawPrint, Plus, Sun, WifiSlash, Question } from "@phosphor-icons/react";
 import { useGame, useSettings } from "@/core/settings";
 import { levelProgress } from "@/core/gamification";
 import { syncWithCloud, useSyncQueue } from "@/lib/cloudSync";
@@ -74,7 +74,7 @@ export function Header() {
   return (
     <header
       style={{ paddingLeft: "var(--gutter, 16px)", paddingRight: "var(--gutter, 16px)" }}
-      className="flex h-14 sm:h-16 shrink-0 items-center justify-between gap-3 pt-2 pb-1 border-b border-line/10 bg-canvas/80 backdrop-blur-sm z-30"
+      className="flex h-14 sm:h-16 shrink-0 items-center justify-between gap-1.5 sm:gap-3 pt-2 pb-1 border-b border-line/10 bg-canvas/80 backdrop-blur-sm z-30"
     >
       {/* Left: Avatar + Page Title + conditional subtitle */}
       <div className="min-w-0 flex-1 flex items-center gap-2.5">
@@ -82,7 +82,7 @@ export function Header() {
         <div className="min-w-0 flex-1 flex items-baseline gap-3">
           <h1
             title={typeof title === "string" ? title : undefined}
-            className="font-display truncate text-lg sm:text-2xl font-extrabold text-fg leading-tight"
+            className="font-display truncate text-base sm:text-2xl font-extrabold text-fg leading-tight"
             suppressHydrationWarning
           >
             {title}
@@ -221,6 +221,16 @@ export function Header() {
           onClick={() => ui.set({ shortcuts: true })}
         >
           <Question size={20} weight="duotone" />
+        </button>
+
+        <button
+          type="button"
+          className="btn btn-icon btn-ghost border-0 inline-flex sm:hidden hover:bg-soft"
+          aria-label="All pages"
+          title="All pages"
+          onClick={() => ui.set({ launcher: "all" })}
+        >
+          <DotsNine size={20} weight="duotone" />
         </button>
 
         <button

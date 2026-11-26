@@ -54,7 +54,7 @@ export function MlPage() {
     >
       <div className="scroll-thin min-h-0 flex-1">
         {view === "lesson" && <>
-          <div className="mb-2 flex gap-2">{t.lessons.map((l, i) => <button key={l.id} className={`chip ${i === lesson ? "bg-surface-inverse text-on-inverse" : ""}`} onClick={() => setLesson(i)}>{l.title}</button>)}</div>
+          <div className="mb-2 flex flex-wrap gap-2">{t.lessons.map((l, i) => <button key={l.id} className={`chip ${i === lesson ? "bg-surface-inverse text-on-inverse" : ""}`} onClick={() => setLesson(i)}>{l.title}</button>)}</div>
           <h3 className="font-display text-2xl">{t.lessons[lesson].title}</h3>
           <RunnableLesson key={t.lessons[lesson].id} md={t.lessons[lesson].md} />
         </>}

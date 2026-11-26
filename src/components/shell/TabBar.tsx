@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { DotsNine, House, ListChecks, NotePencil, Timer } from "@phosphor-icons/react";
-import { useUI } from "./ui-store";
+import { House, ListChecks, NotePencil, Timer } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -15,10 +14,9 @@ const TABS = [
 
 export function TabBar() {
   const path = usePathname();
-  const setUI = useUI((s) => s.set);
   return (
     <nav aria-label="Primary mobile" className="fixed inset-x-0 bottom-0 z-40 sm:hidden">
-      <div className="tabbar-mask mx-2 mb-[max(8px,env(safe-area-inset-bottom))] grid h-[62px] grid-cols-[1fr_1fr_76px_1fr_1fr_1fr] items-center rounded-full bg-ink px-2 text-paper">
+      <div className="tabbar-mask mx-2 mb-[max(8px,env(safe-area-inset-bottom))] grid h-[62px] grid-cols-[1fr_1fr_76px_1fr_1fr] items-center rounded-full bg-ink px-2 text-paper">
         {TABS.map((t, i) => {
           if (!t) return <span key={i} aria-hidden />;
           const on = t.href === "/" ? path === "/" : path.startsWith(t.href);
@@ -29,9 +27,6 @@ export function TabBar() {
             </Link>
           );
         })}
-        <button onClick={() => setUI({ launcher: "all" })} aria-label="More pages" className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-full text-[10px] font-bold text-paper/70">
-          <DotsNine size={22} weight="duotone" />More
-        </button>
       </div>
     </nav>
   );
