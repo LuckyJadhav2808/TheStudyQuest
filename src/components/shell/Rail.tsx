@@ -58,15 +58,15 @@ export function Rail() {
         transition={snappy}
         aria-hidden
         className="pointer-events-none absolute inset-y-0 left-0 -right-3 rounded-l-full"
-        style={{ background: "var(--rail-notch, var(--canvas))" }}
+        style={{ backgroundColor: "var(--rail-notch, var(--canvas))" }}
       >
         <span
           className="pointer-events-none absolute -top-3 right-0 size-3"
-          style={{ background: "radial-gradient(circle at 0 0, transparent 11.5px, var(--rail-notch, var(--canvas)) 12px)" }}
+          style={{ backgroundImage: "radial-gradient(circle at 0 0, transparent 11.5px, var(--rail-notch, var(--canvas)) 12px)" }}
         />
         <span
           className="pointer-events-none absolute -bottom-3 right-0 size-3"
-          style={{ background: "radial-gradient(circle at 0 100%, transparent 11.5px, var(--rail-notch, var(--canvas)) 12px)" }}
+          style={{ backgroundImage: "radial-gradient(circle at 0 100%, transparent 11.5px, var(--rail-notch, var(--canvas)) 12px)" }}
         />
       </motion.span>
     ) : null;

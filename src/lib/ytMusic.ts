@@ -31,9 +31,10 @@ export function parseYtUrl(raw: string): { videoId?: string; playlistId?: string
     if (!videoId && host === "youtu.be") {
       videoId = url.pathname.slice(1).split("/")[0] || undefined;
     }
-    if (!videoId && url.pathname.startsWith("/live/")) {
-      videoId = url.pathname.split("/live/")[1]?.split("/")[0] || undefined;
+    if (!videoId && /^\/(?:live|shorts|embed)\//.test(url.pathname)) {
+      videoId = url.pathname.split("/")[2] || undefined;
     }
+    if (videoId && !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) videoId = undefined;
     if (!videoId && !list) return null;
     return { videoId, playlistId: list };
   } catch {
@@ -54,6 +55,8 @@ interface YtMusicState {
   prev: () => void;
   setVolume: (v: number) => void;
   addFromUrl: (url: string, title?: string) => YtTrack | null;
+  updateTrack: (id: string, patch: Partial<YtTrack>) => void;
+  importTracks: (incoming: YtTrack[], activeId?: string) => void;
   removeTrack: (id: string) => void;
   setPlaying: (playing: boolean) => void;
 }
@@ -111,6 +114,22 @@ export const useYtMusic = create<YtMusicState>()(
         get().playTrack(track);
         return track;
       },
+      updateTrack: (id, patch) =>
+        set((s) => ({
+          tracks: s.tracks.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+        })),
+      importTracks: (incoming, activeId) =>
+        set((s) => {
+          const byId = new Map<string, YtTrack>();
+          for (const t of incoming) byId.set(t.id, t);
+          for (const t of s.tracks) if (!byId.has(t.id)) byId.set(t.id, t);
+          const tracks = Array.from(byId.values()).slice(0, 30);
+          return {
+            tracks,
+            activeId: activeId && byId.has(activeId) ? activeId : incoming[0]?.id ?? s.activeId,
+            playing: true,
+          };
+        }),
       removeTrack: (id) =>
         set((s) => {
           const tracks = s.tracks.filter((t) => t.id !== id);

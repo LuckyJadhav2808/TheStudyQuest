@@ -49,12 +49,42 @@ function SoundscapeCard() {
       setResults(null);
       return;
     }
-    if (parseYtUrl(q)) {
+    const parsed = parseYtUrl(q);
+    if (parsed) {
       const added = yt.addFromUrl(q);
       if (added) {
         setQuery("");
         setResults(null);
-        strobiSay(`Playing "${added.title}"`);
+        strobiSay(`Loading "${added.title}"…`);
+        const params = new URLSearchParams();
+        if (parsed.playlistId && !parsed.playlistId.startsWith("RD")) {
+          params.set("listId", parsed.playlistId);
+        } else if (parsed.videoId) {
+          params.set("videoId", parsed.videoId);
+        }
+        if (params.toString()) {
+          void fetch(`/api/music/search?${params.toString()}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data: { playlistTitle?: string; results?: YtTrack[] } | null) => {
+              const list = data?.results ?? [];
+              if (list.length === 0) return;
+              if (parsed.playlistId && !parsed.playlistId.startsWith("RD")) {
+                const targetId = parsed.videoId ? `yt-${parsed.videoId}` : list[0].id;
+                yt.importTracks(list, targetId);
+                if (!parsed.videoId) yt.removeTrack(`yt-pl-${parsed.playlistId}`);
+                strobiSay(`Loaded ${data?.playlistTitle || "playlist"} (${list.length} tracks)`);
+              } else if (list[0]) {
+                yt.updateTrack(added.id, {
+                  title: list[0].title,
+                  artist: list[0].artist,
+                  duration: list[0].duration,
+                  thumbnail: list[0].thumbnail,
+                });
+                strobiSay(`Playing "${list[0].title}"`);
+              }
+            })
+            .catch(() => undefined);
+        }
       }
       return;
     }

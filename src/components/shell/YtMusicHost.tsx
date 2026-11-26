@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { useSettings } from "@/core/settings";
 import { strobiSay } from "@/features/strobi/toast";
 import { audioPrefs } from "@/lib/audio";
 import { useYtMusic } from "@/lib/ytMusic";
@@ -38,6 +39,7 @@ declare global {
 /** Persistent hidden YouTube IFrame audio host mounted once in AppShell. */
 export function YtMusicHost() {
   const { tracks, activeId, playing, volume, setPlaying } = useYtMusic();
+  const s = useSettings();
   const hostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayer | null>(null);
   const readyRef = useRef(false);
@@ -76,6 +78,11 @@ export function YtMusicHost() {
           onStateChange: (e) => {
             if (e.data === 1) setPlaying(true);
             else if (e.data === 2) setPlaying(false);
+            else if (e.data === 0) {
+              const state = useYtMusic.getState();
+              if (state.tracks.length > 1) state.next();
+              else setPlaying(false);
+            }
           },
           onError: () => {
             const state = useYtMusic.getState();
@@ -125,9 +132,9 @@ export function YtMusicHost() {
   useEffect(() => {
     const p = playerRef.current;
     if (!p || !readyRef.current) return;
-    const effVol = audioPrefs.muted ? 0 : Math.round(volume * audioPrefs.master * audioPrefs.music * 100);
+    const effVol = s.muted ? 0 : Math.round(volume * s.masterVolume * s.musicVolume * 100);
     p.setVolume(effVol);
-  }, [volume]);
+  }, [volume, s.muted, s.masterVolume, s.musicVolume]);
 
   return <div ref={hostRef} aria-hidden className="pointer-events-none fixed -left-[9999px] -top-[9999px] size-px overflow-hidden opacity-0" />;
 }
