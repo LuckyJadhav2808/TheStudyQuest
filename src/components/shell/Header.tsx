@@ -85,7 +85,14 @@ export function Header() {
             className="font-display truncate text-base sm:text-2xl font-extrabold text-fg leading-tight"
             suppressHydrationWarning
           >
-            {title}
+            {isHome ? (
+              <>
+                <span className="sm:hidden">Today</span>
+                <span className="hidden sm:inline">{title}</span>
+              </>
+            ) : (
+              title
+            )}
           </h1>
           {subtitle && (
             <span className="hidden shrink-0 md:[@media(min-height:800px)]:inline-block truncate text-xs text-muted font-medium" suppressHydrationWarning>
