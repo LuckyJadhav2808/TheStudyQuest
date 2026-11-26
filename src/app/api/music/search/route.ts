@@ -35,19 +35,23 @@ export async function GET(req: Request) {
     }
 
     if (videoId) {
-      const v = await yts({ videoId });
-      return NextResponse.json({
-        results: [
-          {
-            id: `yt-${v.videoId || videoId}`,
-            videoId: v.videoId || videoId,
-            title: v.title,
-            artist: v.author?.name || "YouTube",
-            duration: v.timestamp || v.duration?.timestamp || "",
-            thumbnail: v.image || v.thumbnail || `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
-          },
-        ],
-      });
+      try {
+        const v = await yts({ videoId });
+        return NextResponse.json({
+          results: [
+            {
+              id: `yt-${v.videoId || videoId}`,
+              videoId: v.videoId || videoId,
+              title: v.title,
+              artist: v.author?.name || "YouTube",
+              duration: v.timestamp || v.duration?.timestamp || "",
+              thumbnail: v.image || v.thumbnail || `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+            },
+          ],
+        });
+      } catch {
+        return NextResponse.json({ results: [] });
+      }
     }
 
     const res = await yts(q);

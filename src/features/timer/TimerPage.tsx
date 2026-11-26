@@ -1,7 +1,7 @@
 "use client";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useRef, useState } from "react";
-import { ArrowsOut, MagnifyingGlass, Pause, Play, ArrowCounterClockwise, ShieldCheck, ShieldWarning, X, CloudRain, Fire, Coffee, Waves, Tree, Wind, Broadcast, MusicNotes, SkipBack, SkipForward, Trash } from "@phosphor-icons/react";
+import { ArrowsOut, BookmarkSimple, MagnifyingGlass, Pause, Play, ArrowCounterClockwise, ShieldCheck, ShieldWarning, X, CloudRain, Fire, Coffee, Waves, Tree, Wind, Broadcast, MusicNotes, SkipBack, SkipForward, Trash } from "@phosphor-icons/react";
 import { Panels } from "@/components/shell/Panels";
 import { BentoCard } from "@/components/shell/BentoCard";
 import { HeroCard } from "@/components/ui/design-primitives";
@@ -36,6 +36,9 @@ function SoundscapeCard() {
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<YtTrack[] | null>(null);
+  const [ytView, setYtView] = useState<"recent" | "saved">("recent");
+  const [savingPl, setSavingPl] = useState(false);
+  const [plName, setPlName] = useState("");
   const yt = useYtMusic();
   const { vols, set, stopAll } = useAmbient();
 
@@ -72,7 +75,9 @@ function SoundscapeCard() {
                 const targetId = parsed.videoId ? `yt-${parsed.videoId}` : list[0].id;
                 yt.importTracks(list, targetId);
                 if (!parsed.videoId) yt.removeTrack(`yt-pl-${parsed.playlistId}`);
-                strobiSay(`Loaded ${data?.playlistTitle || "playlist"} (${list.length} tracks)`);
+                const title = data?.playlistTitle || "YouTube Playlist";
+                yt.savePlaylist(title, list);
+                strobiSay(`Saved ${title} (${list.length} tracks)`);
               } else if (list[0]) {
                 yt.updateTrack(added.id, {
                   title: list[0].title,
@@ -170,15 +175,48 @@ function SoundscapeCard() {
           </form>
 
           <div className="flex items-center justify-between gap-2 shrink-0 px-0.5">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted">
-              {results ? `Results (${results.length})` : `Recent (${yt.tracks.length})`}
-            </span>
+            {results ? (
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted">
+                Results ({results.length})
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setYtView("recent")}
+                  className={`text-[10px] font-extrabold uppercase tracking-wider transition ${
+                    ytView === "recent" ? "text-fg underline underline-offset-4" : "text-muted hover:text-fg"
+                  }`}
+                >
+                  Recent ({yt.tracks.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setYtView("saved")}
+                  className={`text-[10px] font-extrabold uppercase tracking-wider transition ${
+                    ytView === "saved" ? "text-fg underline underline-offset-4" : "text-muted hover:text-fg"
+                  }`}
+                >
+                  Saved ({yt.savedPlaylists.length})
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-2">
-              {results && (
+              {results ? (
                 <button type="button" onClick={() => { setResults(null); setQuery(""); }} className="text-[10px] font-bold text-lime hover:underline">
                   Show recent
                 </button>
-              )}
+              ) : yt.tracks.length > 0 && ytView === "recent" ? (
+                <button
+                  type="button"
+                  onClick={() => setSavingPl((v) => !v)}
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-lime hover:underline"
+                  title="Save current queue as a playlist"
+                >
+                  <BookmarkSimple size={12} weight="bold" />
+                  Save
+                </button>
+              ) : null}
               <div className="w-24">
                 <Slider
                   aria-label="YT Music volume"
@@ -192,8 +230,84 @@ function SoundscapeCard() {
             </div>
           </div>
 
+          {savingPl && !results && ytView === "recent" && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const saved = yt.savePlaylist(plName);
+                if (saved) {
+                  strobiSay(`Saved playlist "${saved.name}"`);
+                  setPlName("");
+                  setSavingPl(false);
+                  setYtView("saved");
+                }
+              }}
+              className="flex items-center gap-1.5 shrink-0"
+            >
+              <input
+                autoFocus
+                className="input !min-h-7 flex-1 text-xs"
+                placeholder="Playlist name (e.g. Focus Lo-Fi)..."
+                aria-label="Playlist name"
+                value={plName}
+                onChange={(e) => setPlName(e.target.value)}
+              />
+              <button type="submit" className="btn btn-lime btn-sm !min-h-7 px-2.5 text-[11px]">
+                Save
+              </button>
+              <button type="button" onClick={() => setSavingPl(false)} className="p-1 text-muted hover:text-fg" aria-label="Cancel">
+                <X size={13} />
+              </button>
+            </form>
+          )}
+
           <ScrollArea className="min-h-0 flex-1 pr-1">
-            {displayList.length === 0 ? (
+            {!results && ytView === "saved" ? (
+              yt.savedPlaylists.length === 0 ? (
+                <div className="grid h-full min-h-28 place-items-center rounded-2xl border border-dashed border-line/25 p-4 text-center">
+                  <p className="text-xs font-semibold text-muted">
+                    No saved playlists yet. Play songs or paste a YouTube playlist URL, then click Save.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5 pb-1">
+                  {yt.savedPlaylists.map((pl) => (
+                    <div key={pl.id} className="flex items-center gap-2 rounded-xl border border-line/15 bg-soft/40 px-2.5 py-1.5 hover:border-line/40 transition">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          yt.playSavedPlaylist(pl.id);
+                          setYtView("recent");
+                          strobiSay(`Playing "${pl.name}"`);
+                        }}
+                        className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-lime text-ink">
+                            <Play size={14} weight="fill" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-bold">{pl.name}</p>
+                            <p className="truncate text-[10px] text-muted">{pl.tracks.length} {pl.tracks.length === 1 ? "item" : "tracks"}</p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-surface/15 px-2 py-0.5 text-[9px] font-extrabold">
+                          Load
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Delete playlist ${pl.name}`}
+                        onClick={() => yt.removeSavedPlaylist(pl.id)}
+                        className="p-1 text-muted hover:text-fg"
+                      >
+                        <Trash size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : displayList.length === 0 ? (
               <div className="grid h-full min-h-28 place-items-center rounded-2xl border border-dashed border-line/25 p-4 text-center">
                 <p className="text-xs font-semibold text-muted">
                   {results ? "No songs matched that search." : "Search for any artist, song, or album above."}

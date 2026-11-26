@@ -59,7 +59,7 @@ export function YtMusicHost() {
       playerRef.current = new window.YT.Player(target, {
         height: "1",
         width: "1",
-        videoId: track.videoId,
+        ...(track.videoId ? { videoId: track.videoId } : {}),
         playerVars: {
           autoplay: 1,
           controls: 0,

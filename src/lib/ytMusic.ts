@@ -12,6 +12,13 @@ export interface YtTrack {
   playlistId?: string;
 }
 
+export interface SavedPlaylist {
+  id: string;
+  name: string;
+  tracks: YtTrack[];
+  savedAt: number;
+}
+
 export function ytThumb(track?: Pick<YtTrack, "thumbnail" | "videoId"> | null): string | null {
   if (!track) return null;
   if (track.thumbnail) return track.thumbnail;
@@ -44,6 +51,7 @@ export function parseYtUrl(raw: string): { videoId?: string; playlistId?: string
 
 interface YtMusicState {
   tracks: YtTrack[];
+  savedPlaylists: SavedPlaylist[];
   activeId: string | null;
   playing: boolean;
   volume: number;
@@ -57,6 +65,9 @@ interface YtMusicState {
   addFromUrl: (url: string, title?: string) => YtTrack | null;
   updateTrack: (id: string, patch: Partial<YtTrack>) => void;
   importTracks: (incoming: YtTrack[], activeId?: string) => void;
+  savePlaylist: (name: string, tracks?: YtTrack[]) => SavedPlaylist | null;
+  playSavedPlaylist: (id: string) => void;
+  removeSavedPlaylist: (id: string) => void;
   removeTrack: (id: string) => void;
   setPlaying: (playing: boolean) => void;
 }
@@ -65,6 +76,7 @@ export const useYtMusic = create<YtMusicState>()(
   persist(
     (set, get) => ({
       tracks: [],
+      savedPlaylists: [],
       activeId: null,
       playing: false,
       volume: 0.65,
@@ -130,6 +142,30 @@ export const useYtMusic = create<YtMusicState>()(
             playing: true,
           };
         }),
+      savePlaylist: (name, customTracks) => {
+        const list = (customTracks ?? get().tracks).slice(0, 30);
+        if (list.length === 0) return null;
+        const cleanName = name.trim() || `Study Mix ${get().savedPlaylists.length + 1}`;
+        const pl: SavedPlaylist = {
+          id: `pl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          name: cleanName,
+          tracks: list,
+          savedAt: Date.now(),
+        };
+        set((s) => ({ savedPlaylists: [pl, ...s.savedPlaylists].slice(0, 20) }));
+        return pl;
+      },
+      playSavedPlaylist: (id) => {
+        const pl = get().savedPlaylists.find((p) => p.id === id);
+        if (!pl || pl.tracks.length === 0) return;
+        set({
+          tracks: pl.tracks,
+          activeId: pl.tracks[0].id,
+          playing: true,
+        });
+      },
+      removeSavedPlaylist: (id) =>
+        set((s) => ({ savedPlaylists: s.savedPlaylists.filter((p) => p.id !== id) })),
       removeTrack: (id) =>
         set((s) => {
           const tracks = s.tracks.filter((t) => t.id !== id);
@@ -142,6 +178,7 @@ export const useYtMusic = create<YtMusicState>()(
       name: "sq-yt-music-v2",
       partialize: (s) => ({
         tracks: s.tracks,
+        savedPlaylists: s.savedPlaylists,
         activeId: s.activeId,
         volume: s.volume,
       }),
