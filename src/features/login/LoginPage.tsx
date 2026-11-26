@@ -33,11 +33,12 @@ export function LoginPage() {
   const [focusField, setFocusField] = useState<"none" | "email" | "pw">("none");
 
   useEffect(() => {
+    router.prefetch("/");
     void fetchCloudSession().then((r) => {
       setSbConfigured(r.configured);
       if (!r.configured && !firebaseConfigured) setRightPane("character");
     });
-  }, []);
+  }, [router]);
 
   const guest = async () => {
     await ensureProfile();
@@ -91,10 +92,13 @@ export function LoginPage() {
       }
       await ensureProfile();
       await updateSettings({ name: data.user.name, profileCreated: true });
-      const synced = await syncWithCloud().catch(() => null);
-      if (synced?.needsSchema) strobiSay("Signed in! Run supabase/schema.sql to enable table sync.", "tip");
-      else strobiSay(`Signed in as ${data.user.name}`, "tip");
+      strobiSay(`Signed in as ${data.user.name}`, "tip");
       router.push("/");
+      void syncWithCloud()
+        .then((synced) => {
+          if (synced?.needsSchema) strobiSay("Run supabase/schema.sql to enable table sync.", "tip");
+        })
+        .catch(() => undefined);
     } catch {
       strobiSay("Could not reach auth server.", "error");
     }
