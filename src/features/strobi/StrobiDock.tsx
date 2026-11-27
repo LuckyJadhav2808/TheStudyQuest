@@ -8,6 +8,7 @@ import { Brain, Command, ListChecks, Timer } from "@phosphor-icons/react";
 import { StrobiFace } from "./StrobiFace";
 import { useStrobi } from "./store";
 import { useUI } from "@/components/shell/ui-store";
+import { useIsMobile } from "@/components/ui/useMedia";
 import { useMotionConfig } from "@/lib/motion";
 
 const Scene = dynamic(() => import("./StrobiScene"), { ssr: false, loading: () => null });
@@ -26,12 +27,14 @@ function Fallback() {
 }
 
 export function StrobiRailButton() {
+  const mobile = useIsMobile();
   const [gl, setGl] = useState<boolean | null>(null);
   const { menuOpen, setMenu, poke, setMood, mood } = useStrobi();
   useEffect(() => {
+    if (mobile) return;
     const handle = requestAnimationFrame(() => setGl(hasWebGL()));
     return () => cancelAnimationFrame(handle);
-  }, []);
+  }, [mobile]);
 
   return (
     <button
@@ -52,7 +55,9 @@ export function StrobiRailButton() {
         className="pointer-events-none absolute -inset-1 rounded-full bg-strobi/25 blur-sm animate-pulse"
       />
       <div className="relative z-10 size-9 overflow-hidden rounded-full pointer-events-none">
-        {gl === null ? null : gl ? (
+        {mobile ? (
+          <Fallback />
+        ) : gl === null ? null : gl ? (
           <ErrorBoundary fallback={<Fallback />}><Scene /></ErrorBoundary>
         ) : (
           <Fallback />
@@ -72,15 +77,10 @@ export function StrobiRailButton() {
 }
 
 export function StrobiDock() {
-  const [gl, setGl] = useState<boolean | null>(null);
   const { menuOpen, setMenu, poke, setMood, mood } = useStrobi();
   const router = useRouter();
   const ui = useUI();
   const { bouncy } = useMotionConfig();
-  useEffect(() => {
-    const handle = requestAnimationFrame(() => setGl(hasWebGL()));
-    return () => cancelAnimationFrame(handle);
-  }, []);
   const go = (fn: () => void) => () => { setMenu(false); fn(); };
 
   const fanItems = [
@@ -147,11 +147,7 @@ export function StrobiDock() {
         onClick={() => { poke(); setMood("happy", 1800); setMenu(!menuOpen); }}
         className="fixed bottom-[calc(env(safe-area-inset-bottom)+22px)] left-1/2 z-50 size-[68px] -translate-x-1/2 cursor-pointer rounded-full transition-transform hover:scale-105 sm:hidden"
       >
-        {gl === null ? null : gl ? (
-          <ErrorBoundary fallback={<Fallback />}><Scene /></ErrorBoundary>
-        ) : (
-          <Fallback />
-        )}
+        <Fallback />
       </button>
     </>
   );

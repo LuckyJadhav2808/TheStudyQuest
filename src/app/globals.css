@@ -791,10 +791,14 @@
 }
 .animate-blob { animation: blob-morph 14s ease-in-out infinite; transform-origin: center; }
 @keyframes pop-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
-.pop-in { animation: pop-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.pop-in { animation: pop-in 0.14s ease-out both; }
+@media (max-width: 639px), (hover: none) {
+  .animate-blob { animation: none !important; }
+  .bento-card.lift:hover { transform: none !important; box-shadow: var(--shadow) !important; }
+}
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

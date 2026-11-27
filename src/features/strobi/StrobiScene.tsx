@@ -44,11 +44,11 @@ function DemandTicker({ route }: { route: string }) {
       const recentMove = performance.now() - pointer.movedAt < 900;
       const activeAnim = st.mood !== "idle" || recentMove || getStrobiBehaviour(route).idleBounce;
       if (activeAnim) invalidate();
-    }, 33);
-    // Periodic blink wake-up every 3.5s
+    }, 66);
+    // Periodic blink wake-up every 2s
     const blinkTimer = window.setInterval(() => {
       if (!document.hidden) invalidate();
-    }, 350);
+    }, 2000);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.clearInterval(id);
@@ -155,7 +155,7 @@ function Body({ route }: { route: string }) {
   return (
     <group ref={root}>
       <mesh>
-        <sphereGeometry args={[1, 64, 64]} />
+        <sphereGeometry args={[1, 32, 32]} />
         <meshPhysicalMaterial color="#2E8BFF" roughness={0.16} clearcoat={1} clearcoatRoughness={0.08} sheen={1} sheenColor="#a9d2ff" sheenRoughness={0.35} emissive="#0d4bb5" emissiveIntensity={0.35} />
       </mesh>
       <group ref={eyes}>
@@ -175,7 +175,7 @@ function Body({ route }: { route: string }) {
 export default function StrobiScene() {
   const route = usePathname();
   return (
-    <Canvas dpr={[1, 1.75]} frameloop="demand" gl={{ antialias: true, alpha: true, powerPreference: "low-power" }} camera={{ position: [0, 0, 4.1], fov: 34 }}>
+    <Canvas dpr={[1, 1.5]} frameloop="demand" gl={{ antialias: true, alpha: true, powerPreference: "low-power" }} camera={{ position: [0, 0, 4.1], fov: 34 }}>
       <ambientLight intensity={1.1} />
       <directionalLight position={[2.5, 3, 4]} intensity={2.4} />
       <pointLight position={[-3, -1.5, 2.5]} color="#9ccbff" intensity={18} />

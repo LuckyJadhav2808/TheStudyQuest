@@ -74,7 +74,7 @@ export function Header() {
   return (
     <header
       style={{ paddingLeft: "var(--gutter, 16px)", paddingRight: "var(--gutter, 16px)" }}
-      className="flex h-14 sm:h-16 shrink-0 items-center justify-between gap-1.5 sm:gap-3 pt-2 pb-1 border-b border-line/10 bg-canvas/80 backdrop-blur-sm z-30"
+      className="flex h-14 sm:h-16 shrink-0 items-center justify-between gap-1.5 sm:gap-3 pt-2 pb-1 border-b border-line/10 bg-canvas/95 z-30"
     >
       {/* Left: Avatar + Page Title + conditional subtitle */}
       <div className="min-w-0 flex-1 flex items-center gap-2.5">
