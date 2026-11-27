@@ -30,8 +30,8 @@ export function applyThemeAndSurface(
         ? "#151518"
         : "#000000"
       : surf === "neumorphic"
-      ? "#efe3f7"
-      : "#f4e7fb";
+      ? "#efefe9"
+      : "#f6f6f4";
   let meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) {
     meta = document.createElement("meta");

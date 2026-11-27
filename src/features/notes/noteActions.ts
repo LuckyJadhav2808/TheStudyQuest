@@ -180,7 +180,7 @@ export type ExportTheme = "white" | "black" | "pastel" | "obsidian";
 export const EXPORT_THEMES: { id: ExportTheme; label: string; bg: string; fg: string; accent: string }[] = [
   { id: "white", label: "White", bg: "#ffffff", fg: "#111111", accent: "#e4e4e7" },
   { id: "black", label: "Black", bg: "#000000", fg: "#fafafa", accent: "#27272a" },
-  { id: "pastel", label: "Light · Pastel", bg: "#f4e7fb", fg: "#1e192b", accent: "#c8a8e9" },
+  { id: "pastel", label: "Light · Mint", bg: "#f6f6f4", fg: "#141416", accent: "#b9ecc0" },
   { id: "obsidian", label: "Dark · Obsidian", bg: "#141414", fg: "#f9f9f9", accent: "#cf4300" },
 ];
 
@@ -227,17 +227,17 @@ const EXPORT_PALETTES: Record<
     shadow: "0 12px 32px -12px rgba(0,0,0,0.8)",
   },
   pastel: {
-    bg: "#f4e7fb",
-    surface: "#fcf8ff",
-    surface2: "#f2dddc",
-    fg: "#1e192b",
-    muted: "#5b516e",
-    border: "#231b30",
-    primary: "#c8a8e9",
-    onPrimary: "#1e192b",
-    tint: "#f4e7fb",
-    tintText: "#5a3982",
-    shadow: "6px 6px 0 #231b30",
+    bg: "#f6f6f4",
+    surface: "#ffffff",
+    surface2: "#efefec",
+    fg: "#141416",
+    muted: "#5c5c63",
+    border: "#141416",
+    primary: "#b9ecc0",
+    onPrimary: "#11381b",
+    tint: "#d9f4dc",
+    tintText: "#11421d",
+    shadow: "0 8px 24px -10px rgba(20, 20, 22, 0.1)",
   },
   obsidian: {
     bg: "#000000",

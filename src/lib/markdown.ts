@@ -73,13 +73,13 @@ export async function renderMermaid(svgHost: HTMLElement, code: string, id: stri
         }
       : {
           darkMode: false,
-          background: "#fcf8ff",
-          primaryColor: "#f4e7fb",
-          primaryTextColor: "#1e192b",
-          primaryBorderColor: "#c8a8e9",
-          lineColor: "#5b516e",
-          secondaryColor: "#f2dddc",
-          tertiaryColor: "#c3c7f4",
+          background: "#ffffff",
+          primaryColor: "#d9f4dc",
+          primaryTextColor: "#141416",
+          primaryBorderColor: "#84d892",
+          lineColor: "#5c5c63",
+          secondaryColor: "#dff3fc",
+          tertiaryColor: "#ebd3fc",
         },
   });
   const { svg } = await mermaid.render(id, code);

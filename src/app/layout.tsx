@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4e7fb" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f6f4" },
     { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
   width: "device-width",
@@ -31,7 +31,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('sq-theme')||'pastel';var s=localStorage.getItem('sq-surface')||'classic';var d=t==='obsidian'||t==='ink'||(t==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);var e=d?'obsidian':'pastel';var n=s==='neumorphic'?'neumorphic':'classic';var r=document.documentElement;r.dataset.theme=e;r.dataset.surface=n;var c=e==='obsidian'?(n==='neumorphic'?'#151518':'#000000'):(n==='neumorphic'?'#efe3f7':'#f4e7fb');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',c);}catch(x){}})();`;
+const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('sq-theme')||'pastel';var s=localStorage.getItem('sq-surface')||'classic';var d=t==='obsidian'||t==='ink'||(t==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);var e=d?'obsidian':'pastel';var n=s==='neumorphic'?'neumorphic':'classic';var r=document.documentElement;r.dataset.theme=e;r.dataset.surface=n;var c=e==='obsidian'?(n==='neumorphic'?'#151518':'#000000'):(n==='neumorphic'?'#efefe9':'#f6f6f4');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',c);}catch(x){}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

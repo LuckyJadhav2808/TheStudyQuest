@@ -27,9 +27,9 @@ import { Illustration } from "@/components/illustrations/Illustration";
 import { exportBackup, importBackup, resetAll } from "./dataTools";
 
 const THEMES: { id: ThemeName; label: string; bg: string }[] = [
-  { id: "pastel", label: "Light · Pastel", bg: "#F4E7FB" },
-  { id: "obsidian", label: "Dark · Obsidian", bg: "#E85002" },
-  { id: "system", label: "Auto (System)", bg: "linear-gradient(135deg, #F4E7FB 50%, #000000 50%)" },
+  { id: "pastel", label: "Light · Mint", bg: "#B9ECC0" },
+  { id: "obsidian", label: "Dark · Obsidian", bg: "#CF4300" },
+  { id: "system", label: "Auto (System)", bg: "linear-gradient(135deg, #F6F6F4 50%, #000000 50%)" },
 ];
 const hue = (s: string) => [...s].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360;
 
