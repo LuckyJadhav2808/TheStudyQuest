@@ -35,7 +35,7 @@ export function Panels({ panels, className }: { panels: Panel[]; className?: str
   const cur = panels[Math.min(idx, panels.length - 1)];
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div role="tablist" className="no-scrollbar flex shrink-0 gap-1 overflow-x-auto rounded-t-[24px] bg-ink px-3 pt-2">
+      <div role="tablist" className="no-scrollbar flex shrink-0 gap-1 overflow-x-auto rounded-t-[24px] bg-surface-2 px-3 pt-2">
         {panels.map((p, i) => (
           <NotchTab key={p.id} role="tab" active={i === idx} onClick={() => setIdx(i)}>{p.label}</NotchTab>
         ))}

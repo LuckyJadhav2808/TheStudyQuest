@@ -472,7 +472,25 @@
     transform: translateY(-3px);
     box-shadow: 0 16px 36px -14px rgba(18, 17, 15, 0.22);
   }
-  .surface-inverse {
+  /* In Light Mode, keep .surface-inverse cards light & airy (soft stone) so no black blocks appear */
+  .bento-card.surface-inverse {
+    --surface: #ffffff;
+    --color-surface: #ffffff;
+    --fg: var(--ink);
+    --color-fg: var(--ink);
+    --muted: var(--ink-muted);
+    --color-muted: var(--ink-muted);
+    --color-ink-muted: var(--ink-muted);
+    --soft: #e6e6e1;
+    --color-soft: #e6e6e1;
+    --surface-2: #e6e6e1;
+    --color-surface-2: #e6e6e1;
+    background: var(--surface-2) !important;
+    color: var(--ink) !important;
+    border-color: var(--line) !important;
+  }
+  [data-theme="obsidian"] .surface-inverse,
+  [data-theme="ink"] .surface-inverse {
     --surface: color-mix(in srgb, var(--on-inverse) 10%, var(--surface-inverse));
     --color-surface: color-mix(in srgb, var(--on-inverse) 10%, var(--surface-inverse));
     --fg: var(--on-inverse);

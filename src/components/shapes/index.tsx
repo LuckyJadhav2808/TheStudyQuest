@@ -24,7 +24,7 @@ export function NotchTab({ active, bg = "var(--surface)", children, className, .
     <button
       type="button"
       aria-pressed={active}
-      className={cn("relative shrink-0 whitespace-nowrap min-h-11 rounded-t-[20px] px-4 text-[13px] font-bold transition-colors", active ? "text-fg" : "text-paper/80 hover:text-paper", className)}
+      className={cn("relative shrink-0 whitespace-nowrap min-h-11 rounded-t-[20px] px-4 text-[13px] font-bold transition-colors", active ? "text-fg" : "text-muted hover:text-fg", className)}
       style={active ? { background: bg } : undefined}
       {...rest}
     >
